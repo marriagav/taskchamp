@@ -11,17 +11,19 @@ let project = Project(
             infoPlist: .extendingDefault(
                 with: [
                     "UILaunchScreen": [
-                        "UIColorName": "LaunchBackground",
+                        "UIColorName": "LaunchBackground"
                     ],
-                    "ITSAppUsesNonExemptEncryption": false,
+                    "ITSAppUsesNonExemptEncryption": false
                 ]
             ),
             sources: ["taskchamp/Sources/**"],
             resources: ["taskchamp/Resources/**"],
             scripts: [
-                .pre(script: "./scripts/pre_build_script.sh", name: "Prebuild", basedOnDependencyAnalysis: false),
+                .pre(script: "./scripts/pre_build_script.sh", name: "Prebuild", basedOnDependencyAnalysis: false)
             ],
-            dependencies: []
+            dependencies: [
+                .external(name: "SQLite")
+            ]
         ),
         .target(
             name: "taskchampTests",
@@ -32,6 +34,6 @@ let project = Project(
             sources: ["taskchamp/Tests/**"],
             resources: [],
             dependencies: [.target(name: "taskchamp")]
-        ),
+        )
     ]
 )
