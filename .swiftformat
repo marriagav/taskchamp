@@ -1,0 +1,112 @@
+## File options
+
+ --exclude Pods
+ --exclude Carthage
+ --exclude DerivedData
+
+ ## Enabled rules
+
+ --enable andOperator
+ --enable anyObjectProtocol
+ --enable blankLinesAroundMark
+ --enable blankLinesBetweenScopes
+ --enable braces
+ --enable consecutiveBlankLines
+ --enable consecutiveSpaces
+ --enable duplicateimports
+ --enable elseOnSameLine
+ --enable emptybraces
+ --enable enumnamespaces
+ --enable extensionaccesscontrol
+ --enable fileHeader
+ --enable indent
+ --enable initcoderunavailable
+ --enable isempty
+ --enable leadingdelimiters
+ --enable linebreakAtEndOfFile
+ --enable marktypes
+ --enable numberFormatting
+ --enable preferkeypath
+ --enable redundantbackticks
+ --enable redundantextensionacl
+ --enable redundantfileprivate
+ --enable redundantlet
+ --enable redundantnilinit
+ --enable redundantobjc
+ --enable redundantparens
+ --enable redundantpattern
+ --enable redundantrawvalues
+ --enable redundantself
+ --enable redundanttype
+ --enable redundantvoidreturntype
+ --enable semicolons
+ --enable sortImports
+ --enable spacearoundbraces
+ --enable spacearoundbrackets
+ --enable spacearoundcomments
+ --enable spacearoundgenerics
+ --enable spacearoundoperators
+ --enable spacearoundparens
+ --enable spaceinsidebraces
+ --enable spaceinsidebrackets
+ --enable spaceinsidecomments
+ --enable spaceinsidegenerics
+ --enable spaceinsideparens
+ --enable trailingclosures
+ --enable trailingCommas
+ --enable typesugar
+ --enable wrapArguments
+ --enable wrapAttributes
+ --enable wrapenumcases
+ --enable wrapmultilinestatementbraces
+ --enable yodaconditions
+
+
+
+ ## Configuration of specific rules
+
+ ### Number formatting
+ --decimalgrouping 3
+ --hexgrouping 4,8
+ --binarygrouping 4
+
+ ### MARK
+ --marktypes never
+
+ ### Wrap
+ --wraparguments before-first
+ --wrapparameters before-first
+ --wrapcollections before-first
+
+ ### Attributes
+ --funcattributes prev-line
+ --typeattributes prev-line
+ --varattributes same-line
+
+ ### Else
+ --elseposition same-line
+ --guardelse same-line
+
+ ### Others
+ --commas inline
+ --ifdef noindent
+ --indent 4
+ --linebreaks lf #\#default
+ --maxwidth 120
+ --patternlet hoist #\#default
+ --semicolons never
+ --stripunusedargs always
+ --trimwhitespace always
+ --voidtype void
+
+
+ ## Disabled rules
+
+ ### SwiftFormat also removes from funcs, so let's let SwiftLint takes care of it.
+ --disable redundantReturn
+
+ ### SwiftFormat also removes from end of scope, which is against our empty line guidelines.
+ --disable blankLinesAtEndOfScope
+
+ ### SwiftFormat also removes from start of scope, which is against our empty line guidelines.
+ --disable blankLinesAtStartOfScope
