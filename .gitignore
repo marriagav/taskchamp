@@ -1,7 +1,7 @@
 .env
 variables.json
 .vscode
-
+.nvim
 Tuist/.build
 #amplify-do-not-edit-begin
 amplify/\#current-cloud-backend

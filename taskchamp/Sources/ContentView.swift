@@ -8,8 +8,11 @@ public struct ContentView: View {
 
     func completeTask(uuid: String) {
         do {
+            let access = taskChampionFileUrl?.startAccessingSecurityScopedResource()
+            print("Access to the file : \(access)")
             try DBService.shared.completeTask(id: uuid)
             updateTasks()
+            taskChampionFileUrl?.stopAccessingSecurityScopedResource()
         } catch {
             print(error)
         }
@@ -17,7 +20,10 @@ public struct ContentView: View {
 
     func updateTasks() {
         do {
+            let access = taskChampionFileUrl?.startAccessingSecurityScopedResource()
             tasks = try DBService.shared.getPendingTasks()
+            print("Access to the file : \(access)")
+            taskChampionFileUrl?.stopAccessingSecurityScopedResource()
         } catch {
             print(error)
         }
@@ -64,7 +70,7 @@ public struct ContentView: View {
 
                     updateTasks()
 
-//                    url.stopAccessingSecurityScopedResource()
+                    url.stopAccessingSecurityScopedResource()
                     taskChampionFileUrl = url
 
                 case let .failure(error):
