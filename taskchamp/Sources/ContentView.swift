@@ -6,12 +6,27 @@ public struct ContentView: View {
     @State private var tasks: [Task] = []
     public init() {}
 
-    func completeTask(uuid: String) {
+    func completeTask(_ task: Task) {
         do {
             let access = taskChampionFileUrl?.startAccessingSecurityScopedResource()
             print("Access to the file : \(access)")
-            try DBService.shared.completeTask(id: uuid)
+            try DBService.shared.completeTask(task)
             updateTasks()
+            taskChampionFileUrl?.stopAccessingSecurityScopedResource()
+        } catch {
+            print(error)
+        }
+    }
+
+    func updateTasksTest() {
+        do {
+            let access = taskChampionFileUrl?.startAccessingSecurityScopedResource()
+            guard let access, let path = taskChampionFileUrl?.path else {
+                throw TCError.genericError("No access or path")
+            }
+            DBService.shared.setDbUrl(path)
+            tasks = try DBService.shared.getPendingTasks()
+            print("Access to the file : \(access)")
             taskChampionFileUrl?.stopAccessingSecurityScopedResource()
         } catch {
             print(error)
@@ -36,7 +51,7 @@ public struct ContentView: View {
                     TaskCellView(task: task)
                         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                             Button {
-                                completeTask(uuid: task.uuid)
+                                completeTask(task)
                             } label: {
                                 Label("Done", systemImage: "checkmark")
                             }
@@ -45,7 +60,7 @@ public struct ContentView: View {
                 }
             }
             .refreshable {
-                updateTasks()
+                updateTasksTest()
             }
             .listStyle(.insetGrouped)
             .toolbar {

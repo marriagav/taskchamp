@@ -40,7 +40,7 @@ struct Task: Codable {
     let uuid: String
     let project: String?
     let description: String
-    let status: Status
+    var status: Status
     let priority: Priority?
     let due: Date?
 

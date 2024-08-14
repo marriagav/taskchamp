@@ -65,11 +65,41 @@ class DBService {
         }
     }
 
-    public func completeTask(id: String) throws {
+    public func completeTask(_ task: Task) throws {
         do {
+            // var newTask = task
+            // newTask.status = .done
             let tasks = Table("tasks")
-            let query = tasks.filter(TasksColumns.uuid == id)
-            try dbConnection?.run(query.update(TasksColumns.data <- TasksColumns.data.replace("pending", with: "done")))
+            // let data = try JSONEncoder().encode(newTask)
+            // var jsonObject = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
+            // jsonObject?.removeValue(forKey: "uuid")
+            //
+            // guard let jsonObject else {
+            //     throw TCError.genericError("jsonObject was null")
+            // }
+            // let updatedData = try JSONSerialization.data(withJSONObject: jsonObject, options: [])
+            //
+            // let updatedJsonString = String(decoding: updatedData, as: UTF8.self)
+            //
+            // let query = tasks.filter(TasksColumns.uuid == task.uuid)
+            //
+            // try dbConnection?.run(query.update(TasksColumns.data <- updatedJsonString))
+            let query = tasks.filter(TasksColumns.uuid == task.uuid)
+            let queryTasks = try dbConnection?.prepare(query)
+            guard let queryTasks else {
+                throw TCError.genericError("Query was null")
+            }
+            for task in queryTasks {
+                let newData = task[TasksColumns.data].replacingOccurrences(of: "pending", with: "done")
+                print(newData)
+                try dbConnection?.run(query.update(TasksColumns.data <- newData))
+            }
+
+            // let newData = TasksColumns.data.replace("pending", with: "done")
+            //
+            // print(newData)
+            // try dbConnection?.run(query.update(TasksColumns.data <- TasksColumns.data.replace("pending", with:
+            // "done")))
         } catch {
             throw error
         }
