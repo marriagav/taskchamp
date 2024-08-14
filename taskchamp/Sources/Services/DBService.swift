@@ -65,26 +65,11 @@ class DBService {
         }
     }
 
-    public func completeTask(_ task: Task) throws {
+    public func completeTask(_ uuid: String) throws {
         do {
-            // var newTask = task
-            // newTask.status = .done
             let tasks = Table("tasks")
-            // let data = try JSONEncoder().encode(newTask)
-            // var jsonObject = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
-            // jsonObject?.removeValue(forKey: "uuid")
-            //
-            // guard let jsonObject else {
-            //     throw TCError.genericError("jsonObject was null")
-            // }
-            // let updatedData = try JSONSerialization.data(withJSONObject: jsonObject, options: [])
-            //
-            // let updatedJsonString = String(decoding: updatedData, as: UTF8.self)
-            //
-            // let query = tasks.filter(TasksColumns.uuid == task.uuid)
-            //
-            // try dbConnection?.run(query.update(TasksColumns.data <- updatedJsonString))
-            let query = tasks.filter(TasksColumns.uuid == task.uuid)
+
+            let query = tasks.filter(TasksColumns.uuid == uuid)
             let queryTasks = try dbConnection?.prepare(query)
             guard let queryTasks else {
                 throw TCError.genericError("Query was null")
@@ -94,12 +79,16 @@ class DBService {
                 print(newData)
                 try dbConnection?.run(query.update(TasksColumns.data <- newData))
             }
+        } catch {
+            throw error
+        }
+    }
 
-            // let newData = TasksColumns.data.replace("pending", with: "done")
-            //
-            // print(newData)
-            // try dbConnection?.run(query.update(TasksColumns.data <- TasksColumns.data.replace("pending", with:
-            // "done")))
+    public func deleteTask(_ uuid: String) throws {
+        do {
+            let tasks = Table("tasks")
+            let query = tasks.filter(TasksColumns.uuid == uuid)
+            try dbConnection?.run(query.delete())
         } catch {
             throw error
         }

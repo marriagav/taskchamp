@@ -2,32 +2,19 @@ import SwiftUI
 
 public struct ContentView: View {
     @State private var isPickerShowing = false
-    @State private var taskChampionFileUrl: URL?
+    @State private var taskChampionFileUrlString: String?
     @State private var tasks: [Task] = []
     public init() {}
 
-    func completeTask(_ task: Task) {
+    func completeTask(_ uuid: String) {
         do {
-            let access = taskChampionFileUrl?.startAccessingSecurityScopedResource()
-            print("Access to the file : \(access)")
-            try DBService.shared.completeTask(task)
-            updateTasks()
-            taskChampionFileUrl?.stopAccessingSecurityScopedResource()
-        } catch {
-            print(error)
-        }
-    }
-
-    func updateTasksTest() {
-        do {
-            let access = taskChampionFileUrl?.startAccessingSecurityScopedResource()
-            guard let access, let path = taskChampionFileUrl?.path else {
+            guard let path = taskChampionFileUrlString else {
                 throw TCError.genericError("No access or path")
             }
             DBService.shared.setDbUrl(path)
-            tasks = try DBService.shared.getPendingTasks()
-            print("Access to the file : \(access)")
-            taskChampionFileUrl?.stopAccessingSecurityScopedResource()
+            // try DBService.shared.completeTask(uuid)
+            try DBService.shared.deleteTask(uuid)
+            updateTasks()
         } catch {
             print(error)
         }
@@ -35,12 +22,62 @@ public struct ContentView: View {
 
     func updateTasks() {
         do {
-            let access = taskChampionFileUrl?.startAccessingSecurityScopedResource()
+            guard let path = taskChampionFileUrlString else {
+                throw TCError.genericError("No access or path")
+            }
+
+            DBService.shared.setDbUrl(path)
             tasks = try DBService.shared.getPendingTasks()
-            print("Access to the file : \(access)")
-            taskChampionFileUrl?.stopAccessingSecurityScopedResource()
         } catch {
             print(error)
+        }
+    }
+
+    func createDirectoryIfNeeded(url: URL) {
+        if !FileManager.default.fileExists(atPath: url.path) {
+            do {
+                try FileManager.default.createDirectory(
+                    at: url,
+                    withIntermediateDirectories: true,
+                    attributes: nil
+                )
+            } catch {
+                print("Error creating directory: \(error)")
+            }
+        }
+    }
+
+    func copyDatabaseIfNeeded() {
+        let sourcePath = Bundle.main.path(forResource: "taskchampion", ofType: "sqlite3")
+        guard let sourcePath = sourcePath else {
+            return
+        }
+        let containerURL = FileManager.default.url(forUbiquityContainerIdentifier: nil)
+        guard let containerURL = containerURL else {
+            return
+        }
+
+        let documentsURL = containerURL.appendingPathComponent("Documents")
+        let taskDirectory = documentsURL.appendingPathComponent("task")
+        let destinationPath = taskDirectory.appendingPathComponent("taskchampion.sqlite3")
+
+        createDirectoryIfNeeded(url: documentsURL)
+        createDirectoryIfNeeded(url: taskDirectory)
+
+        let exists = FileManager.default.fileExists(atPath: destinationPath.path)
+        guard !exists else {
+            taskChampionFileUrlString = destinationPath.path
+            updateTasks()
+            return
+        }
+        do {
+            try FileManager.default.copyItem(atPath: sourcePath, toPath: destinationPath.path)
+            taskChampionFileUrlString = destinationPath.path
+            updateTasks()
+            return
+        } catch {
+            print("error during file copy: \(error)")
+            return
         }
     }
 
@@ -51,7 +88,7 @@ public struct ContentView: View {
                     TaskCellView(task: task)
                         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                             Button {
-                                completeTask(task)
+                                completeTask(task.uuid)
                             } label: {
                                 Label("Done", systemImage: "checkmark")
                             }
@@ -60,7 +97,7 @@ public struct ContentView: View {
                 }
             }
             .refreshable {
-                updateTasksTest()
+                updateTasks()
             }
             .listStyle(.insetGrouped)
             .toolbar {
@@ -72,26 +109,22 @@ public struct ContentView: View {
                     }
                 }
             }
-            .fileImporter(
-                isPresented: $isPickerShowing,
-                allowedContentTypes: [.data]
-            ) { result in
-                switch result {
-                case let .success(url):
-                    let gotAccess = url.startAccessingSecurityScopedResource()
-                    print("Access to the file : \(gotAccess)")
-
-                    DBService.shared.setDbUrl(url.path)
-
-                    updateTasks()
-
-                    url.stopAccessingSecurityScopedResource()
-                    taskChampionFileUrl = url
-
-                case let .failure(error):
-                    print(error)
-                }
+            .onAppear {
+                copyDatabaseIfNeeded()
             }
+            // .fileImporter(
+            //     isPresented: $isPickerShowing,
+            //     allowedContentTypes: [.data]
+            // ) { result in
+            //     switch result {
+            //     case let .success(url):
+            //         taskChampionFileUrlString = url
+            //         updateTasks()
+            //
+            //     case let .failure(error):
+            //         print(error)
+            //     }
+            // }
             .navigationTitle("My Tasks")
         }
     }
