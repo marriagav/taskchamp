@@ -1,1 +1,1 @@
-{"testsCount": 0, "failedTestsCount": 0, "tests": [], "buildWarnings": [], "buildErrors": [], "testErrors": []}
+{"testsCount": 0, "failedTestsCount": 0, "tests": [], "buildWarnings": [{"lineNumber": 68, "filepath": "/Users/marriagav/Code/taskchamp/taskchamp/Sources/ContentView.swift", "columnNumber": 1, "message": ["Indentation Width Violation: Code should be indented using one tab or 4 spaces (indentation_width)", "Done linting! Found 1 violation, 0 serious in 6 files."], "filename": "ContentView"}], "testErrors": [], "buildErrors": []}

@@ -3,13 +3,45 @@ import SwiftUI
 public struct ContentView: View {
     @State private var isPickerShowing = false
     @State private var taskChampionFileUrl: URL?
+    @State private var tasks: [Task] = []
     public init() {}
+
+    func completeTask(uuid: String) {
+        do {
+            try DBService.shared.completeTask(id: uuid)
+            updateTasks()
+        } catch {
+            print(error)
+        }
+    }
+
+    func updateTasks() {
+        do {
+            tasks = try DBService.shared.getPendingTasks()
+        } catch {
+            print(error)
+        }
+    }
 
     public var body: some View {
         NavigationStack {
             List {
-                Text("Hello, world!")
+                ForEach(tasks, id: \.uuid) { task in
+                    TaskCellView(task: task)
+                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                            Button {
+                                completeTask(uuid: task.uuid)
+                            } label: {
+                                Label("Done", systemImage: "checkmark")
+                            }
+                            .tint(.green)
+                        }
+                }
             }
+            .refreshable {
+                updateTasks()
+            }
+            .listStyle(.insetGrouped)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
@@ -21,17 +53,25 @@ public struct ContentView: View {
             }
             .fileImporter(
                 isPresented: $isPickerShowing,
-                allowedContentTypes: [.folder]
+                allowedContentTypes: [.data]
             ) { result in
-                print(result)
                 switch result {
                 case let .success(url):
-                    taskChampionFileUrl = url.appending(path: "taskchampion.sqlite3")
-                    print(taskChampionFileUrl ?? "No url")
+                    let gotAccess = url.startAccessingSecurityScopedResource()
+                    print("Access to the file : \(gotAccess)")
+
+                    DBService.shared.setDbUrl(url.path)
+
+                    updateTasks()
+
+//                    url.stopAccessingSecurityScopedResource()
+                    taskChampionFileUrl = url
+
                 case let .failure(error):
                     print(error)
                 }
             }
+            .navigationTitle("My Tasks")
         }
     }
 }
