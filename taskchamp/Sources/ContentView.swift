@@ -1,32 +1,32 @@
 import SwiftUI
 
 public struct ContentView: View {
-    @State private var isPickerShowing = false
     @State private var taskChampionFileUrlString: String?
     @State private var tasks: [Task] = []
     public init() {}
 
     func completeTask(_ uuid: String) {
         do {
-            guard let path = taskChampionFileUrlString else {
-                throw TCError.genericError("No access or path")
-            }
-            DBService.shared.setDbUrl(path)
-            // try DBService.shared.completeTask(uuid)
-            try DBService.shared.deleteTask(uuid)
+            // guard let path = taskChampionFileUrlString else {
+            //     throw TCError.genericError("No access or path")
+            // }
+            // DBService.shared.setDbUrl(path)
+            try DBService.shared.completeTask(uuid)
             updateTasks()
         } catch {
             print(error)
         }
     }
 
-    func updateTasks() {
+    func updateTasks(setDb: Bool = false) {
         do {
-            guard let path = taskChampionFileUrlString else {
-                throw TCError.genericError("No access or path")
-            }
+            if setDb {
+                guard let path = taskChampionFileUrlString else {
+                    throw TCError.genericError("No access or path")
+                }
 
-            DBService.shared.setDbUrl(path)
+                DBService.shared.setDbUrl(path)
+            }
             tasks = try DBService.shared.getPendingTasks()
         } catch {
             print(error)
@@ -67,13 +67,13 @@ public struct ContentView: View {
         let exists = FileManager.default.fileExists(atPath: destinationPath.path)
         guard !exists else {
             taskChampionFileUrlString = destinationPath.path
-            updateTasks()
+            updateTasks(setDb: true)
             return
         }
         do {
             try FileManager.default.copyItem(atPath: sourcePath, toPath: destinationPath.path)
             taskChampionFileUrlString = destinationPath.path
-            updateTasks()
+            updateTasks(setDb: true)
             return
         } catch {
             print("error during file copy: \(error)")
@@ -102,9 +102,7 @@ public struct ContentView: View {
             .listStyle(.insetGrouped)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        isPickerShowing.toggle()
-                    } label: {
+                    Button {} label: {
                         Label("Select taskchampion task folder", systemImage: "doc.text.fill")
                     }
                 }
@@ -112,19 +110,6 @@ public struct ContentView: View {
             .onAppear {
                 copyDatabaseIfNeeded()
             }
-            // .fileImporter(
-            //     isPresented: $isPickerShowing,
-            //     allowedContentTypes: [.data]
-            // ) { result in
-            //     switch result {
-            //     case let .success(url):
-            //         taskChampionFileUrlString = url
-            //         updateTasks()
-            //
-            //     case let .failure(error):
-            //         print(error)
-            //     }
-            // }
             .navigationTitle("My Tasks")
         }
     }
