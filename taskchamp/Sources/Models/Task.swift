@@ -7,7 +7,16 @@ struct Task: Codable {
         case deleted
     }
 
-    enum Priority: String, Codable {
+    enum Priority: String, Codable, Comparable {
+        static func < (lhs: Task.Priority, rhs: Task.Priority) -> Bool {
+            switch (lhs, rhs) {
+            case (.low, .medium), (.low, .high), (.medium, .high):
+                return true
+            default:
+                return false
+            }
+        }
+
         case low = "L"
         case medium = "M"
         case high = "H"

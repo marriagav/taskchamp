@@ -12,41 +12,8 @@ class DBService {
 
     private init() {}
 
-    private func pickLatestVersion(for documentURL: URL) {
-        guard let versionsInConflict =
-            NSFileVersion.unresolvedConflictVersionsOfItem(at: documentURL),
-            let currentVersion =
-            NSFileVersion.currentVersionOfItem(at: documentURL) else { return }
-
-        do {
-            let modifyDate1 = try currentVersion.url.resourceValues(forKeys: [.contentModificationDateKey])
-            print(modifyDate1.contentModificationDate)
-            var mostRecentDate = modifyDate1.contentModificationDate
-            var winner = currentVersion
-            for version in versionsInConflict {
-                let modifyDate = try version.url.resourceValues(forKeys: [.contentModificationDateKey])
-                print(modifyDate.contentModificationDate)
-                if
-                    let mostRecent = mostRecentDate,
-                    let newDate = modifyDate.contentModificationDate,
-                    newDate > mostRecent
-                {
-                    mostRecentDate = newDate
-                    winner = version
-                }
-            }
-            if winner != currentVersion {
-                try winner.replaceItem(at: documentURL)
-            }
-            try NSFileVersion.removeOtherVersionsOfItem(at: documentURL)
-        } catch {
-            print("Error getting file attributes: \(error)")
-        }
-    }
-
     public func setDbUrl(_ path: String) {
         do {
-            pickLatestVersion(for: URL(fileURLWithPath: path))
             dbConnection = try Connection(path)
         } catch {
             print(error)
@@ -64,41 +31,47 @@ class DBService {
                 throw TCError.genericError("Query was null")
             }
             for task in queryTasks {
-                let jsonObject = task[TasksColumns.data]
-                let jsonData = jsonObject.data(using: .utf8)
-                if let jsonData {
-                    var jsonDictionary = try? JSONSerialization
-                        .jsonObject(with: jsonData, options: []) as? [String: Any]
-
-                    jsonDictionary?["uuid"] = task[TasksColumns.uuid]
-
-                    guard let jsonDictionary else {
-                        throw TCError.genericError("jsonDictionary was null")
-                    }
-
-                    let updatedJsonData = try? JSONSerialization.data(withJSONObject: jsonDictionary, options: [])
-
-                    guard let updatedJsonData else {
-                        throw TCError.genericError("updatedJsonData was null")
-                    }
-
-                    let jsonDecoder = JSONDecoder()
-                    jsonDecoder.dateDecodingStrategy = .secondsSince1970
-
-                    let taskObject = try? jsonDecoder.decode(Task.self, from: updatedJsonData)
-
-                    if let taskObject {
-                        taskObjects.append(taskObject)
-                    }
+                if let taskObject = try parseTask(row: task) {
+                    taskObjects.append(taskObject)
                 }
             }
+            TasksHelper.sortTasks(&taskObjects)
             return taskObjects
         } catch {
             throw error
         }
     }
 
-    public func completeTask(_ uuid: String) throws {
+    private func parseTask(row: Row) throws -> Task? {
+        let jsonObject = row[TasksColumns.data]
+        let jsonData = jsonObject.data(using: .utf8)
+        if let jsonData {
+            var jsonDictionary = try? JSONSerialization
+                .jsonObject(with: jsonData, options: []) as? [String: Any]
+
+            jsonDictionary?["uuid"] = row[TasksColumns.uuid]
+
+            guard let jsonDictionary else {
+                throw TCError.genericError("jsonDictionary was null")
+            }
+
+            let updatedJsonData = try? JSONSerialization.data(withJSONObject: jsonDictionary, options: [])
+
+            guard let updatedJsonData else {
+                throw TCError.genericError("updatedJsonData was null")
+            }
+
+            let jsonDecoder = JSONDecoder()
+            jsonDecoder.dateDecodingStrategy = .secondsSince1970
+
+            let taskObject = try? jsonDecoder.decode(Task.self, from: updatedJsonData)
+
+            return taskObject
+        }
+        return nil
+    }
+
+    func updatePendingTask(_ uuid: String, withStatus newStatus: Task.Status) throws {
         do {
             let tasks = Table("tasks")
 
@@ -110,21 +83,10 @@ class DBService {
             for task in queryTasks {
                 let newData = task[TasksColumns.data].replacingOccurrences(
                     of: Task.Status.pending.rawValue,
-                    with: Task.Status.completed.rawValue
+                    with: newStatus.rawValue
                 )
-                print(newData)
                 try dbConnection?.run(query.update(TasksColumns.data <- newData))
             }
-        } catch {
-            throw error
-        }
-    }
-
-    public func deleteTask(_ uuid: String) throws {
-        do {
-            let tasks = Table("tasks")
-            let query = tasks.filter(TasksColumns.uuid == uuid)
-            try dbConnection?.run(query.delete())
         } catch {
             throw error
         }
