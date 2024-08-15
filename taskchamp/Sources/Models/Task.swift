@@ -3,7 +3,7 @@ import Foundation
 struct Task: Codable {
     enum Status: String, Codable {
         case pending
-        case done
+        case completed
         case deleted
     }
 
@@ -45,7 +45,7 @@ struct Task: Codable {
     let due: Date?
 
     var isCompleted: Bool {
-        status == .done
+        status == .completed
     }
 
     var localDate: String {

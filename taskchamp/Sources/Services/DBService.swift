@@ -12,8 +12,41 @@ class DBService {
 
     private init() {}
 
+    private func pickLatestVersion(for documentURL: URL) {
+        guard let versionsInConflict =
+            NSFileVersion.unresolvedConflictVersionsOfItem(at: documentURL),
+            let currentVersion =
+            NSFileVersion.currentVersionOfItem(at: documentURL) else { return }
+
+        do {
+            let modifyDate1 = try currentVersion.url.resourceValues(forKeys: [.contentModificationDateKey])
+            print(modifyDate1.contentModificationDate)
+            var mostRecentDate = modifyDate1.contentModificationDate
+            var winner = currentVersion
+            for version in versionsInConflict {
+                let modifyDate = try version.url.resourceValues(forKeys: [.contentModificationDateKey])
+                print(modifyDate.contentModificationDate)
+                if
+                    let mostRecent = mostRecentDate,
+                    let newDate = modifyDate.contentModificationDate,
+                    newDate > mostRecent
+                {
+                    mostRecentDate = newDate
+                    winner = version
+                }
+            }
+            if winner != currentVersion {
+                try winner.replaceItem(at: documentURL)
+            }
+            try NSFileVersion.removeOtherVersionsOfItem(at: documentURL)
+        } catch {
+            print("Error getting file attributes: \(error)")
+        }
+    }
+
     public func setDbUrl(_ path: String) {
         do {
+            pickLatestVersion(for: URL(fileURLWithPath: path))
             dbConnection = try Connection(path)
         } catch {
             print(error)
@@ -75,7 +108,10 @@ class DBService {
                 throw TCError.genericError("Query was null")
             }
             for task in queryTasks {
-                let newData = task[TasksColumns.data].replacingOccurrences(of: "pending", with: "done")
+                let newData = task[TasksColumns.data].replacingOccurrences(
+                    of: Task.Status.pending.rawValue,
+                    with: Task.Status.completed.rawValue
+                )
                 print(newData)
                 try dbConnection?.run(query.update(TasksColumns.data <- newData))
             }
