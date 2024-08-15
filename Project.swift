@@ -13,6 +13,7 @@ let project = Project(
                     "UILaunchScreen": [
                         "UIColorName": "LaunchBackground"
                     ],
+                    "NSAccentColorName": "AccentColor",
                     "ITSAppUsesNonExemptEncryption": false,
                     "NSUbiquitousContainers": [
                         "iCloud.com.mav.taskchamp":

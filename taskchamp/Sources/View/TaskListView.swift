@@ -1,10 +1,13 @@
 import SwiftUI
+import UIKit
 
 public struct TaskListView: View {
     @State private var taskChampionFileUrlString: String?
     @State private var tasks: [Task] = []
 
-    public init() {}
+    public init() {
+        UINavigationBar.appearance().largeTitleTextAttributes = [.foregroundColor: UIColor.tintColor]
+    }
 
     func setDbUrl() throws {
         guard let path = taskChampionFileUrlString else {
@@ -52,7 +55,7 @@ public struct TaskListView: View {
                         Button {
                             updateTask(task.uuid, withStatus: .completed)
                         } label: {
-                            Label("Done", systemImage: "checkmark")
+                            Label("Done", systemImage: SFSymbols.checkmark.rawValue)
                         }
                         .tint(.green)
                     }
@@ -60,7 +63,7 @@ public struct TaskListView: View {
                         Button(role: .destructive) {
                             updateTask(task.uuid, withStatus: .deleted)
                         } label: {
-                            Label("Delete", systemImage: "trash")
+                            Label("Delete", systemImage: SFSymbols.trash.rawValue)
                         }
                     }
             }
@@ -68,9 +71,38 @@ public struct TaskListView: View {
         .refreshable {
             updateTasks()
         }
-        .listStyle(.insetGrouped)
+        .listStyle(.inset)
         .onAppear {
             copyDatabaseIfNeeded()
+        }
+        .toolbar {
+            ToolbarItemGroup(placement: .bottomBar) {
+                HStack {
+                    Button {} label: {
+                        Label(
+                            "New Task",
+                            systemImage: SFSymbols.plusCircleFill.rawValue
+                        )
+                        .labelStyle(.titleAndIcon)
+                        .imageScale(.large)
+                        .bold()
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                    .foregroundStyle(.tint)
+                    Spacer()
+                }
+            }
+            ToolbarItemGroup(placement: .topBarTrailing) {
+                Button {} label: {
+                    Label(
+                        "Options",
+                        systemImage: SFSymbols.ellipsisCircle.rawValue
+                    )
+                    .labelStyle(.titleAndIcon)
+                    .imageScale(.large)
+                    .bold()
+                }
+            }
         }
         .navigationTitle("My Tasks")
     }
