@@ -7,7 +7,7 @@ struct Task: Codable {
         case deleted
     }
 
-    enum Priority: String, Codable, Comparable {
+    enum Priority: String, Codable, Comparable, CaseIterable {
         static func < (lhs: Task.Priority, rhs: Task.Priority) -> Bool {
             switch (lhs, rhs) {
             case (.low, .medium), (.low, .high), (.medium, .high):
@@ -46,12 +46,28 @@ struct Task: Codable {
         }
     }
 
+    init(
+        uuid: String,
+        project: String? = nil,
+        description: String,
+        status: Status,
+        priority: Priority? = nil,
+        due: Date? = nil
+    ) {
+        self.uuid = uuid
+        self.project = project
+        self.description = description
+        self.status = status
+        self.priority = priority
+        self.due = due
+    }
+
     let uuid: String
-    let project: String?
-    let description: String
+    var project: String?
+    var description: String
     var status: Status
-    let priority: Priority?
-    let due: Date?
+    var priority: Priority?
+    var due: Date?
 
     var isCompleted: Bool {
         status == .completed

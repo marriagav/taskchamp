@@ -4,6 +4,7 @@ import UIKit
 public struct TaskListView: View {
     @State private var taskChampionFileUrlString: String?
     @State private var tasks: [Task] = []
+    @State private var isShowingCreateTaskView: Bool = false
 
     public init() {
         UINavigationBar.appearance().largeTitleTextAttributes = [.foregroundColor: UIColor.tintColor]
@@ -78,7 +79,9 @@ public struct TaskListView: View {
         .toolbar {
             ToolbarItemGroup(placement: .bottomBar) {
                 HStack {
-                    Button {} label: {
+                    Button {
+                        isShowingCreateTaskView.toggle()
+                    } label: {
                         Label(
                             "New Task",
                             systemImage: SFSymbols.plusCircleFill.rawValue
@@ -103,6 +106,9 @@ public struct TaskListView: View {
                     .bold()
                 }
             }
+        }
+        .sheet(isPresented: $isShowingCreateTaskView) {
+            CreateTaskView()
         }
         .navigationTitle("My Tasks")
     }
