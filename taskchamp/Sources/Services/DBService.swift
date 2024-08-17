@@ -22,24 +22,20 @@ class DBService {
 
     public func getPendingTasks() throws -> [Task] {
         var taskObjects: [Task] = []
-        do {
-            let tasks = Table("tasks")
-            let query = tasks.select(TasksColumns.data, TasksColumns.uuid)
-                .filter(TasksColumns.data.like("%\"status\":\"pending\"%"))
-            let queryTasks = try dbConnection?.prepare(query)
-            guard let queryTasks else {
-                throw TCError.genericError("Query was null")
-            }
-            for task in queryTasks {
-                if let taskObject = try parseTask(row: task) {
-                    taskObjects.append(taskObject)
-                }
-            }
-            TasksHelper.sortTasks(&taskObjects)
-            return taskObjects
-        } catch {
-            throw error
+        let tasks = Table("tasks")
+        let query = tasks.select(TasksColumns.data, TasksColumns.uuid)
+            .filter(TasksColumns.data.like("%\"status\":\"pending\"%"))
+        let queryTasks = try dbConnection?.prepare(query)
+        guard let queryTasks else {
+            throw TCError.genericError("Query was null")
         }
+        for task in queryTasks {
+            if let taskObject = try parseTask(row: task) {
+                taskObjects.append(taskObject)
+            }
+        }
+        TasksHelper.sortTasks(&taskObjects)
+        return taskObjects
     }
 
     private func parseTask(row: Row) throws -> Task? {
@@ -72,23 +68,26 @@ class DBService {
     }
 
     func updatePendingTask(_ uuid: String, withStatus newStatus: Task.Status) throws {
-        do {
-            let tasks = Table("tasks")
+        let tasks = Table("tasks")
 
-            let query = tasks.filter(TasksColumns.uuid == uuid)
-            let queryTasks = try dbConnection?.prepare(query)
-            guard let queryTasks else {
-                throw TCError.genericError("Query was null")
-            }
-            for task in queryTasks {
-                let newData = task[TasksColumns.data].replacingOccurrences(
-                    of: Task.Status.pending.rawValue,
-                    with: newStatus.rawValue
-                )
-                try dbConnection?.run(query.update(TasksColumns.data <- newData))
-            }
-        } catch {
-            throw error
+        let query = tasks.filter(TasksColumns.uuid == uuid)
+        let queryTasks = try dbConnection?.prepare(query)
+        guard let queryTasks else {
+            throw TCError.genericError("Query was null")
         }
+        for task in queryTasks {
+            let newData = task[TasksColumns.data].replacingOccurrences(
+                of: Task.Status.pending.rawValue,
+                with: newStatus.rawValue
+            )
+            try dbConnection?.run(query.update(TasksColumns.data <- newData))
+        }
+    }
+
+    func createTask(_ task: Task) throws {
+        let jsonData = try JSONEncoder().encode(task)
+        let jsonString = String(decoding: jsonData, as: UTF8.self)
+        let tasks = Table("tasks")
+        try dbConnection?.run(tasks.insert(TasksColumns.uuid <- task.uuid, TasksColumns.data <- jsonString))
     }
 }

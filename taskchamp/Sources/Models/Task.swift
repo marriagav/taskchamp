@@ -17,6 +17,7 @@ struct Task: Codable {
             }
         }
 
+        case none = "None"
         case low = "L"
         case medium = "M"
         case high = "H"
@@ -43,6 +44,18 @@ struct Task: Codable {
             due = Date(timeIntervalSince1970: timeInterval)
         } else {
             due = nil
+        }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(project, forKey: .project)
+        try container.encode(description, forKey: .description)
+        try container.encode(status, forKey: .status)
+        try container.encode(priority, forKey: .priority)
+        if let due = due {
+            let timeInterval = due.timeIntervalSince1970
+            try container.encode(String(timeInterval), forKey: .due)
         }
     }
 

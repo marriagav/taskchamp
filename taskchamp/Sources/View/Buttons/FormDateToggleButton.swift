@@ -3,25 +3,25 @@ import SwiftUI
 public struct FormDateToggleButton: View {
     var isOnlyTime: Bool
     @Binding var date: Date
-    @State private var isDateSet: Bool = false
+    @Binding var isSet: Bool
     @State private var isDateShowing: Bool = false
 
     public var body: some View {
         Button(
             action: {
-                if isDateSet {
+                if isSet {
                     withAnimation {
                         isDateShowing.toggle()
                     }
                 }
             },
             label: {
-                Toggle(isOn: $isDateSet) {
+                Toggle(isOn: $isSet) {
                     Label {
                         HStack {
                             Text(isOnlyTime ? "Time" : "Date")
                                 .foregroundStyle(.primary)
-                            if isDateSet {
+                            if isSet {
                                 Text(" • ")
                                     .foregroundStyle(.tertiary)
                                 Text(date, style: isOnlyTime ? .time : .date)
@@ -30,10 +30,10 @@ public struct FormDateToggleButton: View {
                             }
                         }
                     } icon: {
-                        Image(systemName: isOnlyTime ? "clock.fill" : "calendar")
+                        Image(systemName: isOnlyTime ? SFSymbols.clockFill.rawValue : SFSymbols.calendar.rawValue)
                             .foregroundStyle(.tint)
                     }
-                }.onChange(of: isDateSet) { _, newValue in
+                }.onChange(of: isSet) { _, newValue in
                     withAnimation {
                         isDateShowing = newValue
                     }
@@ -41,7 +41,7 @@ public struct FormDateToggleButton: View {
             }
         )
         .foregroundStyle(.primary)
-        if isDateSet && isDateShowing {
+        if isSet && isDateShowing {
             DatePicker(
                 isOnlyTime ? "Time" : "Date",
                 selection: $date,

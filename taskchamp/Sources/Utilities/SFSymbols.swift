@@ -5,4 +5,7 @@ enum SFSymbols: String {
     case checkmark
     case trash
     case ellipsisCircle = "ellipsis.circle"
+    case exclamationmark
+    case clockFill = "clock.fill"
+    case calendar
 }

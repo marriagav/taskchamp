@@ -10,8 +10,6 @@ public struct TaskCellView: View {
     public var body: some View {
         VStack {
             HStack {
-                // Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
-                //     .font(.largeTitle)
                 Text(task.description)
                     .font(.headline)
                 Spacer()
@@ -23,7 +21,7 @@ public struct TaskCellView: View {
             }
             .padding(.vertical, 5)
             HStack {
-                if let due = task.due {
+                if task.due != nil {
                     Text(task.localDate)
                         .font(.subheadline)
                 }
