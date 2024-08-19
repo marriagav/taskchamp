@@ -49,12 +49,12 @@ struct Task: Codable {
 
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(project, forKey: .project)
+        try container.encodeIfPresent(project, forKey: .project)
         try container.encode(description, forKey: .description)
         try container.encode(status, forKey: .status)
-        try container.encode(priority, forKey: .priority)
+        try container.encodeIfPresent(priority, forKey: .priority)
         if let due = due {
-            let timeInterval = due.timeIntervalSince1970
+            let timeInterval = due.timeIntervalSince1970.rounded()
             try container.encode(String(timeInterval), forKey: .due)
         }
     }

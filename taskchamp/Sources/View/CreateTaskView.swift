@@ -43,7 +43,7 @@ public struct CreateTaskView: View {
                         let finalDate = Calendar.current.mergeDateWithTime(date: date, time: time)
 
                         let task = Task(
-                            uuid: UUID().description,
+                            uuid: UUID().uuidString,
                             project: project.isEmpty ? nil : project,
                             description: description,
                             status: status,
