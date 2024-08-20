@@ -1,17 +1,12 @@
 import SwiftUI
 
 public struct TaskCellView: View {
-    private let task: Task
-
-    init(task: Task) {
-        self.task = task
-    }
+    let task: Task
 
     public var body: some View {
         VStack {
             HStack {
                 Text(task.description)
-                    .font(.headline)
                 Spacer()
                 if let project = task.project {
                     Text(project)
@@ -19,7 +14,7 @@ public struct TaskCellView: View {
                         .foregroundStyle(.secondary)
                 }
             }
-            .padding(.vertical, 5)
+            .padding(.vertical, 3)
             HStack {
                 if task.due != nil {
                     Text(task.localDate)

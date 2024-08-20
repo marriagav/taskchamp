@@ -135,6 +135,7 @@ public struct CreateTaskView: View {
                 Alert(title: Text(alertTitle), message: Text(alertMessage), dismissButton: .default(Text("OK")))
             }
             .navigationTitle("New Task")
+            .navigationBarTitleDisplayMode(.inline)
         }
     }
 }

@@ -51,6 +51,10 @@ public struct TaskListView: View {
 
     func copyDatabaseIfNeeded() {
         do {
+            if taskChampionFileUrlString != nil {
+                updateTasks()
+                return
+            }
             taskChampionFileUrlString = try FileService.shared.copyDatabaseIfNeededAndGetDestinationPath()
             updateTasks()
             return
