@@ -25,7 +25,7 @@ public struct EditTaskView: View {
     @FocusState private var isFocused: Bool
 
     var didChange: Bool {
-        task.project != project ||
+        task.project ?? "" != project ||
             task.description != description ||
             task.status != status ||
             task.priority != (priority == Task.Priority.none ? nil : priority) ||
