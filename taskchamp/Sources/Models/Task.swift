@@ -1,7 +1,7 @@
 import Foundation
 
-struct Task: Codable {
-    enum Status: String, Codable {
+struct Task: Codable, Hashable {
+    enum Status: String, Codable, CaseIterable {
         case pending
         case completed
         case deleted

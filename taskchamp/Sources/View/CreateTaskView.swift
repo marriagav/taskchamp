@@ -10,6 +10,9 @@ public struct CreateTaskView: View {
 
     @State private var didSetDate: Bool = false
     @State private var didSetTime: Bool = false
+    @State private var isDateShowing: Bool = false
+    @State private var isTimeShowing: Bool = false
+
     @State private var due: Date = .init()
     @State private var time: Date = .init()
 
@@ -29,12 +32,23 @@ public struct CreateTaskView: View {
                         .focused($isFocused)
                 }
                 Section {
-                    FormDateToggleButton(isOnlyTime: false, date: $due, isSet: $didSetDate)
-                    FormDateToggleButton(isOnlyTime: true, date: $time, isSet: $didSetTime)
+                    FormDateToggleButton(
+                        isOnlyTime: false,
+                        date: $due,
+                        isSet: $didSetDate,
+                        isDateShowing: $isDateShowing
+                    )
+                    FormDateToggleButton(
+                        isOnlyTime: true,
+                        date: $time,
+                        isSet: $didSetTime,
+                        isDateShowing: $isTimeShowing
+                    )
                 }
                 Section {
                     Picker("Priority", systemImage: SFSymbols.exclamationmark.rawValue, selection: $priority) {
                         Text(Task.Priority.none.rawValue.capitalized)
+                            .tag(Task.Priority.none)
                         Divider()
                         ForEach(Task.Priority.allCases, id: \.self) { priority in
                             if priority != .none {
@@ -89,6 +103,29 @@ public struct CreateTaskView: View {
                         Button("Done") {
                             isFocused = false
                         }
+                    }
+                }
+            }
+            .onChange(
+                of: didSetTime
+            ) { _, newValue in
+                if didSetTime {
+                    didSetDate = true
+                    isDateShowing = false
+                    withAnimation {
+                        isTimeShowing = newValue
+                    }
+                }
+            }
+            .onChange(
+                of: didSetDate
+            ) { _, newValue in
+                if !didSetDate {
+                    didSetTime = false
+                    isTimeShowing = false
+                } else if didSetDate, !didSetTime {
+                    withAnimation {
+                        isDateShowing = newValue
                     }
                 }
             }

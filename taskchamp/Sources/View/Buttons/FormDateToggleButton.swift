@@ -4,7 +4,7 @@ public struct FormDateToggleButton: View {
     var isOnlyTime: Bool
     @Binding var date: Date
     @Binding var isSet: Bool
-    @State private var isDateShowing: Bool = false
+    @Binding var isDateShowing: Bool
 
     public var body: some View {
         Button(
@@ -32,10 +32,6 @@ public struct FormDateToggleButton: View {
                     } icon: {
                         Image(systemName: isOnlyTime ? SFSymbols.clockFill.rawValue : SFSymbols.calendar.rawValue)
                             .foregroundStyle(.tint)
-                    }
-                }.onChange(of: isSet) { _, newValue in
-                    withAnimation {
-                        isDateShowing = newValue
                     }
                 }
             }

@@ -58,22 +58,24 @@ public struct TaskListView: View {
     public var body: some View {
         List(selection: $selection) {
             ForEach(tasks, id: \.uuid) { task in
-                TaskCellView(task: task)
-                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                        Button {
-                            updateTasks([task.uuid], withStatus: .completed)
-                        } label: {
-                            Label("Done", systemImage: SFSymbols.checkmark.rawValue)
-                        }
-                        .tint(.green)
+                NavigationLink(value: task) {
+                    TaskCellView(task: task)
+                }
+                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                    Button {
+                        updateTasks([task.uuid], withStatus: .completed)
+                    } label: {
+                        Label("Done", systemImage: SFSymbols.checkmark.rawValue)
                     }
-                    .swipeActions(edge: .leading, allowsFullSwipe: true) {
-                        Button(role: .destructive) {
-                            updateTasks([task.uuid], withStatus: .deleted)
-                        } label: {
-                            Label("Delete", systemImage: SFSymbols.trash.rawValue)
-                        }
+                    .tint(.green)
+                }
+                .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                    Button(role: .destructive) {
+                        updateTasks([task.uuid], withStatus: .deleted)
+                    } label: {
+                        Label("Delete", systemImage: SFSymbols.trash.rawValue)
                     }
+                }
             }
         }
         .refreshable {
@@ -143,6 +145,9 @@ public struct TaskListView: View {
         }, content: {
             CreateTaskView()
         })
+        .navigationDestination(for: Task.self) { task in
+            EditTaskView(task: task)
+        }
         .navigationTitle(
             isEditModeActive ? selection.isEmpty ? "Select Tasks" : "\(selection.count) Selected" :
                 "My Tasks"
