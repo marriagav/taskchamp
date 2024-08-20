@@ -130,7 +130,7 @@ public struct EditTaskView: View {
                     )
 
                     do {
-                        try DBService.shared.updatePendingTasks([task.uuid], withStatus: .completed)
+                        try DBService.shared.updateTask(task)
                         dismiss()
                     } catch {
                         isShowingAlert = true

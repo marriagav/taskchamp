@@ -157,9 +157,17 @@ public struct TaskListView: View {
             CreateTaskView()
         })
         .navigationDestination(for: Task.self) { task in
-            EditTaskView(task: task).onDisappear {
-                updateTasks()
-            }
+            EditTaskView(task: task)
+                .onDisappear {
+                    updateTasks()
+                }
+                .onAppear {
+                    do {
+                        try setDbUrl()
+                    } catch {
+                        print(error)
+                    }
+                }
         }
         .navigationTitle(
             isEditModeActive ? selection.isEmpty ? "Select Tasks" : "\(selection.count) Selected" :

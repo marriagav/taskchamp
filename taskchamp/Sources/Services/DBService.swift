@@ -84,6 +84,46 @@ class DBService {
         }
     }
 
+    func updateTask(_ task: Task) throws {
+        let jsonData = try JSONEncoder().encode(task)
+        var jsonDictionary = try? JSONSerialization
+            .jsonObject(with: jsonData, options: []) as? [String: Any]
+
+        let modifiedDate = String(Date().timeIntervalSince1970.rounded())
+
+        jsonDictionary?["modified"] = modifiedDate
+
+        let tasks = Table("tasks")
+        let query = tasks.filter(TasksColumns.uuid == task.uuid.lowercased())
+        let queryTasks = try dbConnection?.prepare(query)
+
+        guard let queryTasks else {
+            throw TCError.genericError("Query was null")
+        }
+
+        for task in queryTasks {
+            let oldData = task[TasksColumns.data].data(using: .utf8)
+            guard let oldData else {
+                throw TCError.genericError("oldData was null")
+            }
+            let oldJsonDictionary = try? JSONSerialization
+                .jsonObject(with: oldData, options: []) as? [String: Any]
+
+            guard let oldJsonDictionary, let jsonDictionary else {
+                throw TCError.genericError("jsonDictionary was null")
+            }
+            let mergedJsonDictionary = oldJsonDictionary.merging(jsonDictionary) { _, new in new }
+
+            let updatedJsonData = try? JSONSerialization.data(withJSONObject: mergedJsonDictionary, options: [])
+
+            guard let updatedJsonData else {
+                throw TCError.genericError("updatedJsonData was null")
+            }
+            let jsonString = String(decoding: updatedJsonData, as: UTF8.self)
+            try dbConnection?.run(query.update(TasksColumns.data <- jsonString))
+        }
+    }
+
     func createTask(_ task: Task) throws {
         let jsonData = try JSONEncoder().encode(task)
         var jsonDictionary = try? JSONSerialization
