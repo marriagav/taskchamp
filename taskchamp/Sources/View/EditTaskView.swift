@@ -35,14 +35,6 @@ public struct EditTaskView: View {
             )
     }
 
-    // func updateTasks(_ uuids: Set<String>, withStatus newStatus: Task.Status) {
-    //     do {
-    //         try DBService.shared.updatePendingTasks(uuids, withStatus: newStatus)
-    //     } catch {
-    //         print(error)
-    //     }
-    // }
-
     init(task: Task) {
         description = task.description
         project = task.project ?? ""
@@ -98,7 +90,7 @@ public struct EditTaskView: View {
             Section {
                 Button(action: {
                     do {
-                        // try DBService.shared.updateTaskStatus(task.uuid, withStatus: .completed)
+                        try DBService.shared.updatePendingTasks([task.uuid], withStatus: .completed)
                         dismiss()
                     } catch {
                         isShowingAlert = true
@@ -138,7 +130,7 @@ public struct EditTaskView: View {
                     )
 
                     do {
-                        try DBService.shared.createTask(task) // should be updateTask
+                        try DBService.shared.updatePendingTasks([task.uuid], withStatus: .completed)
                         dismiss()
                     } catch {
                         isShowingAlert = true
@@ -150,9 +142,27 @@ public struct EditTaskView: View {
                 .disabled(!didChange)
                 .bold()
             }
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button("Back") {
-                    dismiss()
+            ToolbarItemGroup(placement: .bottomBar) {
+                Spacer()
+                Menu {
+                    Button(role: .destructive) {
+                        do {
+                            try DBService.shared.updatePendingTasks([task.uuid], withStatus: .deleted)
+                            dismiss()
+                        } catch {
+                            isShowingAlert = true
+                            alertTitle = "There was an error"
+                            alertMessage = "Task failed to update. Please try again."
+                            print(error)
+                        }
+                    } label: {
+                        Label(
+                            "Delete task",
+                            systemImage: SFSymbols.trash.rawValue
+                        )
+                    }
+                } label: {
+                    Label("Delete", systemImage: SFSymbols.trash.rawValue)
                 }
             }
             ToolbarItem(placement: .keyboard) {

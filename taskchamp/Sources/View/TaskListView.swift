@@ -37,6 +37,10 @@ public struct TaskListView: View {
     func updateTasks() {
         do {
             try setDbUrl()
+            let newTasks = try DBService.shared.getPendingTasks()
+            if newTasks == tasks {
+                return
+            }
             try withAnimation {
                 tasks = try DBService.shared.getPendingTasks()
             }
@@ -91,16 +95,23 @@ public struct TaskListView: View {
                     HStack {
                         Button("Complete") {
                             updateTasks(selection, withStatus: .completed)
+                            selection.removeAll()
                         }
                         .disabled(selection.isEmpty)
                         Spacer()
-                        Button {
-                            updateTasks(selection, withStatus: .deleted)
+                        Menu {
+                            Button(role: .destructive) {
+                                updateTasks(selection, withStatus: .deleted)
+                                selection.removeAll()
+                            } label: {
+                                Label(
+                                    "Delete selected tasks",
+                                    systemImage: SFSymbols.trash.rawValue
+                                )
+                            }
+                            .disabled(selection.isEmpty)
                         } label: {
-                            Label(
-                                "Delete",
-                                systemImage: SFSymbols.trash.rawValue
-                            )
+                            Label("Delete", systemImage: SFSymbols.trash.rawValue)
                         }
                         .disabled(selection.isEmpty)
                     }
@@ -146,7 +157,9 @@ public struct TaskListView: View {
             CreateTaskView()
         })
         .navigationDestination(for: Task.self) { task in
-            EditTaskView(task: task)
+            EditTaskView(task: task).onDisappear {
+                updateTasks()
+            }
         }
         .navigationTitle(
             isEditModeActive ? selection.isEmpty ? "Select Tasks" : "\(selection.count) Selected" :
