@@ -4,7 +4,7 @@ import UIKit
 public struct TaskListView: View {
     @State private var taskChampionFileUrlString: String?
     @State private var tasks: [Task] = []
-    @State private var isShowingCreateTaskView: Bool = false
+    @State private var isShowingCreateTaskView = false
     @State private var selection = Set<String>()
 
     @State private var editMode: EditMode = .inactive

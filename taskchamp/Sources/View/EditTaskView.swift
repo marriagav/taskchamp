@@ -5,22 +5,22 @@ public struct EditTaskView: View {
 
     @Environment(\.dismiss) var dismiss
 
-    @State private var project: String = ""
-    @State private var description: String = ""
+    @State private var project = ""
+    @State private var description = ""
     @State private var status: Task.Status = .pending
     @State private var priority: Task.Priority = .none
 
-    @State private var didSetDate: Bool = false
-    @State private var didSetTime: Bool = false
-    @State private var isDateShowing: Bool = false
-    @State private var isTimeShowing: Bool = false
+    @State private var didSetDate = false
+    @State private var didSetTime = false
+    @State private var isDateShowing = false
+    @State private var isTimeShowing = false
 
     @State private var due: Date = .init()
     @State private var time: Date = .init()
 
-    @State private var isShowingAlert: Bool = false
-    @State private var alertTitle: String = ""
-    @State private var alertMessage: String = ""
+    @State private var isShowingAlert = false
+    @State private var alertTitle = ""
+    @State private var alertMessage = ""
 
     @FocusState private var isFocused: Bool
 
