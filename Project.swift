@@ -10,7 +10,7 @@ let project = Project(
             bundleId: "com.mav.taskchamp",
             infoPlist: .extendingDefault(
                 with: [
-                    "CBBundleDisplayName": "Taskchamp",
+                    "CFBundleName": "Taskchamp",
                     "CFBundleVersion": "2",
                     "UILaunchScreen": [
                         "UIColorName": "LaunchBackground"
