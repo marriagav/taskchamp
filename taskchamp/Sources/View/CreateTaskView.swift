@@ -13,12 +13,20 @@ public struct CreateTaskView: View {
     @State private var due: Date = .init()
     @State private var time: Date = .init()
 
+    @State private var isShowingAlert: Bool = false
+    @State private var alertTitle: String = ""
+    @State private var alertMessage: String = ""
+
+    @FocusState private var isFocused: Bool
+
     public var body: some View {
         NavigationStack {
             Form {
                 Section {
                     TextField("Task name", text: $description)
+                        .focused($isFocused)
                     TextField("Project", text: $project)
+                        .focused($isFocused)
                 }
                 Section {
                     FormDateToggleButton(isOnlyTime: false, date: $due, isSet: $didSetDate)
@@ -38,6 +46,13 @@ public struct CreateTaskView: View {
             }.toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") {
+                        if description.isEmpty {
+                            isShowingAlert = true
+                            alertTitle = "Missing field"
+                            alertMessage = "Please enter a task name"
+                            return
+                        }
+
                         let date: Date? = didSetDate ? due : nil
                         let time: Date? = didSetTime ? time : nil
                         let finalDate = Calendar.current.mergeDateWithTime(date: date, time: time)
@@ -55,6 +70,9 @@ public struct CreateTaskView: View {
                             try DBService.shared.createTask(task)
                             dismiss()
                         } catch {
+                            isShowingAlert = true
+                            alertTitle = "There was an error"
+                            alertMessage = "Task failed to create. Please try again."
                             print(error)
                         }
                     }
@@ -65,6 +83,19 @@ public struct CreateTaskView: View {
                         dismiss()
                     }
                 }
+                ToolbarItem(placement: .keyboard) {
+                    HStack {
+                        Spacer()
+                        Button("Done") {
+                            isFocused = false
+                        }
+                    }
+                }
+            }
+            .animation(.default, value: didSetDate)
+            .animation(.default, value: didSetTime)
+            .alert(isPresented: $isShowingAlert) {
+                Alert(title: Text(alertTitle), message: Text(alertMessage), dismissButton: .default(Text("OK")))
             }
             .navigationTitle("New Task")
         }

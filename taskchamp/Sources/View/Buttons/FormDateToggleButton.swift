@@ -42,17 +42,23 @@ public struct FormDateToggleButton: View {
         )
         .foregroundStyle(.primary)
         if isSet && isDateShowing {
-            DatePicker(
-                isOnlyTime ? "Time" : "Date",
-                selection: $date,
-                displayedComponents: [isOnlyTime ? .hourAndMinute : .date]
-            )
-            .if(isOnlyTime) { view in
-                view.datePickerStyle(.wheel)
+            HStack {
+                Spacer()
+                DatePicker(
+                    isOnlyTime ? "Time" : "Date",
+                    selection: $date,
+                    displayedComponents: [isOnlyTime ? .hourAndMinute : .date]
+                )
+                .if(isOnlyTime) { view in
+                    view.datePickerStyle(.wheel)
+                }
+                .if(!isOnlyTime) { view in
+                    view.datePickerStyle(.graphical)
+                }
+                .labelsHidden()
+                Spacer()
             }
-            .if(!isOnlyTime) { view in
-                view.datePickerStyle(.graphical)
-            }
+            .listRowInsets(.init(top: 0, leading: 10, bottom: 0, trailing: 10))
         }
     }
 }

@@ -18,9 +18,9 @@ struct Task: Codable {
         }
 
         case none = "None"
-        case low = "L"
-        case medium = "M"
         case high = "H"
+        case medium = "M"
+        case low = "L"
     }
 
     enum CodingKeys: String, CodingKey {

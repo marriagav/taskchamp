@@ -13,10 +13,10 @@ public struct TaskCellView: View {
                 Text(task.description)
                     .font(.headline)
                 Spacer()
-                if let priority = task.priority {
-                    Text(priority.rawValue)
-                        .font(.subheadline)
-                        .foregroundStyle(priority == .high ? .red : priority == .medium ? .orange : .green)
+                if let project = task.project {
+                    Text(project)
+                        .font(.subheadline.italic())
+                        .foregroundStyle(.secondary)
                 }
             }
             .padding(.vertical, 5)
@@ -24,11 +24,13 @@ public struct TaskCellView: View {
                 if task.due != nil {
                     Text(task.localDate)
                         .font(.subheadline)
+                        .foregroundStyle(.secondary)
                 }
                 Spacer()
-                if let project = task.project {
-                    Text(project)
-                        .font(.subheadline.italic())
+                if let priority = task.priority {
+                    Text(priority.rawValue)
+                        .font(.subheadline)
+                        .foregroundStyle(priority == .high ? .red : priority == .medium ? .orange : .green)
                 }
             }
         }

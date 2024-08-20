@@ -2,8 +2,8 @@
   "colors" : [
     {
       "color" : {
-        "platform" : "osx",
-        "reference" : "controlAccentColor"
+        "platform" : "tvos",
+        "reference" : "systemIndigoColor"
       },
       "idiom" : "universal"
     }

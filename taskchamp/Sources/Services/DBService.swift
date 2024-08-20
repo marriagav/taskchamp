@@ -67,10 +67,10 @@ class DBService {
         return nil
     }
 
-    func updatePendingTask(_ uuid: String, withStatus newStatus: Task.Status) throws {
+    func updatePendingTasks(_ uuids: Set<String>, withStatus newStatus: Task.Status) throws {
         let tasks = Table("tasks")
 
-        let query = tasks.filter(TasksColumns.uuid == uuid)
+        let query = tasks.filter(uuids.contains(TasksColumns.uuid))
         let queryTasks = try dbConnection?.prepare(query)
         guard let queryTasks else {
             throw TCError.genericError("Query was null")
