@@ -80,6 +80,7 @@ public struct TaskListView: View {
                         Label("Delete", systemImage: SFSymbols.trash.rawValue)
                     }
                 }
+                .listRowBackground(Color.clear)
             }
         }
         .refreshable {
@@ -150,6 +151,9 @@ public struct TaskListView: View {
             ToolbarItemGroup(placement: .topBarLeading) {
                 EditButton()
             }
+        }
+        .onChange(of: isEditModeActive) {
+            selection.removeAll()
         }
         .sheet(isPresented: $isShowingCreateTaskView, onDismiss: {
             updateTasks()
