@@ -1,4 +1,5 @@
 import SwiftUI
+import taskchampShared
 
 public struct TaskCellView: View {
     let task: Task

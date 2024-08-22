@@ -1,4 +1,5 @@
 import Foundation
+import taskchampShared
 
 class FileService {
     static let shared = FileService()

@@ -1,4 +1,5 @@
 import SwiftUI
+import taskchampShared
 
 public struct CreateTaskView: View {
     @Environment(\.dismiss) var dismiss

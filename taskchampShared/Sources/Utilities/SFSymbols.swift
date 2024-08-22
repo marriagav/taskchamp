@@ -1,6 +1,6 @@
 import Foundation
 
-enum SFSymbols: String {
+public enum SFSymbols: String {
     case plusCircleFill = "plus.circle.fill"
     case checkmark
     case trash

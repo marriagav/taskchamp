@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import taskchampShared
 
 public struct TaskListView: View {
     @State private var taskChampionFileUrlString: String?

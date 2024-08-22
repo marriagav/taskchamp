@@ -40,7 +40,7 @@ let project = Project(
                 .pre(script: "./scripts/pre_build_script.sh", name: "Prebuild", basedOnDependencyAnalysis: false)
             ],
             dependencies: [
-                .external(name: "SQLite")
+                .target(name: "taskchampShared")
             ]
         ),
         .target(
@@ -52,6 +52,34 @@ let project = Project(
             sources: ["taskchamp/Tests/**"],
             resources: [],
             dependencies: [.target(name: "taskchamp")]
+        ),
+        .target(
+            name: "taskchampWidget",
+            destinations: .iOS,
+            product: .appExtension,
+            bundleId: "com.mav.taskchamp.taskchampWidget",
+            infoPlist: .extendingDefault(with: [
+                "CFBundleDisplayName": "$(PRODUCT_NAME)",
+                "NSExtension": [
+                    "NSExtensionPointIdentifier": "com.apple.widgetkit-extension"
+                ]
+            ]),
+            sources: "taskchampWidget/Sources/**",
+            resources: "taskchampWidget/Resources/**",
+            dependencies: [
+                .target(name: "taskchampShared")
+            ]
+        ),
+        .target(
+            name: "taskchampShared",
+            destinations: .iOS,
+            product: .staticFramework,
+            bundleId: "com.mav.taskchamp.taskchampShared",
+            infoPlist: .default,
+            sources: "taskchampShared/Sources/**",
+            dependencies: [
+                .external(name: "SQLite")
+            ]
         )
     ]
 )

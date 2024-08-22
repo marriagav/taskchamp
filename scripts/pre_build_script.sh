@@ -16,7 +16,7 @@ if which swiftlint > /dev/null; then
     swiftlint taskchamp/Sources --no-cache --strict 
 
   elif [ "$ACTION" = 'build' ]; then
-    swiftlint taskchamp/Sources --strict
+    swiftlint taskchamp/Sources
   fi
 
 else

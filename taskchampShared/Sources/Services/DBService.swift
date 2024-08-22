@@ -1,13 +1,13 @@
 import Foundation
 import SQLite
 
-class DBService {
+public class DBService {
     enum TasksColumns {
         static let uuid = Expression<String>("uuid")
         static let data = Expression<String>("data")
     }
 
-    static let shared = DBService()
+    public static let shared = DBService()
     private var dbConnection: Connection?
 
     private init() {}
@@ -67,7 +67,7 @@ class DBService {
         return nil
     }
 
-    func updatePendingTasks(_ uuids: Set<String>, withStatus newStatus: Task.Status) throws {
+    public func updatePendingTasks(_ uuids: Set<String>, withStatus newStatus: Task.Status) throws {
         let tasks = Table("tasks")
 
         let query = tasks.filter(uuids.contains(TasksColumns.uuid))
@@ -84,7 +84,7 @@ class DBService {
         }
     }
 
-    func updateTask(_ task: Task) throws {
+    public func updateTask(_ task: Task) throws {
         let jsonData = try JSONEncoder().encode(task)
         var jsonDictionary = try? JSONSerialization
             .jsonObject(with: jsonData, options: []) as? [String: Any]
@@ -124,7 +124,7 @@ class DBService {
         }
     }
 
-    func createTask(_ task: Task) throws {
+    public func createTask(_ task: Task) throws {
         let jsonData = try JSONEncoder().encode(task)
         var jsonDictionary = try? JSONSerialization
             .jsonObject(with: jsonData, options: []) as? [String: Any]
