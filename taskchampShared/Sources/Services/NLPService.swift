@@ -57,7 +57,7 @@ public class NLPService {
         }
         let date = nlpDate?.dateValue
 
-        let priority = TCTask.Priority(rawValue: prio ?? "") ?? .none
+        let priority = TCTask.Priority(rawValue: prio ?? "")
 
         let task = TCTask(
             uuid: UUID().uuidString,
