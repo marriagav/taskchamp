@@ -53,6 +53,7 @@ struct TaskchampWidgetEntryView: View {
                     Text("Your tasks")
                         .bold()
                         .foregroundStyle(.indigo)
+                        .font(family == .systemLarge ? .title2 : .body)
                     Spacer()
                     Link(destination: TCTask.newTaskUrl) {
                         Image(systemName: SFSymbols.plusCircleFill.rawValue)
@@ -62,11 +63,6 @@ struct TaskchampWidgetEntryView: View {
                 }
             }
             ViewThatFits {
-                if family == .systemExtraLarge {
-                    TasksThatFitView(entry: entry, items: 13, family: family)
-                    TasksThatFitView(entry: entry, items: 10, family: family)
-                    TasksThatFitView(entry: entry, items: 7, family: family)
-                }
                 if family == .systemLarge {
                     TasksThatFitView(entry: entry, items: 10, family: family)
                     TasksThatFitView(entry: entry, items: 7, family: family)
