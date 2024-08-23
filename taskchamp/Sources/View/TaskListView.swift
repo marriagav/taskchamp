@@ -89,6 +89,22 @@ public struct TaskListView: View {
                 .listRowBackground(Color.clear)
             }
         }
+        .overlay(
+            Group {
+                if tasks.isEmpty {
+                    ContentUnavailableView {
+                        Label("No new tasks", systemImage: "bolt.heart")
+                    } description: {
+                        Text("Use this time to relax or add new tasks!")
+                    } actions: {
+                        Button("New task") {
+                            isShowingCreateTaskView.toggle()
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
+                }
+            }
+        )
         .refreshable {
             updateTasks()
         }
@@ -155,7 +171,9 @@ public struct TaskListView: View {
                 }
             }
             ToolbarItemGroup(placement: .topBarLeading) {
-                EditButton()
+                if !tasks.isEmpty {
+                    EditButton()
+                }
             }
         }
         .onChange(of: isEditModeActive) {
@@ -180,7 +198,7 @@ public struct TaskListView: View {
                 }
         }
         .navigationTitle(
-            isEditModeActive ? selection.isEmpty ? "Select Tasks" : "\(selection.count) Selected" :
+            tasks.isEmpty ? "" : isEditModeActive ? selection.isEmpty ? "Select Tasks" : "\(selection.count) Selected" :
                 "My Tasks"
         )
         .environment(\.editMode, $editMode)
