@@ -74,7 +74,6 @@ let project = Project(
                 ]
             ]),
             sources: "taskchampWidget/Sources/**",
-            resources: "taskchampWidget/Resources/**",
             entitlements: .dictionary(
                 [
                     "com.apple.developer.icloud-container-identifiers": ["iCloud.com.mav.taskchamp"],
