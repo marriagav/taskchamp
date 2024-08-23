@@ -49,6 +49,7 @@ public struct CreateTaskView: View {
                                 let timeComponents = calendar.dateComponents([.hour, .minute, .second], from: due)
                                 self.due = calendar.date(from: dateComponents) ?? .init()
                                 time = calendar.date(from: timeComponents) ?? .init()
+                                isTimeShowing = false
                             }
                         }
                 } header: {
