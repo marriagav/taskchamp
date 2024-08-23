@@ -4,6 +4,7 @@ import UIKit
 
 public struct TaskListView: View {
     @Environment(PathStore.self) var pathStore
+    @Environment(\.scenePhase) var scenePhase
 
     @State private var taskChampionFileUrlString: String?
     @State private var tasks: [TCTask] = []
@@ -222,6 +223,11 @@ public struct TaskListView: View {
                 } catch {
                     print(error)
                 }
+            }
+        }
+        .onChange(of: scenePhase) { _, newScenePhase in
+            if newScenePhase == .active {
+                copyDatabaseIfNeeded()
             }
         }
     }

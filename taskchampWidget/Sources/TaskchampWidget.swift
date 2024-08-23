@@ -49,7 +49,7 @@ struct TaskchampWidgetEntryView: View {
         VStack(spacing: 10) {
             if family != .systemSmall {
                 HStack {
-                    Text("Your tasks")
+                    Text("My tasks")
                         .bold()
                         .foregroundStyle(.indigo)
                         .font(family == .systemLarge ? .title2 : .body)
@@ -77,9 +77,9 @@ struct TaskchampWidgetEntryView: View {
             } else {
                 ViewThatFits {
                     if family == .systemLarge {
-                        TasksThatFitView(entry: entry, items: 10, family: family)
+                        TasksThatFitView(entry: entry, items: 9, family: family)
+                        TasksThatFitView(entry: entry, items: 8, family: family)
                         TasksThatFitView(entry: entry, items: 7, family: family)
-                        TasksThatFitView(entry: entry, items: 5, family: family)
                     }
                     if family == .systemMedium {
                         TasksThatFitView(entry: entry, items: 4, family: family)

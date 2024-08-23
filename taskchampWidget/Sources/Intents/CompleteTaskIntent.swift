@@ -18,6 +18,8 @@ struct CompleteTaskIntent: AppIntent {
         let destinationPath = try FileService.shared.getDestinationPath()
         DBService.shared.setDbUrl(destinationPath)
 
+        try? DBService.shared.togglePendingTasksStatus(uuids: [taskId])
+
         try? await Task.sleep(nanoseconds: 1_000_000_000)
         return .result()
     }
