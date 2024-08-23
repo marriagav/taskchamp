@@ -31,10 +31,26 @@ public struct CreateTaskView: View {
         NavigationStack {
             Form {
                 Section {
-                    TextField("New Task@tomorrow at 1pm@ project:my-project prio:M", text: $nlpInput)
+                    TextEditor(text: $nlpInput)
                         .font(.system(.body, design: .monospaced))
                         .autocapitalization(.none)
+                        .autocorrectionDisabled()
                         .focused($isFocused)
+                        .onChange(of: nlpInput) { _, input in
+                            let nlpTask = try? NLPService.shared.createTask(from: input)
+                            self.description = nlpTask?.description ?? ""
+                            self.project = nlpTask?.project ?? ""
+                            self.priority = nlpTask?.priority ?? .none
+                            if let due = nlpTask?.due {
+                                didSetDate = true
+                                didSetTime = true
+                                let calendar = Calendar.current
+                                let dateComponents = calendar.dateComponents([.year, .month, .day], from: due)
+                                let timeComponents = calendar.dateComponents([.hour, .minute, .second], from: due)
+                                self.due = calendar.date(from: dateComponents) ?? .init()
+                                time = calendar.date(from: timeComponents) ?? .init()
+                            }
+                        }
                 } header: {
                     HStack {
                         Text("Command Line Input")
@@ -46,17 +62,17 @@ public struct CreateTaskView: View {
                         .popover(isPresented: $showNlpInfoPopover, attachmentAnchor: .point(.bottom)) {
                             VStack(alignment: .leading, spacing: 10) {
                                 Spacer()
+                                Text(
+                                    "Create a task via a command line input. The format is as follows:"
+                                )
+                                .padding(.top)
                                 Text("New Task@tomorrow at 1pm@ project:my-project prio:M")
                                     .font(.system(.body, design: .monospaced))
                                 Text(
-                                    """
-                                    This will create the following task:
-                                    • Description 'New Task'
-                                    • Due tomorrow at 1pm
-                                    • Project 'my-project'
-                                    • Priority 'M'
-                                    """
+                                    "Manually updating the fields will override the values from the command line input."
                                 )
+                                .bold()
+                                .padding(.bottom)
                                 Spacer()
                             }
                             .textCase(nil)

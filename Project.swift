@@ -93,7 +93,8 @@ let project = Project(
             infoPlist: .default,
             sources: "taskchampShared/Sources/**",
             dependencies: [
-                .external(name: "SQLite")
+                .external(name: "SQLite"),
+                .external(name: "SoulverCore")
             ]
         )
     ]
