@@ -4,38 +4,87 @@ import WidgetKit
 
 struct Provider: TimelineProvider {
     func placeholder(in _: Context) -> TaskEntry {
-        TaskEntry(date: Date(), task: Task(uuid: "test", description: "test", status: .pending))
+        let tasks = getTasks()
+        let entry = TaskEntry(date: Date(), tasks: tasks)
+        return entry
     }
 
     func getSnapshot(in _: Context, completion: @escaping (TaskEntry) -> Void) {
-        let entry = TaskEntry(date: Date(), task: Task(uuid: "test", description: "test", status: .pending))
+        let tasks = getTasks()
+        let entry = TaskEntry(date: Date(), tasks: tasks)
         completion(entry)
     }
 
     func getTimeline(in _: Context, completion: @escaping (Timeline<TaskEntry>) -> Void) {
-        let entry = TaskEntry(date: Date(), task: Task(uuid: "test", description: "test", status: .pending))
+        let tasks = getTasks()
+        let entry = TaskEntry(date: Date(), tasks: tasks)
         let timeline = Timeline(entries: [entry], policy: .atEnd)
         completion(timeline)
+    }
+
+    func getTasks() -> [Task] {
+        do {
+            let destinationPath = try FileService.shared.getDestinationPath()
+            DBService.shared.setDbUrl(destinationPath)
+            let tasks = try DBService.shared.getPendingTasks()
+            print("tasks: \(tasks)")
+            return tasks
+        } catch {
+            print("Error getting tasks \(error)")
+            return []
+            // throw TCError.genericError("Error getting tasks \(error)")
+        }
     }
 }
 
 struct TaskEntry: TimelineEntry {
     let date: Date
-    let task: Task
+    let tasks: [Task]
 }
 
 struct TaskchampWidgetEntryView: View {
+    @Environment(\.widgetFamily) var family
     var entry: Provider.Entry
 
     var body: some View {
-        VStack {
-            Text(entry.task.description)
-                .font(.title)
-                .padding()
-            Text(entry.task.project ?? "")
-                .font(.subheadline)
-                .padding()
+        VStack(spacing: 10) {
+            if family != .systemSmall {
+                HStack {
+                    Text("Your tasks")
+                        .bold()
+                        .foregroundStyle(.indigo)
+                    Spacer()
+                    Link(destination: URL(string: "taskchamp://")!) {
+                        Image(systemName: "plus.circle.fill")
+                            .font(family == .systemLarge ? .title : .title2)
+                    }
+                    .foregroundStyle(.indigo)
+                }
+            }
+            ViewThatFits {
+                if family == .systemExtraLarge {
+                    TasksThatFitView(entry: entry, items: 13, family: family)
+                    TasksThatFitView(entry: entry, items: 10, family: family)
+                    TasksThatFitView(entry: entry, items: 7, family: family)
+                }
+                if family == .systemLarge {
+                    TasksThatFitView(entry: entry, items: 10, family: family)
+                    TasksThatFitView(entry: entry, items: 7, family: family)
+                    TasksThatFitView(entry: entry, items: 5, family: family)
+                }
+                if family == .systemMedium {
+                    TasksThatFitView(entry: entry, items: 4, family: family)
+                    TasksThatFitView(entry: entry, items: 3, family: family)
+                }
+                if family == .systemSmall {
+                    TasksThatFitView(entry: entry, items: 4, family: family)
+                }
+            }
+            if family != .systemSmall {
+                Spacer()
+            }
         }
+        .containerBackground(.background, for: .widget)
     }
 }
 
@@ -49,5 +98,31 @@ struct TaskchampWidget: Widget {
         .configurationDisplayName("Taskchamp")
         .description("Keep track of your tasks")
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
+    }
+}
+
+struct CheckToggleStyle: ToggleStyle {
+    let priority: Task.Priority
+    func makeBody(configuration: Configuration) -> some View {
+        HStack {
+            Button {
+                configuration.isOn.toggle()
+            } label: {
+                Image(systemName: configuration.isOn ? "checkmark.circle.fill" : "circle")
+                    .foregroundStyle(
+                        priority == .high ? .red : priority == .medium ? .orange : priority == .low ?
+                            .green : .secondary
+                    )
+                    .accessibility(label: Text(configuration.isOn ? "Checked" : "Unchecked"))
+                    .imageScale(.medium)
+            }
+            Spacer()
+            configuration.label
+                .foregroundStyle(
+                    configuration.isOn ? .secondary :
+                        .primary
+                )
+        }
+        .buttonStyle(.plain)
     }
 }

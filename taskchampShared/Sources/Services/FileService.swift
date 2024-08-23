@@ -1,10 +1,26 @@
 import Foundation
-import taskchampShared
 
-class FileService {
-    static let shared = FileService()
+public class FileService {
+    public static let shared = FileService()
 
     private init() {}
+
+    public func getDestinationPath() throws -> String {
+        let containerURL = FileManager.default.url(forUbiquityContainerIdentifier: nil)
+        guard let containerURL = containerURL else {
+            throw TCError.genericError("No container URL")
+        }
+
+        let documentsURL = containerURL.appendingPathComponent("Documents")
+        let taskDirectory = documentsURL.appendingPathComponent("task")
+        let destinationPath = taskDirectory.appendingPathComponent("taskchampion.sqlite3")
+
+        let exists = FileManager.default.fileExists(atPath: destinationPath.path)
+        guard exists else {
+            throw TCError.genericError("File not found")
+        }
+        return destinationPath.path
+    }
 
     public func copyDatabaseIfNeededAndGetDestinationPath() throws -> String {
         let sourcePath = Bundle.main.path(forResource: "taskchampion", ofType: "sqlite3")

@@ -11,7 +11,7 @@ let project = Project(
             infoPlist: .extendingDefault(
                 with: [
                     "CFBundleName": "Taskchamp",
-                    "CFBundleVersion": "2",
+                    /*     "CFBundleVersion": "2", */
                     "UILaunchScreen": [
                         "UIColorName": "LaunchBackground"
                     ],
@@ -40,7 +40,8 @@ let project = Project(
                 .pre(script: "./scripts/pre_build_script.sh", name: "Prebuild", basedOnDependencyAnalysis: false)
             ],
             dependencies: [
-                .target(name: "taskchampShared")
+                .target(name: "taskchampShared"),
+                .target(name: "taskchampWidget")
             ]
         ),
         .target(
@@ -62,10 +63,25 @@ let project = Project(
                 "CFBundleDisplayName": "$(PRODUCT_NAME)",
                 "NSExtension": [
                     "NSExtensionPointIdentifier": "com.apple.widgetkit-extension"
+                ],
+                "NSUbiquitousContainers": [
+                    "iCloud.com.mav.taskchamp":
+                        [
+                            "NSUbiquitousContainerIsDocumentScopePublic": true,
+                            "NSUbiquitousContainerName": "taskchamp",
+                            "NSUbiquitousContainerSupportedFolderLevels": "Any"
+                        ]
                 ]
             ]),
             sources: "taskchampWidget/Sources/**",
             resources: "taskchampWidget/Resources/**",
+            entitlements: .dictionary(
+                [
+                    "com.apple.developer.icloud-container-identifiers": ["iCloud.com.mav.taskchamp"],
+                    "com.apple.developer.icloud-services": ["CloudDocuments"],
+                    "com.apple.developer.ubiquity-container-identifiers": ["iCloud.com.mav.taskchamp"]
+                ]
+            ),
             dependencies: [
                 .target(name: "taskchampShared")
             ]

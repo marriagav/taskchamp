@@ -95,4 +95,14 @@ public struct Task: Codable, Hashable {
         dateFormatter.timeStyle = .short
         return dateFormatter.string(from: due)
     }
+
+    public var localDateShort: String {
+        guard let due = due else {
+            return ""
+        }
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateStyle = .medium
+        dateFormatter.timeStyle = .none
+        return dateFormatter.string(from: due)
+    }
 }
