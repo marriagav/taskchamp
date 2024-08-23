@@ -1,5 +1,6 @@
 import Foundation
 import SQLite
+import WidgetKit
 
 public class DBService {
     enum TasksColumns {
@@ -25,6 +26,7 @@ public class DBService {
         let tasks = Table("tasks")
         let query = tasks.select(TasksColumns.data, TasksColumns.uuid)
             .filter(TasksColumns.data.like("%\"status\":\"pending\"%"))
+        WidgetCenter.shared.reloadAllTimelines()
         let queryTasks = try dbConnection?.prepare(query)
         guard let queryTasks else {
             throw TCError.genericError("Query was null")
@@ -114,6 +116,7 @@ public class DBService {
                 with: newStatus.rawValue
             )
             try dbConnection?.run(query.update(TasksColumns.data <- newData))
+            WidgetCenter.shared.reloadAllTimelines()
         }
     }
 
@@ -154,6 +157,7 @@ public class DBService {
             }
             let jsonString = String(decoding: updatedJsonData, as: UTF8.self)
             try dbConnection?.run(query.update(TasksColumns.data <- jsonString))
+            WidgetCenter.shared.reloadAllTimelines()
         }
     }
 
@@ -183,5 +187,6 @@ public class DBService {
             TasksColumns.uuid <- task.uuid.lowercased(),
             TasksColumns.data <- jsonString
         ))
+        WidgetCenter.shared.reloadAllTimelines()
     }
 }
