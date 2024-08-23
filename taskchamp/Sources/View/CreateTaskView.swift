@@ -4,6 +4,10 @@ import taskchampShared
 public struct CreateTaskView: View {
     @Environment(\.dismiss) var dismiss
 
+    @State private var nlpInput = ""
+    @State private var nlpPlaceholder = "New Task@tomorrow at 1pm@ project:my-project prio:M"
+    @State private var showNlpInfoPopover = false
+
     @State private var project = ""
     @State private var description = ""
     @State private var status: TCTask.Status = .pending
@@ -26,6 +30,42 @@ public struct CreateTaskView: View {
     public var body: some View {
         NavigationStack {
             Form {
+                Section {
+                    TextField("New Task@tomorrow at 1pm@ project:my-project prio:M", text: $nlpInput)
+                        .font(.system(.body, design: .monospaced))
+                        .autocapitalization(.none)
+                        .focused($isFocused)
+                } header: {
+                    HStack {
+                        Text("Command Line Input")
+                        Button {
+                            showNlpInfoPopover.toggle()
+                        } label: {
+                            Image(systemName: SFSymbols.questionmarkCircle.rawValue)
+                        }
+                        .popover(isPresented: $showNlpInfoPopover, attachmentAnchor: .point(.bottom)) {
+                            VStack(alignment: .leading, spacing: 10) {
+                                Spacer()
+                                Text("New Task@tomorrow at 1pm@ project:my-project prio:M")
+                                    .font(.system(.body, design: .monospaced))
+                                Text(
+                                    """
+                                    This will create the following task:
+                                    • Description 'New Task'
+                                    • Due tomorrow at 1pm
+                                    • Project 'my-project'
+                                    • Priority 'M'
+                                    """
+                                )
+                                Spacer()
+                            }
+                            .textCase(nil)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding()
+                            .presentationCompactAdaptation(.popover)
+                        }
+                    }
+                }
                 Section {
                     TextField("Task name", text: $description)
                         .focused($isFocused)
