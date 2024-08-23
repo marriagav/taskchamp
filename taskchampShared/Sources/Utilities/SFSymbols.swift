@@ -8,4 +8,6 @@ public enum SFSymbols: String {
     case exclamationmark
     case clockFill = "clock.fill"
     case calendar
+    case circle
+    case checkmarkCircleFill = "checkmark.circle.fill"
 }

@@ -1,6 +1,6 @@
 import Foundation
 
-public struct Task: Codable, Hashable {
+public struct TCTask: Codable, Hashable {
     public enum Status: String, Codable, CaseIterable {
         case pending
         case completed
@@ -8,7 +8,7 @@ public struct Task: Codable, Hashable {
     }
 
     public enum Priority: String, Codable, Comparable, CaseIterable {
-        public static func < (lhs: Task.Priority, rhs: Task.Priority) -> Bool {
+        public static func < (lhs: TCTask.Priority, rhs: TCTask.Priority) -> Bool {
             switch (lhs, rhs) {
             case (.low, .medium), (.low, .high), (.medium, .high):
                 return true
@@ -104,5 +104,21 @@ public struct Task: Codable, Hashable {
         dateFormatter.dateStyle = .medium
         dateFormatter.timeStyle = .none
         return dateFormatter.string(from: due)
+    }
+
+    public var url: URL {
+        guard let url = URL(string: "taskchamp://task/\(uuid)") else {
+            fatalError("Failed to construct url.")
+        }
+
+        return url
+    }
+
+    public static var newTaskUrl: URL {
+        guard let url = URL(string: "taskchamp://task/new") else {
+            fatalError("Failed to construct url.")
+        }
+
+        return url
     }
 }

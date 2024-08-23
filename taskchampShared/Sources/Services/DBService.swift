@@ -20,8 +20,8 @@ public class DBService {
         }
     }
 
-    public func getPendingTasks() throws -> [Task] {
-        var taskObjects: [Task] = []
+    public func getPendingTasks() throws -> [TCTask] {
+        var taskObjects: [TCTask] = []
         let tasks = Table("tasks")
         let query = tasks.select(TasksColumns.data, TasksColumns.uuid)
             .filter(TasksColumns.data.like("%\"status\":\"pending\"%"))
@@ -38,7 +38,23 @@ public class DBService {
         return taskObjects
     }
 
-    private func parseTask(row: Row) throws -> Task? {
+    public func getTask(uuid: String) throws -> TCTask {
+        let tasks = Table("tasks")
+        let query = tasks.filter(uuid == TasksColumns.uuid)
+        let queryTasks = try dbConnection?.prepare(query)
+        guard let queryTasks else {
+            throw TCError.genericError("Query was null")
+        }
+        for task in queryTasks {
+            let taskObject = try parseTask(row: task)
+            if let taskObject {
+                return taskObject
+            }
+        }
+        throw TCError.genericError("Task not found")
+    }
+
+    private func parseTask(row: Row) throws -> TCTask? {
         let jsonObject = row[TasksColumns.data]
         let jsonData = jsonObject.data(using: .utf8)
         if let jsonData {
@@ -60,14 +76,31 @@ public class DBService {
             let jsonDecoder = JSONDecoder()
             jsonDecoder.dateDecodingStrategy = .secondsSince1970
 
-            let taskObject = try? jsonDecoder.decode(Task.self, from: updatedJsonData)
+            let taskObject = try? jsonDecoder.decode(TCTask.self, from: updatedJsonData)
 
             return taskObject
         }
         return nil
     }
 
-    public func updatePendingTasks(_ uuids: Set<String>, withStatus newStatus: Task.Status) throws {
+    public func togglePendingTasksStatus(uuids: Set<String>) throws {
+        let tasks = Table("tasks")
+        let query = tasks.filter(uuids.contains(TasksColumns.uuid))
+        let queryTasks = try dbConnection?.prepare(query)
+        guard let queryTasks else {
+            throw TCError.genericError("Query was null")
+        }
+        for task in queryTasks {
+            if let taskObject = try parseTask(row: task) {
+                let newStatus: TCTask.Status = taskObject.status == .pending ? .completed : .pending
+                var newTask = taskObject
+                newTask.status = newStatus
+                try updateTask(newTask)
+            }
+        }
+    }
+
+    public func updatePendingTasks(_ uuids: Set<String>, withStatus newStatus: TCTask.Status) throws {
         let tasks = Table("tasks")
 
         let query = tasks.filter(uuids.contains(TasksColumns.uuid))
@@ -77,14 +110,14 @@ public class DBService {
         }
         for task in queryTasks {
             let newData = task[TasksColumns.data].replacingOccurrences(
-                of: Task.Status.pending.rawValue,
+                of: TCTask.Status.pending.rawValue,
                 with: newStatus.rawValue
             )
             try dbConnection?.run(query.update(TasksColumns.data <- newData))
         }
     }
 
-    public func updateTask(_ task: Task) throws {
+    public func updateTask(_ task: TCTask) throws {
         let jsonData = try JSONEncoder().encode(task)
         var jsonDictionary = try? JSONSerialization
             .jsonObject(with: jsonData, options: []) as? [String: Any]
@@ -124,7 +157,7 @@ public class DBService {
         }
     }
 
-    public func createTask(_ task: Task) throws {
+    public func createTask(_ task: TCTask) throws {
         let jsonData = try JSONEncoder().encode(task)
         var jsonDictionary = try? JSONSerialization
             .jsonObject(with: jsonData, options: []) as? [String: Any]

@@ -2,14 +2,14 @@ import SwiftUI
 import taskchampShared
 
 public struct EditTaskView: View {
-    var task: Task
+    var task: TCTask
 
     @Environment(\.dismiss) var dismiss
 
     @State private var project = ""
     @State private var description = ""
-    @State private var status: Task.Status = .pending
-    @State private var priority: Task.Priority = .none
+    @State private var status: TCTask.Status = .pending
+    @State private var priority: TCTask.Priority = .none
 
     @State private var didSetDate = false
     @State private var didSetTime = false
@@ -29,14 +29,14 @@ public struct EditTaskView: View {
         task.project ?? "" != project ||
             task.description != description ||
             task.status != status ||
-            task.priority != (priority == Task.Priority.none ? nil : priority) ||
+            task.priority != (priority == TCTask.Priority.none ? nil : priority) ||
             task.due != Calendar.current.mergeDateWithTime(
                 date: didSetDate ? due : nil,
                 time: didSetTime ? time : nil
             )
     }
 
-    init(task: Task) {
+    init(task: TCTask) {
         description = task.description
         project = task.project ?? ""
         status = task.status
@@ -78,10 +78,10 @@ public struct EditTaskView: View {
             }
             Section {
                 Picker("Priority", systemImage: SFSymbols.exclamationmark.rawValue, selection: $priority) {
-                    Text(Task.Priority.none.rawValue.capitalized)
-                        .tag(Task.Priority.none)
+                    Text(TCTask.Priority.none.rawValue.capitalized)
+                        .tag(TCTask.Priority.none)
                     Divider()
-                    ForEach(Task.Priority.allCases, id: \.self) { priority in
+                    ForEach(TCTask.Priority.allCases, id: \.self) { priority in
                         if priority != .none {
                             Text(priority.rawValue.capitalized)
                         }
@@ -121,7 +121,7 @@ public struct EditTaskView: View {
                     let time: Date? = didSetTime ? time : nil
                     let finalDate = Calendar.current.mergeDateWithTime(date: date, time: time)
 
-                    let task = Task(
+                    let task = TCTask(
                         uuid: task.uuid,
                         project: project.isEmpty ? nil : project,
                         description: description,

@@ -2,7 +2,7 @@ import SwiftUI
 import taskchampShared
 
 public struct TaskCellView: View {
-    let task: Task
+    let task: TCTask
 
     public var body: some View {
         VStack {

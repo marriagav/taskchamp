@@ -1,10 +1,24 @@
 import AppIntents
+import taskchampShared
 import WidgetKit
 
-struct CompleteTaskIntent: WidgetConfigurationIntent {
-    static var title: LocalizedStringResource = "Configuration"
-    static var description = IntentDescription("This is an example widget.")
+struct CompleteTaskIntent: AppIntent {
+    static var title: LocalizedStringResource = "Complete Task"
+    static var description = IntentDescription("The task is marked as completed.")
 
-    // An example configurable parameter.
-    @Parameter(title: "Favorite Emoji", default: "😃") var favoriteEmoji: String
+    @Parameter(title: "taskId") var taskId: String
+
+    init(taskId: String) {
+        self.taskId = taskId
+    }
+
+    init() {}
+
+    func perform() async throws -> some IntentResult {
+        let destinationPath = try FileService.shared.getDestinationPath()
+        DBService.shared.setDbUrl(destinationPath)
+
+        try? await Task.sleep(nanoseconds: 1_000_000_000)
+        return .result()
+    }
 }

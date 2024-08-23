@@ -6,8 +6,8 @@ public struct CreateTaskView: View {
 
     @State private var project = ""
     @State private var description = ""
-    @State private var status: Task.Status = .pending
-    @State private var priority: Task.Priority = .none
+    @State private var status: TCTask.Status = .pending
+    @State private var priority: TCTask.Priority = .none
 
     @State private var didSetDate = false
     @State private var didSetTime = false
@@ -48,10 +48,10 @@ public struct CreateTaskView: View {
                 }
                 Section {
                     Picker("Priority", systemImage: SFSymbols.exclamationmark.rawValue, selection: $priority) {
-                        Text(Task.Priority.none.rawValue.capitalized)
-                            .tag(Task.Priority.none)
+                        Text(TCTask.Priority.none.rawValue.capitalized)
+                            .tag(TCTask.Priority.none)
                         Divider()
-                        ForEach(Task.Priority.allCases, id: \.self) { priority in
+                        ForEach(TCTask.Priority.allCases, id: \.self) { priority in
                             if priority != .none {
                                 Text(priority.rawValue.capitalized)
                             }
@@ -72,7 +72,7 @@ public struct CreateTaskView: View {
                         let time: Date? = didSetTime ? time : nil
                         let finalDate = Calendar.current.mergeDateWithTime(date: date, time: time)
 
-                        let task = Task(
+                        let task = TCTask(
                             uuid: UUID().uuidString,
                             project: project.isEmpty ? nil : project,
                             description: description,

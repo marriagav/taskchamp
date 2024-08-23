@@ -22,7 +22,7 @@ struct Provider: TimelineProvider {
         completion(timeline)
     }
 
-    func getTasks() -> [Task] {
+    func getTasks() -> [TCTask] {
         do {
             let destinationPath = try FileService.shared.getDestinationPath()
             DBService.shared.setDbUrl(destinationPath)
@@ -39,7 +39,7 @@ struct Provider: TimelineProvider {
 
 struct TaskEntry: TimelineEntry {
     let date: Date
-    let tasks: [Task]
+    let tasks: [TCTask]
 }
 
 struct TaskchampWidgetEntryView: View {
@@ -54,8 +54,8 @@ struct TaskchampWidgetEntryView: View {
                         .bold()
                         .foregroundStyle(.indigo)
                     Spacer()
-                    Link(destination: URL(string: "taskchamp://")!) {
-                        Image(systemName: "plus.circle.fill")
+                    Link(destination: TCTask.newTaskUrl) {
+                        Image(systemName: SFSymbols.plusCircleFill.rawValue)
                             .font(family == .systemLarge ? .title : .title2)
                     }
                     .foregroundStyle(.indigo)
@@ -98,31 +98,5 @@ struct TaskchampWidget: Widget {
         .configurationDisplayName("Taskchamp")
         .description("Keep track of your tasks")
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
-    }
-}
-
-struct CheckToggleStyle: ToggleStyle {
-    let priority: Task.Priority
-    func makeBody(configuration: Configuration) -> some View {
-        HStack {
-            Button {
-                configuration.isOn.toggle()
-            } label: {
-                Image(systemName: configuration.isOn ? "checkmark.circle.fill" : "circle")
-                    .foregroundStyle(
-                        priority == .high ? .red : priority == .medium ? .orange : priority == .low ?
-                            .green : .secondary
-                    )
-                    .accessibility(label: Text(configuration.isOn ? "Checked" : "Unchecked"))
-                    .imageScale(.medium)
-            }
-            Spacer()
-            configuration.label
-                .foregroundStyle(
-                    configuration.isOn ? .secondary :
-                        .primary
-                )
-        }
-        .buttonStyle(.plain)
     }
 }

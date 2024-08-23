@@ -1,13 +1,14 @@
 import SwiftUI
-import UIKit
 import taskchampShared
+import UIKit
 
 public struct TaskListView: View {
+    @Environment(PathStore.self) var pathStore
+
     @State private var taskChampionFileUrlString: String?
-    @State private var tasks: [Task] = []
+    @State private var tasks: [TCTask] = []
     @State private var isShowingCreateTaskView = false
     @State private var selection = Set<String>()
-
     @State private var editMode: EditMode = .inactive
 
     private var isEditModeActive: Bool {
@@ -25,7 +26,7 @@ public struct TaskListView: View {
         DBService.shared.setDbUrl(path)
     }
 
-    func updateTasks(_ uuids: Set<String>, withStatus newStatus: Task.Status) {
+    func updateTasks(_ uuids: Set<String>, withStatus newStatus: TCTask.Status) {
         do {
             try setDbUrl()
             try DBService.shared.updatePendingTasks(uuids, withStatus: newStatus)
@@ -165,7 +166,7 @@ public struct TaskListView: View {
         }, content: {
             CreateTaskView()
         })
-        .navigationDestination(for: Task.self) { task in
+        .navigationDestination(for: TCTask.self) { task in
             EditTaskView(task: task)
                 .onDisappear {
                     updateTasks()
@@ -183,6 +184,28 @@ public struct TaskListView: View {
                 "My Tasks"
         )
         .environment(\.editMode, $editMode)
+        .onOpenURL { url in
+            Task {
+                guard url.scheme == "taskchamp", url.host == "task" else {
+                    return
+                }
+
+                let uuidString = url.pathComponents[1]
+
+                if uuidString == "new" {
+                    isShowingCreateTaskView = true
+                    return
+                }
+
+                do {
+                    try setDbUrl()
+                    let task = try DBService.shared.getTask(uuid: uuidString)
+                    pathStore.path.append(task)
+                } catch {
+                    print(error)
+                }
+            }
+        }
     }
 }
 
