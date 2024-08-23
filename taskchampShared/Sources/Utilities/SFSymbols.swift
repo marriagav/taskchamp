@@ -10,4 +10,5 @@ public enum SFSymbols: String {
     case calendar
     case circle
     case checkmarkCircleFill = "checkmark.circle.fill"
+    case partyPopperFill = "party.popper.fill"
 }

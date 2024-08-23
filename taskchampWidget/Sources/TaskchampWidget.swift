@@ -32,7 +32,6 @@ struct Provider: TimelineProvider {
         } catch {
             print("Error getting tasks \(error)")
             return []
-            // throw TCError.genericError("Error getting tasks \(error)")
         }
     }
 }
@@ -62,22 +61,37 @@ struct TaskchampWidgetEntryView: View {
                     .foregroundStyle(.indigo)
                 }
             }
-            ViewThatFits {
-                if family == .systemLarge {
-                    TasksThatFitView(entry: entry, items: 10, family: family)
-                    TasksThatFitView(entry: entry, items: 7, family: family)
-                    TasksThatFitView(entry: entry, items: 5, family: family)
+            if entry.tasks.isEmpty {
+                VStack {
+                    Spacer()
+                    VStack {
+                        Image(systemName: SFSymbols.partyPopperFill.rawValue)
+                            .font(.largeTitle)
+                            .foregroundStyle(.indigo)
+                        Text("All tasks done!")
+                            .bold()
+                    }
+                    .foregroundStyle(.secondary)
+                    Spacer()
                 }
-                if family == .systemMedium {
-                    TasksThatFitView(entry: entry, items: 4, family: family)
-                    TasksThatFitView(entry: entry, items: 3, family: family)
+            } else {
+                ViewThatFits {
+                    if family == .systemLarge {
+                        TasksThatFitView(entry: entry, items: 10, family: family)
+                        TasksThatFitView(entry: entry, items: 7, family: family)
+                        TasksThatFitView(entry: entry, items: 5, family: family)
+                    }
+                    if family == .systemMedium {
+                        TasksThatFitView(entry: entry, items: 4, family: family)
+                        TasksThatFitView(entry: entry, items: 3, family: family)
+                    }
+                    if family == .systemSmall {
+                        TasksThatFitView(entry: entry, items: 4, family: family)
+                    }
                 }
-                if family == .systemSmall {
-                    TasksThatFitView(entry: entry, items: 4, family: family)
+                if family != .systemSmall {
+                    Spacer()
                 }
-            }
-            if family != .systemSmall {
-                Spacer()
             }
         }
         .containerBackground(.background, for: .widget)
