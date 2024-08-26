@@ -1,7 +1,7 @@
 import Foundation
 
-enum TasksHelper {
-    static func sortTasks(_ tasks: inout [Task]) {
+public enum TasksHelper {
+    public static func sortTasks(_ tasks: inout [TCTask]) {
         tasks.sort {
             if let date = $0.due {
                 if let otherDate = $1.due {

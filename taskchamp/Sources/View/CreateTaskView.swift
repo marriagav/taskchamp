@@ -1,12 +1,17 @@
 import SwiftUI
+import taskchampShared
 
 public struct CreateTaskView: View {
     @Environment(\.dismiss) var dismiss
 
+    @State private var nlpInput = ""
+    @State private var nlpPlaceholder = "New Task@tomorrow at 1pm@ project:my-project prio:M"
+    @State private var showNlpInfoPopover = false
+
     @State private var project = ""
     @State private var description = ""
-    @State private var status: Task.Status = .pending
-    @State private var priority: Task.Priority = .none
+    @State private var status: TCTask.Status = .pending
+    @State private var priority: TCTask.Priority = .none
 
     @State private var didSetDate = false
     @State private var didSetTime = false
@@ -25,6 +30,59 @@ public struct CreateTaskView: View {
     public var body: some View {
         NavigationStack {
             Form {
+                Section {
+                    TextEditor(text: $nlpInput)
+                        .font(.system(.body, design: .monospaced))
+                        .autocapitalization(.none)
+                        .autocorrectionDisabled()
+                        .focused($isFocused)
+                        .onChange(of: nlpInput) { _, input in
+                            let nlpTask = try? NLPService.shared.createTask(from: input)
+                            self.description = nlpTask?.description ?? ""
+                            self.project = nlpTask?.project ?? ""
+                            self.priority = nlpTask?.priority ?? .none
+                            if let due = nlpTask?.due {
+                                didSetDate = true
+                                didSetTime = true
+                                let calendar = Calendar.current
+                                let dateComponents = calendar.dateComponents([.year, .month, .day], from: due)
+                                let timeComponents = calendar.dateComponents([.hour, .minute, .second], from: due)
+                                self.due = calendar.date(from: dateComponents) ?? .init()
+                                time = calendar.date(from: timeComponents) ?? .init()
+                                isTimeShowing = false
+                            }
+                        }
+                } header: {
+                    HStack {
+                        Text("Command Line Input")
+                        Button {
+                            showNlpInfoPopover.toggle()
+                        } label: {
+                            Image(systemName: SFSymbols.questionmarkCircle.rawValue)
+                        }
+                        .popover(isPresented: $showNlpInfoPopover, attachmentAnchor: .point(.bottom)) {
+                            VStack(alignment: .leading, spacing: 10) {
+                                Spacer()
+                                Text(
+                                    "Create a task via a command line input. The format is as follows:"
+                                )
+                                .padding(.top)
+                                Text("New Task@tomorrow at 1pm@ project:my-project prio:M")
+                                    .font(.system(.body, design: .monospaced))
+                                Text(
+                                    "Manually updating the fields will override the values from the command line input."
+                                )
+                                .bold()
+                                .padding(.bottom)
+                                Spacer()
+                            }
+                            .textCase(nil)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding()
+                            .presentationCompactAdaptation(.popover)
+                        }
+                    }
+                }
                 Section {
                     TextField("Task name", text: $description)
                         .focused($isFocused)
@@ -47,10 +105,10 @@ public struct CreateTaskView: View {
                 }
                 Section {
                     Picker("Priority", systemImage: SFSymbols.exclamationmark.rawValue, selection: $priority) {
-                        Text(Task.Priority.none.rawValue.capitalized)
-                            .tag(Task.Priority.none)
+                        Text(TCTask.Priority.none.rawValue.capitalized)
+                            .tag(TCTask.Priority.none)
                         Divider()
-                        ForEach(Task.Priority.allCases, id: \.self) { priority in
+                        ForEach(TCTask.Priority.allCases, id: \.self) { priority in
                             if priority != .none {
                                 Text(priority.rawValue.capitalized)
                             }
@@ -71,7 +129,7 @@ public struct CreateTaskView: View {
                         let time: Date? = didSetTime ? time : nil
                         let finalDate = Calendar.current.mergeDateWithTime(date: date, time: time)
 
-                        let task = Task(
+                        let task = TCTask(
                             uuid: UUID().uuidString,
                             project: project.isEmpty ? nil : project,
                             description: description,
