@@ -167,7 +167,13 @@ public struct TaskListView: View {
                 }
             }
             ToolbarItemGroup(placement: .topBarTrailing) {
-                Button {} label: {
+                Menu {
+                    Link(
+                        "Documentation",
+                        // swiftlint:disable:next force_unwrapping
+                        destination: URL(string: "https://github.com/marriagav/taskchamp-docs")!
+                    )
+                } label: {
                     Label(
                         "Options",
                         systemImage: SFSymbols.ellipsisCircle.rawValue
