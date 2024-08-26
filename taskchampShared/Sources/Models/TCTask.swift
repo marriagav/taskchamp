@@ -1,14 +1,14 @@
 import Foundation
 
-struct Task: Codable, Hashable {
-    enum Status: String, Codable, CaseIterable {
+public struct TCTask: Codable, Hashable {
+    public enum Status: String, Codable, CaseIterable {
         case pending
         case completed
         case deleted
     }
 
-    enum Priority: String, Codable, Comparable, CaseIterable {
-        static func < (lhs: Task.Priority, rhs: Task.Priority) -> Bool {
+    public enum Priority: String, Codable, Comparable, CaseIterable {
+        public static func < (lhs: TCTask.Priority, rhs: TCTask.Priority) -> Bool {
             switch (lhs, rhs) {
             case (.low, .medium), (.low, .high), (.medium, .high):
                 return true
@@ -32,7 +32,7 @@ struct Task: Codable, Hashable {
         case due
     }
 
-    init(from decoder: Decoder) throws {
+    public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         uuid = try container.decode(String.self, forKey: .uuid)
         project = try container.decodeIfPresent(String.self, forKey: .project)
@@ -47,7 +47,7 @@ struct Task: Codable, Hashable {
         }
     }
 
-    func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encodeIfPresent(project, forKey: .project)
         try container.encode(description, forKey: .description)
@@ -59,7 +59,7 @@ struct Task: Codable, Hashable {
         }
     }
 
-    init(
+    public init(
         uuid: String,
         project: String? = nil,
         description: String,
@@ -75,18 +75,18 @@ struct Task: Codable, Hashable {
         self.due = due
     }
 
-    let uuid: String
-    var project: String?
-    var description: String
-    var status: Status
-    var priority: Priority?
-    var due: Date?
+    public let uuid: String
+    public var project: String?
+    public var description: String
+    public var status: Status
+    public var priority: Priority?
+    public var due: Date?
 
-    var isCompleted: Bool {
+    public var isCompleted: Bool {
         status == .completed
     }
 
-    var localDate: String {
+    public var localDate: String {
         guard let due = due else {
             return ""
         }
@@ -94,5 +94,31 @@ struct Task: Codable, Hashable {
         dateFormatter.dateStyle = .medium
         dateFormatter.timeStyle = .short
         return dateFormatter.string(from: due)
+    }
+
+    public var localDateShort: String {
+        guard let due = due else {
+            return ""
+        }
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateStyle = .medium
+        dateFormatter.timeStyle = .none
+        return dateFormatter.string(from: due)
+    }
+
+    public var url: URL {
+        guard let url = URL(string: "taskchamp://task/\(uuid)") else {
+            fatalError("Failed to construct url.")
+        }
+
+        return url
+    }
+
+    public static var newTaskUrl: URL {
+        guard let url = URL(string: "taskchamp://task/new") else {
+            fatalError("Failed to construct url.")
+        }
+
+        return url
     }
 }

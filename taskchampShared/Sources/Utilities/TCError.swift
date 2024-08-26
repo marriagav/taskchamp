@@ -1,5 +1,5 @@
 import Foundation
 
-enum TCError: Error {
+public enum TCError: Error {
     case genericError(String)
 }

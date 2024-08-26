@@ -1,6 +1,6 @@
 import Foundation
 
-enum SFSymbols: String {
+public enum SFSymbols: String {
     case plusCircleFill = "plus.circle.fill"
     case checkmark
     case trash
@@ -8,4 +8,8 @@ enum SFSymbols: String {
     case exclamationmark
     case clockFill = "clock.fill"
     case calendar
+    case circle
+    case checkmarkCircleFill = "checkmark.circle.fill"
+    case partyPopperFill = "party.popper.fill"
+    case questionmarkCircle = "questionmark.circle"
 }

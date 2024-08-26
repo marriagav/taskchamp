@@ -1,6 +1,15 @@
 {
   "pins" : [
     {
+      "identity" : "soulvercore",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/soulverteam/SoulverCore",
+      "state" : {
+        "revision" : "ef309cda2d2f426476181ae294f3b899eac83af4",
+        "version" : "2.6.3"
+      }
+    },
+    {
       "identity" : "sqlite.swift",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/stephencelis/SQLite.swift.git",

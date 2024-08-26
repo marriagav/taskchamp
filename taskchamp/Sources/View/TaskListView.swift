@@ -1,20 +1,25 @@
 import SwiftUI
+import taskchampShared
 import UIKit
 
 public struct TaskListView: View {
+    @Environment(PathStore.self) var pathStore
+    @Environment(\.scenePhase) var scenePhase
+    @Binding var isShowingICloudAlert: Bool
+
     @State private var taskChampionFileUrlString: String?
-    @State private var tasks: [Task] = []
+    @State private var tasks: [TCTask] = []
     @State private var isShowingCreateTaskView = false
     @State private var selection = Set<String>()
-
     @State private var editMode: EditMode = .inactive
 
     private var isEditModeActive: Bool {
         return editMode.isEditing == true
     }
 
-    public init() {
+    public init(isShowingICloudAlert: Binding<Bool>) {
         UINavigationBar.appearance().largeTitleTextAttributes = [.foregroundColor: UIColor.tintColor]
+        _isShowingICloudAlert = isShowingICloudAlert
     }
 
     func setDbUrl() throws {
@@ -24,7 +29,7 @@ public struct TaskListView: View {
         DBService.shared.setDbUrl(path)
     }
 
-    func updateTasks(_ uuids: Set<String>, withStatus newStatus: Task.Status) {
+    func updateTasks(_ uuids: Set<String>, withStatus newStatus: TCTask.Status) {
         do {
             try setDbUrl()
             try DBService.shared.updatePendingTasks(uuids, withStatus: newStatus)
@@ -45,6 +50,10 @@ public struct TaskListView: View {
                 tasks = try DBService.shared.getPendingTasks()
             }
         } catch {
+            if !FileService.shared.isICloudAvailable() {
+                print("iCloud Unavailable")
+                isShowingICloudAlert = true
+            }
             print(error)
         }
     }
@@ -87,6 +96,22 @@ public struct TaskListView: View {
                 .listRowBackground(Color.clear)
             }
         }
+        .overlay(
+            Group {
+                if tasks.isEmpty {
+                    ContentUnavailableView {
+                        Label("No new tasks", systemImage: "bolt.heart")
+                    } description: {
+                        Text("Use this time to relax or add new tasks!")
+                    } actions: {
+                        Button("New task") {
+                            isShowingCreateTaskView.toggle()
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
+                }
+            }
+        )
         .refreshable {
             updateTasks()
         }
@@ -142,7 +167,13 @@ public struct TaskListView: View {
                 }
             }
             ToolbarItemGroup(placement: .topBarTrailing) {
-                Button {} label: {
+                Menu {
+                    Link(
+                        "Documentation",
+                        // swiftlint:disable:next force_unwrapping
+                        destination: URL(string: "https://github.com/marriagav/taskchamp-docs")!
+                    )
+                } label: {
                     Label(
                         "Options",
                         systemImage: SFSymbols.ellipsisCircle.rawValue
@@ -153,7 +184,9 @@ public struct TaskListView: View {
                 }
             }
             ToolbarItemGroup(placement: .topBarLeading) {
-                EditButton()
+                if !tasks.isEmpty {
+                    EditButton()
+                }
             }
         }
         .onChange(of: isEditModeActive) {
@@ -164,7 +197,7 @@ public struct TaskListView: View {
         }, content: {
             CreateTaskView()
         })
-        .navigationDestination(for: Task.self) { task in
+        .navigationDestination(for: TCTask.self) { task in
             EditTaskView(task: task)
                 .onDisappear {
                     updateTasks()
@@ -178,15 +211,36 @@ public struct TaskListView: View {
                 }
         }
         .navigationTitle(
-            isEditModeActive ? selection.isEmpty ? "Select Tasks" : "\(selection.count) Selected" :
+            tasks.isEmpty ? "" : isEditModeActive ? selection.isEmpty ? "Select Tasks" : "\(selection.count) Selected" :
                 "My Tasks"
         )
         .environment(\.editMode, $editMode)
-    }
-}
+        .onOpenURL { url in
+            Task {
+                guard url.scheme == "taskchamp", url.host == "task" else {
+                    return
+                }
 
-struct TaskListView_Previews: PreviewProvider {
-    static var previews: some View {
-        TaskListView()
+                let uuidString = url.pathComponents[1]
+
+                if uuidString == "new" {
+                    isShowingCreateTaskView = true
+                    return
+                }
+
+                do {
+                    try setDbUrl()
+                    let task = try DBService.shared.getTask(uuid: uuidString)
+                    pathStore.path.append(task)
+                } catch {
+                    print(error)
+                }
+            }
+        }
+        .onChange(of: scenePhase) { _, newScenePhase in
+            if newScenePhase == .active {
+                copyDatabaseIfNeeded()
+            }
+        }
     }
 }
