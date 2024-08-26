@@ -5,6 +5,10 @@ public class FileService {
 
     private init() {}
 
+    public func isICloudAvailable() -> Bool {
+        FileManager.default.url(forUbiquityContainerIdentifier: nil) != nil
+    }
+
     public func getDestinationPath() throws -> String {
         let containerURL = FileManager.default.url(forUbiquityContainerIdentifier: nil)
         guard let containerURL = containerURL else {

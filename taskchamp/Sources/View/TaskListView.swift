@@ -5,6 +5,7 @@ import UIKit
 public struct TaskListView: View {
     @Environment(PathStore.self) var pathStore
     @Environment(\.scenePhase) var scenePhase
+    @Binding var isShowingICloudAlert: Bool
 
     @State private var taskChampionFileUrlString: String?
     @State private var tasks: [TCTask] = []
@@ -16,8 +17,9 @@ public struct TaskListView: View {
         return editMode.isEditing == true
     }
 
-    public init() {
+    public init(isShowingICloudAlert: Binding<Bool>) {
         UINavigationBar.appearance().largeTitleTextAttributes = [.foregroundColor: UIColor.tintColor]
+        _isShowingICloudAlert = isShowingICloudAlert
     }
 
     func setDbUrl() throws {
@@ -48,6 +50,10 @@ public struct TaskListView: View {
                 tasks = try DBService.shared.getPendingTasks()
             }
         } catch {
+            if !FileService.shared.isICloudAvailable() {
+                print("iCloud Unavailable")
+                isShowingICloudAlert = true
+            }
             print(error)
         }
     }
@@ -230,11 +236,5 @@ public struct TaskListView: View {
                 copyDatabaseIfNeeded()
             }
         }
-    }
-}
-
-struct TaskListView_Previews: PreviewProvider {
-    static var previews: some View {
-        TaskListView()
     }
 }
