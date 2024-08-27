@@ -8,6 +8,7 @@ let project = Project(
             destinations: .iOS,
             product: .app,
             bundleId: "com.mav.taskchamp",
+            deploymentTargets: .iOS("17.0"),
             infoPlist: .extendingDefault(
                 with: [
                     "CFBundleName": "Taskchamp",
@@ -48,6 +49,7 @@ let project = Project(
             destinations: .iOS,
             product: .unitTests,
             bundleId: "io.tuist.taskchampTests",
+            deploymentTargets: .iOS("17.0"),
             infoPlist: .default,
             sources: ["taskchamp/Tests/**"],
             resources: [],
@@ -58,6 +60,7 @@ let project = Project(
             destinations: .iOS,
             product: .appExtension,
             bundleId: "com.mav.taskchamp.taskchampWidget",
+            deploymentTargets: .iOS("17.0"),
             infoPlist: .extendingDefault(with: [
                 "CFBundleDisplayName": "$(PRODUCT_NAME)",
                 "NSExtension": [
@@ -89,6 +92,7 @@ let project = Project(
             destinations: .iOS,
             product: .staticFramework,
             bundleId: "com.mav.taskchamp.taskchampShared",
+            deploymentTargets: .iOS("15.0"),
             infoPlist: .default,
             sources: "taskchampShared/Sources/**",
             dependencies: [
