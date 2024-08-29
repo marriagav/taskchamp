@@ -5,7 +5,7 @@ public struct CreateTaskView: View {
     @Environment(\.dismiss) var dismiss
 
     @State private var nlpInput = ""
-    @State private var nlpPlaceholder = "New Task@tomorrow at 1pm@ project:my-project prio:M"
+    @State private var nlpPlaceholder = "New Task due:tomorrow at 1pm project:my-project prio:M"
     @State private var showNlpInfoPopover = false
 
     @State private var project = ""
@@ -37,11 +37,11 @@ public struct CreateTaskView: View {
                         .autocorrectionDisabled()
                         .focused($isFocused)
                         .onChange(of: nlpInput) { _, input in
-                            let nlpTask = try? NLPService.shared.createTask(from: input)
-                            self.description = nlpTask?.description ?? ""
-                            self.project = nlpTask?.project ?? ""
-                            self.priority = nlpTask?.priority ?? .none
-                            if let due = nlpTask?.due {
+                            let nlpTask = NLPService.shared.createTask(from: input)
+                            self.description = nlpTask.description
+                            self.project = nlpTask.project ?? ""
+                            self.priority = nlpTask.priority ?? .none
+                            if let due = nlpTask.due {
                                 didSetDate = true
                                 didSetTime = true
                                 let calendar = Calendar.current
@@ -50,6 +50,13 @@ public struct CreateTaskView: View {
                                 self.due = calendar.date(from: dateComponents) ?? .init()
                                 time = calendar.date(from: timeComponents) ?? .init()
                                 isTimeShowing = false
+                            } else {
+                                didSetDate = false
+                                didSetTime = false
+                                isDateShowing = false
+                                isTimeShowing = false
+                                due = .init()
+                                time = .init()
                             }
                         }
                 } header: {
@@ -67,7 +74,7 @@ public struct CreateTaskView: View {
                                     "Create a task via a command line input. The format is as follows:"
                                 )
                                 .padding(.top)
-                                Text("New Task@tomorrow at 1pm@ project:my-project prio:M")
+                                Text(nlpPlaceholder)
                                     .font(.system(.body, design: .monospaced))
                                 Text(
                                     "Manually updating the fields will override the values from the command line input."

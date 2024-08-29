@@ -18,7 +18,7 @@ struct CreateTaskIntent: AppIntent {
         let destinationPath = try FileService.shared.getDestinationPath()
         DBService.shared.setDbUrl(destinationPath)
 
-        let task = try NLPService.shared.createTask(from: taskInput)
+        let task = NLPService.shared.createTask(from: taskInput)
         try DBService.shared.createTask(task)
 
         return .result()
