@@ -6,68 +6,52 @@ public class NLPService {
 
     private init() {}
 
-    public func createTask(from input: String) throws -> TCTask {
-        // swiftlint:disable line_length
-        let pattern =
-            #"^(?<description>.+?)(?:\s+prio:(?<prio>\S+))?(?:\s+project:(?<project>.+?))?(?:\s+prio:(?<prio2>\S+))?\s*$"#
-        // swiftlint:enable line_length
-
-        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else {
-            throw TCError.genericError("Failed to create regex")
-        }
-
-        let nsString = input as NSString
-        let results = regex.firstMatch(
-            in: input,
-            options: [],
-            range: NSRange(location: 0, length: nsString.length)
-        )
-
-        var description = results.flatMap { result -> String? in
-            guard let range = Range(result.range(withName: "description"), in: input) else {
-                return nil
-            }
-            return String(input[range])
-        }
-
-        let project = results.flatMap { result -> String? in
-            guard let range = Range(result.range(withName: "project"), in: input) else {
-                return nil
-            }
-            return String(input[range])
-        }
-
-        let prio = results.flatMap { result -> String? in
-            if let range = Range(result.range(withName: "prio"), in: input) {
-                return String(input[range]).trimmingCharacters(in: .whitespaces)
-            } else if let range = Range(result.range(withName: "prio2"), in: input) {
-                return String(input[range]).trimmingCharacters(in: .whitespaces)
-            }
-            return nil
-        }
-
-        var nlpDate: String?
-        if let desc = description, let range = desc.range(
-            of: #"@[^@]+@"#,
-            options: .regularExpression
-        ) {
-            nlpDate = String(desc[range]).trimmingCharacters(in: CharacterSet(charactersIn: "@"))
-            description = desc.replacingCharacters(in: range, with: "")
-                .trimmingCharacters(in: .whitespaces)
-        }
-        let date = nlpDate?.dateValue
-
-        let priority = TCTask.Priority(rawValue: prio ?? "")
-
-        let task = TCTask(
+    public func createTask(from input: String) -> TCTask {
+        var task = TCTask(
             uuid: UUID().uuidString,
-            project: project,
-            description: description ?? "",
+            project: nil,
+            description: "",
             status: .pending,
-            priority: priority,
-            due: date
+            priority: nil,
+            due: nil
         )
+        var remainingString = input
+
+        // Check for and extract prio
+        if remainingString.range(of: "prio:") != nil {
+            let prio = extractValue(after: "prio:", from: &remainingString)
+            task.priority = TCTask.Priority(rawValue: prio ?? "")
+        }
+
+        // Check for and extract project
+        if remainingString.range(of: "project:") != nil {
+            task.project = extractValue(after: "project:", from: &remainingString)
+        }
+
+        // Check for and extract due
+        if remainingString.range(of: "due:") != nil {
+            task.due = extractValue(after: "due:", from: &remainingString)?.dateValue
+        }
+
+        // The remaining string is the description
+        task.description = remainingString.trimmingCharacters(in: .whitespaces)
 
         return task
+    }
+
+    func extractValue(after tag: String, from input: inout String) -> String? {
+        if let range = input.range(of: tag) {
+            let substring = input[range.upperBound...]
+            if let nextTagRange = substring.range(of: "\\s+(prio:|project:|due:)", options: .regularExpression) {
+                let value = String(substring[..<nextTagRange.lowerBound]).trimmingCharacters(in: .whitespaces)
+                input = String(input[..<range.lowerBound] + substring[nextTagRange.lowerBound...])
+                return value
+            } else {
+                let value = String(substring).trimmingCharacters(in: .whitespaces)
+                input = String(input[..<range.lowerBound])
+                return value
+            }
+        }
+        return nil
     }
 }
