@@ -26,6 +26,7 @@ public struct CreateTaskView: View {
     @State private var alertMessage = ""
 
     @FocusState private var isFocused: Bool
+    @FocusState private var isFocusedNLP: Bool
 
     public var body: some View {
         NavigationStack {
@@ -35,7 +36,7 @@ public struct CreateTaskView: View {
                         .font(.system(.body, design: .monospaced))
                         .autocapitalization(.none)
                         .autocorrectionDisabled()
-                        .focused($isFocused)
+                        .focused($isFocusedNLP)
                         .onChange(of: nlpInput) { _, input in
                             let nlpTask = NLPService.shared.createTask(from: input)
                             self.description = nlpTask.description
@@ -58,6 +59,9 @@ public struct CreateTaskView: View {
                                 due = .init()
                                 time = .init()
                             }
+                        }
+                        .onAppear {
+                            isFocusedNLP = true
                         }
                 } header: {
                     HStack {
@@ -167,6 +171,7 @@ public struct CreateTaskView: View {
                         Spacer()
                         Button("Done") {
                             isFocused = false
+                            isFocusedNLP = false
                         }
                     }
                 }
