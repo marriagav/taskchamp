@@ -155,7 +155,10 @@ public class DBService {
             guard let updatedJsonData else {
                 throw TCError.genericError("updatedJsonData was null")
             }
-            let jsonString = String(decoding: updatedJsonData, as: UTF8.self)
+            let jsonString = String(data: updatedJsonData, encoding: .utf8)
+            guard let jsonString else {
+                throw TCError.genericError("jsonString was null")
+            }
             try dbConnection?.run(query.update(TasksColumns.data <- jsonString))
             WidgetCenter.shared.reloadAllTimelines()
         }
@@ -181,7 +184,10 @@ public class DBService {
             throw TCError.genericError("updatedJsonData was null")
         }
 
-        let jsonString = String(decoding: updatedJsonData, as: UTF8.self)
+        let jsonString = String(data: updatedJsonData, encoding: .utf8)
+        guard let jsonString else {
+            throw TCError.genericError("jsonString was null")
+        }
         let tasks = Table("tasks")
         try dbConnection?.run(tasks.insert(
             TasksColumns.uuid <- task.uuid.lowercased(),
