@@ -4,8 +4,8 @@ import WidgetKit
 
 public class DBService {
     enum TasksColumns {
-        static let uuid = Expression<String>(value: "uuid")
-        static let data = Expression<String>(value: "data")
+        static let uuid = SQLite.Expression<String>("uuid")
+        static let data = SQLite.Expression<String>("data")
     }
 
     public static let shared = DBService()
