@@ -72,23 +72,24 @@ public struct CreateTaskView: View {
                             Image(systemName: SFSymbols.questionmarkCircle.rawValue)
                         }
                         .popover(isPresented: $showNlpInfoPopover, attachmentAnchor: .point(.bottom)) {
-                            VStack(alignment: .leading, spacing: 10) {
-                                Spacer()
-                                Text(
-                                    "Create a task via a command line input. The format is as follows:"
-                                )
-                                .padding(.top)
-                                Text(nlpPlaceholder)
-                                    .font(.system(.body, design: .monospaced))
-                                Text(
-                                    "Manually updating the fields will override the values from the command line input."
-                                )
-                                .bold()
-                                .padding(.bottom)
-                                Spacer()
+                            ScrollView {
+                                VStack(alignment: .leading, spacing: 10) {
+                                    Text(
+                                        "Create a task via a command line input. The format is as follows:"
+                                    )
+                                    .padding(.top)
+                                    Text(nlpPlaceholder)
+                                        .font(.system(.body, design: .monospaced))
+                                    Text(
+                                        // swiftlint:disable:next line_length
+                                        "Manually updating the fields will override the values from the command line input."
+                                    )
+                                    .bold()
+                                    .padding(.bottom)
+                                }
                             }
                             .textCase(nil)
-                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(minHeight: 150)
                             .padding()
                             .presentationCompactAdaptation(.popover)
                         }
