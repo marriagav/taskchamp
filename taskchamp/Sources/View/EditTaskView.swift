@@ -92,6 +92,7 @@ public struct EditTaskView: View {
                 Button(action: {
                     do {
                         try DBService.shared.updatePendingTasks([task.uuid], withStatus: .completed)
+                        NotificationService.shared.deleteReminderForTask(task: task)
                         dismiss()
                     } catch {
                         isShowingAlert = true
@@ -132,6 +133,7 @@ public struct EditTaskView: View {
 
                     do {
                         try DBService.shared.updateTask(task)
+                        NotificationService.shared.createReminderForTask(task: task)
                         dismiss()
                     } catch {
                         isShowingAlert = true
@@ -149,6 +151,7 @@ public struct EditTaskView: View {
                     Button(role: .destructive) {
                         do {
                             try DBService.shared.updatePendingTasks([task.uuid], withStatus: .deleted)
+                            NotificationService.shared.deleteReminderForTask(task: task)
                             dismiss()
                         } catch {
                             isShowingAlert = true
