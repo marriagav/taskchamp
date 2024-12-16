@@ -93,6 +93,7 @@ public struct TCTask: Codable, Hashable {
         let dateFormatter = DateFormatter()
         dateFormatter.dateStyle = .medium
         dateFormatter.timeStyle = .short
+        dateFormatter.doesRelativeDateFormatting = true
         return dateFormatter.string(from: due)
     }
 
@@ -103,6 +104,7 @@ public struct TCTask: Codable, Hashable {
         let dateFormatter = DateFormatter()
         dateFormatter.dateStyle = .medium
         dateFormatter.timeStyle = .none
+        dateFormatter.doesRelativeDateFormatting = true
         return dateFormatter.string(from: due)
     }
 
