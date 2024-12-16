@@ -19,6 +19,7 @@ struct CompleteTaskIntent: AppIntent {
         DBService.shared.setDbUrl(destinationPath)
 
         try? DBService.shared.togglePendingTasksStatus(uuids: [taskId])
+        NotificationService.shared.removeNotifications(for: [taskId])
 
         try? await Task.sleep(nanoseconds: 1_000_000_000)
         return .result()

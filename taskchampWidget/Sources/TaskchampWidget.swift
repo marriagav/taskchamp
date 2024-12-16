@@ -27,7 +27,6 @@ struct Provider: TimelineProvider {
             let destinationPath = try FileService.shared.getDestinationPath()
             DBService.shared.setDbUrl(destinationPath)
             let tasks = try DBService.shared.getPendingTasks()
-            print("tasks: \(tasks)")
             return tasks
         } catch {
             print("Error getting tasks \(error)")
