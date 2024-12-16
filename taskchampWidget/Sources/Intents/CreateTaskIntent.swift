@@ -20,6 +20,7 @@ struct CreateTaskIntent: AppIntent {
 
         let task = NLPService.shared.createTask(from: taskInput)
         try DBService.shared.createTask(task)
+        NotificationService.shared.createReminderForTask(task: task)
 
         return .result()
     }

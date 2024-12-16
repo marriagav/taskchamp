@@ -34,6 +34,7 @@ public struct TaskListView: View {
             try setDbUrl()
             try DBService.shared.updatePendingTasks(uuids, withStatus: newStatus)
             updateTasks()
+            NotificationService.shared.removeNotifications(for: Array(uuids))
         } catch {
             print(error)
         }
@@ -66,6 +67,14 @@ public struct TaskListView: View {
             }
             taskChampionFileUrlString = try FileService.shared.copyDatabaseIfNeededAndGetDestinationPath()
             updateTasks()
+            NotificationService.shared.requestAuthorization { success, error in
+                if success {
+                    print("Notification Authorization granted")
+                    NotificationService.shared.createReminderForTasks(tasks: tasks)
+                } else if let error = error {
+                    print(error.localizedDescription)
+                }
+            }
             return
         } catch {
             print(error)
