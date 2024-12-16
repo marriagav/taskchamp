@@ -70,7 +70,9 @@ public struct TaskListView: View {
             NotificationService.shared.requestAuthorization { success, error in
                 if success {
                     print("Notification Authorization granted")
-                    NotificationService.shared.createReminderForTasks(tasks: tasks)
+                    Task {
+                        await NotificationService.shared.createReminderForTasks(tasks: tasks)
+                    }
                 } else if let error = error {
                     print(error.localizedDescription)
                 }
@@ -78,6 +80,29 @@ public struct TaskListView: View {
             return
         } catch {
             print(error)
+        }
+    }
+
+    func handleDeepLink(url: URL) {
+        Task {
+            guard url.scheme == "taskchamp", url.host == "task" else {
+                return
+            }
+
+            let uuidString = url.pathComponents[1]
+
+            if uuidString == "new" {
+                isShowingCreateTaskView = true
+                return
+            }
+
+            do {
+                try setDbUrl()
+                let task = try DBService.shared.getTask(uuid: uuidString)
+                pathStore.path.append(task)
+            } catch {
+                print(error)
+            }
         }
     }
 
@@ -225,26 +250,15 @@ public struct TaskListView: View {
         )
         .environment(\.editMode, $editMode)
         .onOpenURL { url in
-            Task {
-                guard url.scheme == "taskchamp", url.host == "task" else {
-                    return
-                }
-
-                let uuidString = url.pathComponents[1]
-
-                if uuidString == "new" {
-                    isShowingCreateTaskView = true
-                    return
-                }
-
-                do {
-                    try setDbUrl()
-                    let task = try DBService.shared.getTask(uuid: uuidString)
-                    pathStore.path.append(task)
-                } catch {
-                    print(error)
-                }
+            handleDeepLink(url: url)
+        }
+        .onReceive(NotificationCenter.default.publisher(
+            for: .TCTappedDeepLinkNotification
+        )) { notification in
+            guard let url = notification.object as? URL else {
+                return
             }
+            handleDeepLink(url: url)
         }
         .onChange(of: scenePhase) { _, newScenePhase in
             if newScenePhase == .active {
