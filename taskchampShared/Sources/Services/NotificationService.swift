@@ -47,7 +47,7 @@ public class NotificationService: NSObject {
 
     public func createReminderForTasks(tasks: [TCTask]) async {
         let notifTaskIds = await center.pendingNotificationRequests().map { $0.identifier }
-        for task in tasks where !notifTaskIds.contains(task.uuid) && task.due != nil $$ task.due > Date() {
+        for task in tasks where !notifTaskIds.contains(task.uuid) && task.due != nil && (task.due ?? Date()) > Date() {
             createReminderForTask(task: task)
         }
     }
