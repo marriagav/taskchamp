@@ -33,7 +33,8 @@ let project = Project(
                 [
                     "com.apple.developer.icloud-container-identifiers": ["iCloud.com.mav.taskchamp"],
                     "com.apple.developer.icloud-services": ["CloudDocuments"],
-                    "com.apple.developer.ubiquity-container-identifiers": ["iCloud.com.mav.taskchamp"]
+                    "com.apple.developer.ubiquity-container-identifiers": ["iCloud.com.mav.taskchamp"],
+                    "com.apple.developer.usernotifications.time-sensitive": true
                 ]
             ),
             scripts: [

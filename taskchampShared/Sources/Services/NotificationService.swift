@@ -1,12 +1,14 @@
 import Foundation
 import UserNotifications
 
-public class NotificationService {
+public class NotificationService: NSObject {
     public static let shared = NotificationService()
-    var viewURL: URL?
     let center = UNUserNotificationCenter.current()
 
-    private init() {}
+    override private init() {
+        super.init()
+        center.delegate = self
+    }
 
     public static func defaultRequestCallback(success: Bool, error: (any Error)?) {
         if success {
@@ -43,8 +45,11 @@ public class NotificationService {
         center.removePendingNotificationRequests(withIdentifiers: [task.uuid])
     }
 
-    public func createReminderForTasks(tasks: [TCTask]) {
-        tasks.forEach { createReminderForTask(task: $0) }
+    public func createReminderForTasks(tasks: [TCTask]) async {
+        let notifTaskIds = await center.pendingNotificationRequests().map { $0.identifier }
+        for task in tasks where !notifTaskIds.contains(task.uuid) && task.due != nil $$ task.due > Date() {
+            createReminderForTask(task: task)
+        }
     }
 
     public func createReminderForTask(task: TCTask) {
@@ -59,6 +64,7 @@ public class NotificationService {
         content.body = task.localDateShort
         content.sound = UNNotificationSound.default
         content.interruptionLevel = .timeSensitive
+        content.userInfo = ["deepLink": task.url.description]
 
         let trigger = UNCalendarNotificationTrigger(
             dateMatching: curDateComponents,
@@ -74,4 +80,20 @@ public class NotificationService {
         center.removePendingNotificationRequests(withIdentifiers: [task.uuid])
         center.add(request)
     }
+}
+
+// MARK: UNUserNotificationCenterDelegate
+
+extension NotificationService: UNUserNotificationCenterDelegate {
+    @MainActor
+    public func userNotificationCenter(_: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
+        if let deepLink = response.notification.request.content.userInfo["deepLink"] as? String {
+            let viewURL = URL(string: deepLink)
+            NotificationCenter.default.post(name: .TCTappedDeepLinkNotification, object: viewURL)
+        }
+    }
+}
+
+public extension NSNotification.Name {
+    static let TCTappedDeepLinkNotification = NSNotification.Name("TCTappedDeepLinkNotification")
 }
