@@ -38,11 +38,12 @@ public class NotificationService: NSObject {
     }
 
     public func removeNotifications(for uuids: [String]) {
-        center.removePendingNotificationRequests(withIdentifiers: uuids)
+        let capIds = uuids.map { $0.capitalized }
+        center.removePendingNotificationRequests(withIdentifiers: capIds)
     }
 
     public func deleteReminderForTask(task: TCTask) {
-        center.removePendingNotificationRequests(withIdentifiers: [task.uuid])
+        center.removePendingNotificationRequests(withIdentifiers: [task.uuid.capitalized])
     }
 
     public func createReminderForTasks(tasks: [TCTask]) async {
@@ -72,7 +73,7 @@ public class NotificationService: NSObject {
         )
 
         let request = UNNotificationRequest(
-            identifier: task.uuid,
+            identifier: task.uuid.capitalized,
             content: content,
             trigger: trigger
         )
