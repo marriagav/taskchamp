@@ -40,7 +40,7 @@ public struct TaskListView: View {
         _isShowingICloudAlert = isShowingICloudAlert
     }
 
-    private func filterButton(sortType: TasksHelper.TCSortType) -> some View {
+    private func sortButton(sortType: TasksHelper.TCSortType) -> some View {
         let label = sortType == .defaultSort ? "Default" : sortType == .date ? "Date" : "Priority"
         if self.sortType != sortType {
             return Button(label) {
@@ -163,9 +163,9 @@ public struct TaskListView: View {
                         destination: URL(string: "https://github.com/marriagav/taskchamp-docs")!
                     )
                     Menu("Sort by") {
-                        filterButton(sortType: .defaultSort)
-                        filterButton(sortType: .date)
-                        filterButton(sortType: .priority)
+                        sortButton(sortType: .defaultSort)
+                        sortButton(sortType: .date)
+                        sortButton(sortType: .priority)
                     }
                 } label: {
                     Label(
