@@ -7,11 +7,13 @@ public struct TaskListView: View {
     @Environment(\.scenePhase) var scenePhase
     @Binding var isShowingICloudAlert: Bool
 
-    @State private var taskChampionFileUrlString: String?
-    @State private var tasks: [TCTask] = []
-    @State private var isShowingCreateTaskView = false
-    @State private var selection = Set<String>()
-    @State private var editMode: EditMode = .inactive
+    @State var taskChampionFileUrlString: String?
+    @State var tasks: [TCTask] = []
+    @State var isShowingCreateTaskView = false
+    @State var selection = Set<String>()
+    @State var editMode: EditMode = .inactive
+    @State var sortType: TasksHelper.TCSortType = UserDefaults.standard
+        .object(forKey: "sortType") as? TasksHelper.TCSortType ?? .defaultSort
 
     private var isEditModeActive: Bool {
         return editMode.isEditing == true
@@ -22,87 +24,17 @@ public struct TaskListView: View {
         _isShowingICloudAlert = isShowingICloudAlert
     }
 
-    func setDbUrl() throws {
-        guard let path = taskChampionFileUrlString else {
-            throw TCError.genericError("No access or path")
-        }
-        DBService.shared.setDbUrl(path)
-    }
-
-    func updateTasks(_ uuids: Set<String>, withStatus newStatus: TCTask.Status) {
-        do {
-            try setDbUrl()
-            try DBService.shared.updatePendingTasks(uuids, withStatus: newStatus)
-            NotificationService.shared.removeNotifications(for: Array(uuids))
+    private func filterButton(sortType: TasksHelper.TCSortType) -> some View {
+        let label = sortType == .defaultSort ? "Default" : sortType == .date ? "Date" : "Priority"
+        return Button {
+            self.sortType = sortType
+            UserDefaults.standard.set(sortType, forKey: "sortType")
             updateTasks()
-        } catch {
-            print(error)
-        }
-    }
-
-    func updateTasks() {
-        do {
-            try setDbUrl()
-            let newTasks = try DBService.shared.getPendingTasks()
-            if newTasks == tasks {
-                return
-            }
-            try withAnimation {
-                tasks = try DBService.shared.getPendingTasks()
-            }
-        } catch {
-            if !FileService.shared.isICloudAvailable() {
-                print("iCloud Unavailable")
-                isShowingICloudAlert = true
-            }
-            print(error)
-        }
-    }
-
-    func copyDatabaseIfNeeded() {
-        do {
-            if taskChampionFileUrlString != nil {
-                updateTasks()
-                return
-            }
-            taskChampionFileUrlString = try FileService.shared.copyDatabaseIfNeededAndGetDestinationPath()
-            updateTasks()
-            NotificationService.shared.requestAuthorization { success, error in
-                if success {
-                    print("Notification Authorization granted")
-                    Task {
-                        await NotificationService.shared.createReminderForTasks(tasks: tasks)
-                    }
-                } else if let error = error {
-                    print(error.localizedDescription)
-                }
-            }
-            return
-        } catch {
-            print(error)
-        }
-    }
-
-    func handleDeepLink(url: URL) {
-        Task {
-            guard url.scheme == "taskchamp", url.host == "task" else {
-                return
-            }
-
-            let uuidString = url.pathComponents[1]
-
-            if uuidString == "new" {
-                isShowingCreateTaskView = true
-                return
-            }
-
-            do {
-                try setDbUrl()
-                let task = try DBService.shared.getTask(uuid: uuidString)
-                pathStore.path.append(task)
-            } catch {
-                print(error)
-            }
+        } label: {
+            Label(
+                label,
+                systemImage: sortType == self.sortType ? SFSymbols.checkmark.rawValue : ""
+            )
         }
     }
 
@@ -130,6 +62,7 @@ public struct TaskListView: View {
                 .listRowBackground(Color.clear)
             }
         }
+        .animation(.default, value: sortType)
         .overlay(
             Group {
                 if tasks.isEmpty {
@@ -207,6 +140,11 @@ public struct TaskListView: View {
                         // swiftlint:disable:next force_unwrapping
                         destination: URL(string: "https://github.com/marriagav/taskchamp-docs")!
                     )
+                    Menu("Sort by") {
+                        filterButton(sortType: .defaultSort)
+                        filterButton(sortType: .date)
+                        filterButton(sortType: .priority)
+                    }
                 } label: {
                     Label(
                         "Options",
