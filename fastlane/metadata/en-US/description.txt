@@ -1,0 +1,19 @@
+The ultimate tasks app for software developers! Do you enjoy using your terminal, getting things done and keeping everything in a single place? Taskchamp is built specifically for programmers. 
+
+KEY FEATURES
+
+Two-way Taskwarrior sync: Easily connect taskchamp to Taskwarrior via iCloud, to manage your tasks from your command line and your phone simultaneously.
+
+Command-line input: Use Taskwarrior's command line syntax and natural language to add new tasks blazingly fast.
+
+Widgets: Manage your tasks from your home screen with beautifully designed widgets.
+
+Shortcuts: Set up app shortcuts to add tasks without even entering the App!
+
+Notifications: Get reminded of your tasks when they are due so that you do not miss any of them.
+
+And much more!
+
+
+
+
