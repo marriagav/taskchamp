@@ -21,7 +21,7 @@ public class DBService {
         }
     }
 
-    public func getPendingTasks() throws -> [TCTask] {
+    public func getPendingTasks(sortType: TasksHelper.TCSortType = .defaultSort) throws -> [TCTask] {
         var taskObjects: [TCTask] = []
         let tasks = Table("tasks")
         let query = tasks.select(TasksColumns.data, TasksColumns.uuid)
@@ -36,7 +36,7 @@ public class DBService {
                 taskObjects.append(taskObject)
             }
         }
-        TasksHelper.sortTasks(&taskObjects)
+        TasksHelper.sortTasksWithSortType(&taskObjects, sortType: sortType)
         return taskObjects
     }
 
