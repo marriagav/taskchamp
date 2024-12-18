@@ -12,8 +12,24 @@ public struct TaskListView: View {
     @State var isShowingCreateTaskView = false
     @State var selection = Set<String>()
     @State var editMode: EditMode = .inactive
-    @State var sortType: TasksHelper.TCSortType = UserDefaults.standard
-        .object(forKey: "sortType") as? TasksHelper.TCSortType ?? .defaultSort
+    @State var searchText = ""
+    @State var sortType: TasksHelper.TCSortType = .init(
+        rawValue: UserDefaults.standard
+            .string(forKey: "sortType") ?? TasksHelper.TCSortType.defaultSort.rawValue
+    ) ?? .defaultSort
+
+    private var searchedTasks: [TCTask] {
+        if searchText.isEmpty {
+            return tasks
+        }
+        return tasks.filter { $0.description.localizedCaseInsensitiveContains(searchText) ||
+            $0.project?.localizedCaseInsensitiveContains(searchText) ?? false ||
+            $0.priority?.rawValue.localizedCaseInsensitiveContains(searchText) ?? false ||
+            $0.localDate.localizedCaseInsensitiveContains(searchText)
+            || $0.status.rawValue.localizedCaseInsensitiveContains(searchText)
+            || $0.project?.localizedCaseInsensitiveContains(searchText) ?? false
+        }
+    }
 
     private var isEditModeActive: Bool {
         return editMode.isEditing == true
@@ -26,21 +42,25 @@ public struct TaskListView: View {
 
     private func filterButton(sortType: TasksHelper.TCSortType) -> some View {
         let label = sortType == .defaultSort ? "Default" : sortType == .date ? "Date" : "Priority"
+        if self.sortType != sortType {
+            return Button(label) {
+                self.sortType = sortType
+                UserDefaults.standard.set(sortType.rawValue, forKey: "sortType")
+                updateTasks()
+            }
+        }
         return Button {
             self.sortType = sortType
-            UserDefaults.standard.set(sortType, forKey: "sortType")
+            UserDefaults.standard.set(sortType.rawValue, forKey: "sortType")
             updateTasks()
         } label: {
-            Label(
-                label,
-                systemImage: sortType == self.sortType ? SFSymbols.checkmark.rawValue : ""
-            )
+            Label(label, systemImage: SFSymbols.checkmark.rawValue)
         }
     }
 
     public var body: some View {
         List(selection: $selection) {
-            ForEach(tasks, id: \.uuid) { task in
+            ForEach(searchedTasks, id: \.uuid) { task in
                 NavigationLink(value: task) {
                     TaskCellView(task: task)
                 }
@@ -62,7 +82,9 @@ public struct TaskListView: View {
                 .listRowBackground(Color.clear)
             }
         }
+        .searchable(text: $searchText)
         .animation(.default, value: sortType)
+        .animation(.default, value: searchText)
         .overlay(
             Group {
                 if tasks.isEmpty {
