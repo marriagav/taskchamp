@@ -33,8 +33,8 @@ public struct TaskListView: View {
         do {
             try setDbUrl()
             try DBService.shared.updatePendingTasks(uuids, withStatus: newStatus)
-            updateTasks()
             NotificationService.shared.removeNotifications(for: Array(uuids))
+            updateTasks()
         } catch {
             print(error)
         }
