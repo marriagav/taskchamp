@@ -3,7 +3,7 @@ import taskchampShared
 import UIKit
 
 extension TaskListView {
-    private var searchedTasks: [TCTask] {
+    var searchedTasks: [TCTask] {
         if searchText.isEmpty {
             return tasks
         }
@@ -16,7 +16,7 @@ extension TaskListView {
         }
     }
 
-    private var isEditModeActive: Bool {
+    var isEditModeActive: Bool {
         return editMode.isEditing == true
     }
 
