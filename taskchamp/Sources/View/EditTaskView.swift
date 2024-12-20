@@ -91,8 +91,17 @@ public struct EditTaskView: View {
             Section {
                 Button(action: {
                     do {
-                        try DBService.shared.updatePendingTasks([task.uuid], withStatus: .completed)
-                        NotificationService.shared.deleteReminderForTask(task: task)
+                        let newStatus: TCTask.Status = task.isCompleted ? .pending : task
+                            .isDeleted ? .pending : .completed
+                        try DBService.shared.updatePendingTasks(
+                            [task.uuid],
+                            withStatus: newStatus
+                        )
+                        if (newStatus == .completed) || (newStatus == .deleted) {
+                            NotificationService.shared.deleteReminderForTask(task: task)
+                        } else {
+                            NotificationService.shared.createReminderForTask(task: task)
+                        }
                         dismiss()
                     } catch {
                         isShowingAlert = true
@@ -101,9 +110,13 @@ public struct EditTaskView: View {
                         print(error)
                     }
                 }, label: {
-                    Label("Mark as completed", systemImage: SFSymbols.checkmark.rawValue)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-                        .foregroundStyle(.white)
+                    Label(
+                        task.isDeleted ? "Restore task" : task.isCompleted ? "Mark as pending" : "Mark as completed",
+                        systemImage: (task.isDeleted || task.isCompleted) ? SFSymbols.backArrow.rawValue : SFSymbols
+                            .checkmark.rawValue
+                    )
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                    .foregroundStyle(.white)
                 })
                 .buttonStyle(.borderedProminent)
                 .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))

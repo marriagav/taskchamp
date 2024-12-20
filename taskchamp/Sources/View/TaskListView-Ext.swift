@@ -24,7 +24,10 @@ extension TaskListView {
     func updateTasks() {
         do {
             try setDbUrl()
-            let newTasks = try DBService.shared.getPendingTasks(sortType: sortType)
+            let newTasks = try DBService.shared.getTasks(
+                sortType: sortType,
+                filter: selectedFilter
+            )
             if newTasks == tasks {
                 return
             }
@@ -52,7 +55,11 @@ extension TaskListView {
                 if success {
                     print("Notification Authorization granted")
                     Task {
-                        await NotificationService.shared.createReminderForTasks(tasks: tasks)
+                        let pending = try DBService.shared.getTasks(
+                            sortType: sortType,
+                            filter: .defaultFilter
+                        )
+                        await NotificationService.shared.createReminderForTasks(tasks: pending)
                     }
                 } else if let error = error {
                     print(error.localizedDescription)

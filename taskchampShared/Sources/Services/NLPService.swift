@@ -39,6 +39,39 @@ public class NLPService {
         return task
     }
 
+    public func createFilter(from input: String) -> TCFilter {
+        let filter = TCFilter(
+            fullDescription: input
+        )
+        var remainingString = input
+
+        // Check for and extract prio
+        if remainingString.range(of: "prio:") != nil {
+            let prio = extractValue(after: "prio:", from: &remainingString)
+            filter.setPrio(TCTask.Priority(rawValue: prio ?? ""))
+        }
+
+        // Check for and extract project
+        if remainingString.range(of: "project:") != nil {
+            filter.setProject(extractValue(after: "project:", from: &remainingString))
+        }
+
+        // Check for and extract due
+        if remainingString.range(of: "due:") != nil {
+            filter.setDue(extractValue(after: "due:", from: &remainingString)?.dateValue)
+        }
+
+        // Check for and extract status
+        if remainingString.range(of: "status:") != nil {
+            let status = extractValue(after: "status:", from: &remainingString)
+            filter.setStatus(TCTask.Status(rawValue: status ?? "pending"))
+        } else {
+            filter.setStatus(.pending)
+        }
+
+        return filter
+    }
+
     func extractValue(after tag: String, from input: inout String) -> String? {
         if let range = input.range(of: tag) {
             let substring = input[range.upperBound...]
