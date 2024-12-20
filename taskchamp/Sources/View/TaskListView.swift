@@ -189,6 +189,14 @@ public struct TaskListView: View {
                     Button("Filters") {
                         isShowingFilterView.toggle()
                     }
+                    Button("Clear filters") {
+                        selectedFilter = .defaultFilter
+                        do {
+                            let res = try JSONEncoder().encode(selectedFilter)
+                            UserDefaults.standard.set(res, forKey: "selectedFilter")
+                        } catch { print(error) }
+                    }
+                    .disabled(selectedFilter.id == .defaultFilter.id)
                 } label: {
                     Label(
                         "Options",
