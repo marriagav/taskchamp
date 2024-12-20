@@ -86,6 +86,10 @@ public struct TCTask: Codable, Hashable {
         status == .completed
     }
 
+    public var isDeleted: Bool {
+        status == .deleted
+    }
+
     public var localDate: String {
         guard let due = due else {
             return ""

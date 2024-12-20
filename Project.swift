@@ -25,7 +25,7 @@ let project = Project(
                                 "NSUbiquitousContainerSupportedFolderLevels": "Any"
                             ]
                     ],
-                    "CFBundleShortVersionString": "1.1"
+                    "CFBundleShortVersionString": "1.2"
                 ]
             ),
             sources: ["taskchamp/Sources/**"],
@@ -33,7 +33,7 @@ let project = Project(
             entitlements: .dictionary(
                 [
                     "com.apple.developer.icloud-container-identifiers": ["iCloud.com.mav.taskchamp"],
-                    "com.apple.developer.icloud-services": ["CloudDocuments"],
+                    "com.apple.developer.icloud-services": ["CloudDocuments", "CloudKit"],
                     "com.apple.developer.ubiquity-container-identifiers": ["iCloud.com.mav.taskchamp"],
                     "com.apple.developer.usernotifications.time-sensitive": true
                 ]
@@ -76,7 +76,7 @@ let project = Project(
                             "NSUbiquitousContainerSupportedFolderLevels": "Any"
                         ]
                 ],
-                "CFBundleShortVersionString": "1.1"
+                "CFBundleShortVersionString": "1.2"
             ]),
             sources: "taskchampWidget/Sources/**",
             entitlements: .dictionary(
@@ -95,7 +95,7 @@ let project = Project(
             destinations: .iOS,
             product: .staticFramework,
             bundleId: "com.mav.taskchamp.taskchampShared",
-            deploymentTargets: .iOS("15.0"),
+            deploymentTargets: .iOS("17.0"),
             infoPlist: .default,
             sources: "taskchampShared/Sources/**",
             dependencies: [
