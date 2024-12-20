@@ -196,7 +196,7 @@ public struct TaskListView: View {
                             UserDefaults.standard.set(res, forKey: "selectedFilter")
                         } catch { print(error) }
                     }
-                    .disabled(selectedFilter.id == .defaultFilter.id)
+                    .disabled(selectedFilter.id == TCFilter.defaultFilter.id)
                 } label: {
                     Label(
                         "Options",
