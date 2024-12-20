@@ -3,6 +3,23 @@ import taskchampShared
 import UIKit
 
 extension TaskListView {
+    private var searchedTasks: [TCTask] {
+        if searchText.isEmpty {
+            return tasks
+        }
+        return tasks.filter { $0.description.localizedCaseInsensitiveContains(searchText) ||
+            $0.project?.localizedCaseInsensitiveContains(searchText) ?? false ||
+            $0.priority?.rawValue.localizedCaseInsensitiveContains(searchText) ?? false ||
+            $0.localDate.localizedCaseInsensitiveContains(searchText)
+            || $0.status.rawValue.localizedCaseInsensitiveContains(searchText)
+            || $0.project?.localizedCaseInsensitiveContains(searchText) ?? false
+        }
+    }
+
+    private var isEditModeActive: Bool {
+        return editMode.isEditing == true
+    }
+
     func setDbUrl() throws {
         guard let path = taskChampionFileUrlString else {
             throw TCError.genericError("No access or path")
