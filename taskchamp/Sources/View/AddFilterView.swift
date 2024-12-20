@@ -109,13 +109,16 @@ public struct AddFilterView: View {
                                 } catch { print(error) }
                                 dismiss()
                             } label: {
-                                Label(
-                                    filter.fullDescription,
-                                    systemImage: (selectedFilter.id == filter.id)
-                                        ? SFSymbols.checkmarkCircleFill.rawValue
-                                        : SFSymbols.circle.rawValue
-                                )
-                                .font(.system(.body, design: .monospaced))
+                                HStack {
+                                    Text(
+                                        filter.fullDescription
+                                    )
+                                    .font(.system(.body, design: .monospaced))
+                                    if selectedFilter.id == filter.id {
+                                        Spacer()
+                                        Image(systemName: SFSymbols.checkmark.rawValue)
+                                    }
+                                }
                             }
                             .swipeActions(edge: .leading, allowsFullSwipe: true) {
                                 Button(role: .destructive) {
