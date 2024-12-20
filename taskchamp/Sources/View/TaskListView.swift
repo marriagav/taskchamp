@@ -22,23 +22,6 @@ public struct TaskListView: View {
             .string(forKey: "sortType") ?? TasksHelper.TCSortType.defaultSort.rawValue
     ) ?? .defaultSort
 
-    private var searchedTasks: [TCTask] {
-        if searchText.isEmpty {
-            return tasks
-        }
-        return tasks.filter { $0.description.localizedCaseInsensitiveContains(searchText) ||
-            $0.project?.localizedCaseInsensitiveContains(searchText) ?? false ||
-            $0.priority?.rawValue.localizedCaseInsensitiveContains(searchText) ?? false ||
-            $0.localDate.localizedCaseInsensitiveContains(searchText)
-            || $0.status.rawValue.localizedCaseInsensitiveContains(searchText)
-            || $0.project?.localizedCaseInsensitiveContains(searchText) ?? false
-        }
-    }
-
-    private var isEditModeActive: Bool {
-        return editMode.isEditing == true
-    }
-
     public init(isShowingICloudAlert: Binding<Bool>, selectedFilter: Binding<TCFilter>) {
         UINavigationBar.appearance().largeTitleTextAttributes = [.foregroundColor: UIColor.tintColor]
         _isShowingICloudAlert = isShowingICloudAlert
@@ -189,6 +172,16 @@ public struct TaskListView: View {
                     Button("Filters") {
                         isShowingFilterView.toggle()
                     }
+                    Button("Clear filters") {
+                        withAnimation {
+                            selectedFilter = .defaultFilter
+                            do {
+                                let res = try JSONEncoder().encode(selectedFilter)
+                                UserDefaults.standard.set(res, forKey: "selectedFilter")
+                            } catch { print(error) }
+                        }
+                    }
+                    .disabled(selectedFilter.fullDescription == TCFilter.defaultFilter.fullDescription)
                 } label: {
                     Label(
                         "Options",
