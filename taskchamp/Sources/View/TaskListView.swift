@@ -4,9 +4,11 @@ import taskchampShared
 import UIKit
 
 public struct TaskListView: View {
-    @Environment(PathStore.self) var pathStore
+    @Environment(PathStore.self) var pathStore: PathStore
     @Environment(\.scenePhase) var scenePhase
+
     @Binding var isShowingICloudAlert: Bool
+    @Binding var selectedFilter: TCFilter
 
     @State var taskChampionFileUrlString: String?
     @State var tasks: [TCTask] = []
@@ -19,21 +21,6 @@ public struct TaskListView: View {
         rawValue: UserDefaults.standard
             .string(forKey: "sortType") ?? TasksHelper.TCSortType.defaultSort.rawValue
     ) ?? .defaultSort
-
-    @State var selectedFilter: TCFilter = .defaultFilter
-
-    private func getSelectedFilter() -> TCFilter {
-        do {
-            if let data = UserDefaults.standard.data(forKey: "selectedFilter") {
-                let res = try JSONDecoder().decode(TCFilter.self, from: data)
-                return res
-            } else {
-                return .defaultFilter
-            }
-        } catch {
-            return .defaultFilter
-        }
-    }
 
     private var searchedTasks: [TCTask] {
         if searchText.isEmpty {
@@ -52,9 +39,10 @@ public struct TaskListView: View {
         return editMode.isEditing == true
     }
 
-    public init(isShowingICloudAlert: Binding<Bool>) {
+    public init(isShowingICloudAlert: Binding<Bool>, selectedFilter: Binding<TCFilter>) {
         UINavigationBar.appearance().largeTitleTextAttributes = [.foregroundColor: UIColor.tintColor]
         _isShowingICloudAlert = isShowingICloudAlert
+        _selectedFilter = selectedFilter
     }
 
     private func sortButton(sortType: TasksHelper.TCSortType) -> some View {
@@ -133,7 +121,6 @@ public struct TaskListView: View {
         .listStyle(.inset)
         .onAppear {
             copyDatabaseIfNeeded()
-            selectedFilter = getSelectedFilter()
         }
         .toolbar {
             ToolbarItemGroup(placement: .bottomBar) {
