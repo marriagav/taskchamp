@@ -12,4 +12,5 @@ public enum SFSymbols: String {
     case checkmarkCircleFill = "checkmark.circle.fill"
     case partyPopperFill = "party.popper.fill"
     case questionmarkCircle = "questionmark.circle"
+    case backArrow = "arrow.counterclockwise"
 }

@@ -21,11 +21,16 @@ public class DBService {
         }
     }
 
-    public func getPendingTasks(sortType: TasksHelper.TCSortType = .defaultSort) throws -> [TCTask] {
+    public func getTasks(
+        sortType: TasksHelper.TCSortType = .defaultSort,
+        filter: TCFilter = TCFilter.defaultFilter
+    ) throws -> [TCTask] {
         var taskObjects: [TCTask] = []
         let tasks = Table("tasks")
-        let query = tasks.select(TasksColumns.data, TasksColumns.uuid)
-            .filter(TasksColumns.data.like("%\"status\":\"pending\"%"))
+        var query = tasks.select(TasksColumns.data, TasksColumns.uuid)
+        for filter in filter.convertToSqlFilters() {
+            query = query.filter(TasksColumns.data.like(filter))
+        }
         WidgetCenter.shared.reloadAllTimelines()
         let queryTasks = try dbConnection?.prepare(query)
         guard let queryTasks else {
@@ -103,6 +108,7 @@ public class DBService {
     }
 
     public func updatePendingTasks(_ uuids: Set<String>, withStatus newStatus: TCTask.Status) throws {
+        let oldStatus: TCTask.Status = (newStatus == .deleted || newStatus == .completed) ? .pending : .completed
         let tasks = Table("tasks")
 
         let query = tasks.filter(uuids.contains(TasksColumns.uuid))
@@ -111,10 +117,19 @@ public class DBService {
             throw TCError.genericError("Query was null")
         }
         for task in queryTasks {
-            let newData = task[TasksColumns.data].replacingOccurrences(
-                of: TCTask.Status.pending.rawValue,
+            var newData = task[TasksColumns.data].replacingOccurrences(
+                of: oldStatus.rawValue,
                 with: newStatus.rawValue
             )
+            if oldStatus == .completed {
+                newData = newData.replacingOccurrences(of: TCTask.Status.deleted.rawValue, with: newStatus.rawValue)
+            }
+            if newStatus == .deleted {
+                newData = newData.replacingOccurrences(
+                    of: TCTask.Status.completed.rawValue,
+                    with: TCTask.Status.deleted.rawValue
+                )
+            }
             try dbConnection?.run(query.update(TasksColumns.data <- newData))
             WidgetCenter.shared.reloadAllTimelines()
         }

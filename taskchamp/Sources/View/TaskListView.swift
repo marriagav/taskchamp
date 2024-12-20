@@ -1,3 +1,4 @@
+import SwiftData
 import SwiftUI
 import taskchampShared
 import UIKit
@@ -13,10 +14,26 @@ public struct TaskListView: View {
     @State var selection = Set<String>()
     @State var editMode: EditMode = .inactive
     @State var searchText = ""
+    @State var isShowingFilterView = false
     @State var sortType: TasksHelper.TCSortType = .init(
         rawValue: UserDefaults.standard
             .string(forKey: "sortType") ?? TasksHelper.TCSortType.defaultSort.rawValue
     ) ?? .defaultSort
+
+    @State var selectedFilter: TCFilter = .defaultFilter
+
+    private func getSelectedFilter() -> TCFilter {
+        do {
+            if let data = UserDefaults.standard.data(forKey: "selectedFilter") {
+                let res = try JSONDecoder().decode(TCFilter.self, from: data)
+                return res
+            } else {
+                return .defaultFilter
+            }
+        } catch {
+            return .defaultFilter
+        }
+    }
 
     private var searchedTasks: [TCTask] {
         if searchText.isEmpty {
@@ -64,19 +81,28 @@ public struct TaskListView: View {
                 NavigationLink(value: task) {
                     TaskCellView(task: task)
                 }
-                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                    Button {
-                        updateTasks([task.uuid], withStatus: .completed)
-                    } label: {
-                        Label("Done", systemImage: SFSymbols.checkmark.rawValue)
+                .if(task.status != .deleted) {
+                    $0.swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                        Button {
+                            updateTasks([task.uuid], withStatus: task.isCompleted ? .pending : .completed)
+                        } label: {
+                            Label(
+                                task.isCompleted ? "Undone" : "Done",
+                                systemImage: task.isCompleted ? SFSymbols.backArrow.rawValue : SFSymbols.checkmark
+                                    .rawValue
+                            )
+                        }
+                        .tint(task.isCompleted ? .yellow : .green)
                     }
-                    .tint(.green)
                 }
                 .swipeActions(edge: .leading, allowsFullSwipe: true) {
-                    Button(role: .destructive) {
-                        updateTasks([task.uuid], withStatus: .deleted)
+                    Button(role: task.isDeleted ? .cancel : .destructive) {
+                        updateTasks([task.uuid], withStatus: task.isDeleted ? .pending : .deleted)
                     } label: {
-                        Label("Delete", systemImage: SFSymbols.trash.rawValue)
+                        Label(
+                            task.isDeleted ? "Restore" : "Delete",
+                            systemImage: task.isDeleted ? SFSymbols.backArrow.rawValue : SFSymbols.trash.rawValue
+                        )
                     }
                 }
                 .listRowBackground(Color.clear)
@@ -107,6 +133,7 @@ public struct TaskListView: View {
         .listStyle(.inset)
         .onAppear {
             copyDatabaseIfNeeded()
+            selectedFilter = getSelectedFilter()
         }
         .toolbar {
             ToolbarItemGroup(placement: .bottomBar) {
@@ -162,10 +189,14 @@ public struct TaskListView: View {
                         // swiftlint:disable:next force_unwrapping
                         destination: URL(string: "https://github.com/marriagav/taskchamp-docs")!
                     )
+                    Divider()
                     Menu("Sort by") {
                         sortButton(sortType: .defaultSort)
                         sortButton(sortType: .date)
                         sortButton(sortType: .priority)
+                    }
+                    Button("Filters") {
+                        isShowingFilterView.toggle()
                     }
                 } label: {
                     Label(
@@ -186,11 +217,17 @@ public struct TaskListView: View {
         .onChange(of: isEditModeActive) {
             selection.removeAll()
         }
+        .onChange(of: selectedFilter) {
+            updateTasks()
+        }
         .sheet(isPresented: $isShowingCreateTaskView, onDismiss: {
             updateTasks()
         }, content: {
             CreateTaskView()
         })
+        .sheet(isPresented: $isShowingFilterView) {
+            AddFilterView(selectedFilter: $selectedFilter)
+        }
         .navigationDestination(for: TCTask.self) { task in
             EditTaskView(task: task)
                 .onDisappear {
@@ -206,7 +243,7 @@ public struct TaskListView: View {
         }
         .navigationTitle(
             tasks.isEmpty ? "" : isEditModeActive ? selection.isEmpty ? "Select Tasks" : "\(selection.count) Selected" :
-                "My Tasks"
+                selectedFilter.fullDescription
         )
         .environment(\.editMode, $editMode)
         .onOpenURL { url in
