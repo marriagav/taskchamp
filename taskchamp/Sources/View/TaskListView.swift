@@ -190,13 +190,15 @@ public struct TaskListView: View {
                         isShowingFilterView.toggle()
                     }
                     Button("Clear filters") {
-                        selectedFilter = .defaultFilter
-                        do {
-                            let res = try JSONEncoder().encode(selectedFilter)
-                            UserDefaults.standard.set(res, forKey: "selectedFilter")
-                        } catch { print(error) }
+                        withAnimation {
+                            selectedFilter = .defaultFilter
+                            do {
+                                let res = try JSONEncoder().encode(selectedFilter)
+                                UserDefaults.standard.set(res, forKey: "selectedFilter")
+                            } catch { print(error) }
+                        }
                     }
-                    .disabled(selectedFilter.id == TCFilter.defaultFilter.id)
+                    .disabled(selectedFilter.fullDescription == TCFilter.defaultFilter.fullDescription)
                 } label: {
                     Label(
                         "Options",
