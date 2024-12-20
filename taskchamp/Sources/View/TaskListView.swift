@@ -83,7 +83,6 @@ public struct TaskListView: View {
                 .listRowBackground(Color.clear)
             }
         }
-        .searchable(text: $searchText)
         .animation(.default, value: sortType)
         .animation(.default, value: searchText)
         .overlay(
@@ -103,8 +102,12 @@ public struct TaskListView: View {
             }
         )
         .refreshable {
-            updateTasks()
+            do {
+                try await Task.sleep(nanoseconds: UInt64(1.5 * Double(NSEC_PER_SEC)))
+                updateTasks()
+            } catch {}
         }
+        .searchable(text: $searchText)
         .listStyle(.inset)
         .onAppear {
             copyDatabaseIfNeeded()
