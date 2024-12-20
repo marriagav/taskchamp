@@ -20,6 +20,17 @@ public enum TasksHelper {
 
     public static func sortTasksByDefault(_ tasks: inout [TCTask]) {
         tasks.sort {
+            let status1 = $0.status
+            let status2 = $1.status
+            if status1 != status2 {
+                if status1 == .deleted {
+                    return false
+                }
+                if status1 == .completed {
+                    return status2 == .pending
+                }
+                return true
+            }
             if let date = $0.due {
                 if let otherDate = $1.due {
                     return date < otherDate
@@ -42,6 +53,17 @@ public enum TasksHelper {
 
     public static func sortTasksByDate(_ tasks: inout [TCTask]) {
         tasks.sort {
+            let status1 = $0.status
+            let status2 = $1.status
+            if status1 != status2 {
+                if status1 == .deleted {
+                    return false
+                }
+                if status1 == .completed {
+                    return status2 == .pending
+                }
+                return true
+            }
             if let date = $0.due {
                 if let otherDate = $1.due {
                     return date < otherDate
@@ -55,6 +77,17 @@ public enum TasksHelper {
 
     public static func sortTasksByPriority(_ tasks: inout [TCTask]) {
         tasks.sort {
+            let status1 = $0.status
+            let status2 = $1.status
+            if status1 != status2 {
+                if status1 == .deleted {
+                    return false
+                }
+                if status1 == .completed {
+                    return status2 == .pending
+                }
+                return true
+            }
             if let priority = $0.priority {
                 if let otherPriority = $1.priority {
                     return priority > otherPriority

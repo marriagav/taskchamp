@@ -1,3 +1,4 @@
+import SwiftData
 import SwiftUI
 import taskchampShared
 
@@ -8,5 +9,6 @@ struct TaskchampApp: App {
         WindowGroup {
             ContentView()
         }
+        .modelContainer(for: TCFilter.self)
     }
 }
