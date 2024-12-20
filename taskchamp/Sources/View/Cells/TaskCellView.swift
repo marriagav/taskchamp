@@ -8,6 +8,8 @@ public struct TaskCellView: View {
         VStack {
             HStack {
                 Text(task.description)
+                    .strikethrough(task.isCompleted || task.isDeleted, color: task.isDeleted ? .red : nil)
+                    .foregroundStyle(task.isCompleted ? .secondary : task.isDeleted ? Color.red : .primary)
                 Spacer()
                 if let project = task.project {
                     Text(project)
