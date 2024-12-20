@@ -3,6 +3,7 @@ import SwiftUI
 import taskchampShared
 import UIKit
 
+// swiftlint:disable:next type_body_length
 public struct TaskListView: View {
     @Environment(PathStore.self) var pathStore: PathStore
     @Environment(\.scenePhase) var scenePhase
@@ -89,9 +90,17 @@ public struct TaskListView: View {
             Group {
                 if tasks.isEmpty {
                     ContentUnavailableView {
-                        Label("No new tasks", systemImage: "bolt.heart")
+                        Label(
+                            selectedFilter.fullDescription == TCFilter.defaultFilter
+                                .fullDescription ? "No new tasks" : "No tasks found",
+                            systemImage: "bolt.heart"
+                        )
                     } description: {
-                        Text("Use this time to relax or add new tasks!")
+                        Text(
+                            selectedFilter.fullDescription == TCFilter.defaultFilter
+                                .fullDescription ? "Use this time to relax or add new tasks!" :
+                                "Try changing the filters or search terms."
+                        )
                     } actions: {
                         Button("New task") {
                             isShowingCreateTaskView.toggle()
@@ -107,7 +116,9 @@ public struct TaskListView: View {
                 updateTasks()
             } catch {}
         }
-        .searchable(text: $searchText)
+        .if(!tasks.isEmpty) {
+            $0.searchable(text: $searchText)
+        }
         .listStyle(.inset)
         .onAppear {
             copyDatabaseIfNeeded()
@@ -196,7 +207,7 @@ public struct TaskListView: View {
                 }
             }
             ToolbarItemGroup(placement: .topBarLeading) {
-                if !tasks.isEmpty {
+                if !searchedTasks.isEmpty {
                     EditButton()
                 }
             }
@@ -229,7 +240,10 @@ public struct TaskListView: View {
                 }
         }
         .navigationTitle(
-            tasks.isEmpty ? "" : isEditModeActive ? selection.isEmpty ? "Select Tasks" : "\(selection.count) Selected" :
+            (searchedTasks.isEmpty && selectedFilter.fullDescription == TCFilter.defaultFilter.fullDescription) ? "" :
+                isEditModeActive ?
+                selection
+                .isEmpty ? "Select Tasks" : "\(selection.count) Selected" :
                 selectedFilter.fullDescription
         )
         .environment(\.editMode, $editMode)
