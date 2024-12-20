@@ -6,8 +6,8 @@ import taskchampShared
 public struct AddFilterView: View {
     @Environment(\.modelContext) var modelContext
     @Environment(\.dismiss) var dismiss
-
     @Binding var selectedFilter: TCFilter
+
     @Query var filters: [TCFilter]
 
     @State private var showNlpInfoPopover = false
