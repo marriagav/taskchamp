@@ -1,135 +1,108 @@
+import SwiftData
 import SwiftUI
 import taskchampShared
 import UIKit
 
 public struct TaskListView: View {
-    @Environment(PathStore.self) var pathStore
+    @Environment(PathStore.self) var pathStore: PathStore
     @Environment(\.scenePhase) var scenePhase
-    @Binding var isShowingICloudAlert: Bool
 
-    @State private var taskChampionFileUrlString: String?
-    @State private var tasks: [TCTask] = []
-    @State private var isShowingCreateTaskView = false
-    @State private var selection = Set<String>()
-    @State private var editMode: EditMode = .inactive
+    @Binding var isShowingICloudAlert: Bool
+    @Binding var selectedFilter: TCFilter
+
+    @State var taskChampionFileUrlString: String?
+    @State var tasks: [TCTask] = []
+    @State var isShowingCreateTaskView = false
+    @State var selection = Set<String>()
+    @State var editMode: EditMode = .inactive
+    @State var searchText = ""
+    @State var isShowingFilterView = false
+    @State var sortType: TasksHelper.TCSortType = .init(
+        rawValue: UserDefaults.standard
+            .string(forKey: "sortType") ?? TasksHelper.TCSortType.defaultSort.rawValue
+    ) ?? .defaultSort
+
+    private var searchedTasks: [TCTask] {
+        if searchText.isEmpty {
+            return tasks
+        }
+        return tasks.filter { $0.description.localizedCaseInsensitiveContains(searchText) ||
+            $0.project?.localizedCaseInsensitiveContains(searchText) ?? false ||
+            $0.priority?.rawValue.localizedCaseInsensitiveContains(searchText) ?? false ||
+            $0.localDate.localizedCaseInsensitiveContains(searchText)
+            || $0.status.rawValue.localizedCaseInsensitiveContains(searchText)
+            || $0.project?.localizedCaseInsensitiveContains(searchText) ?? false
+        }
+    }
 
     private var isEditModeActive: Bool {
         return editMode.isEditing == true
     }
 
-    public init(isShowingICloudAlert: Binding<Bool>) {
+    public init(isShowingICloudAlert: Binding<Bool>, selectedFilter: Binding<TCFilter>) {
         UINavigationBar.appearance().largeTitleTextAttributes = [.foregroundColor: UIColor.tintColor]
         _isShowingICloudAlert = isShowingICloudAlert
+        _selectedFilter = selectedFilter
     }
 
-    func setDbUrl() throws {
-        guard let path = taskChampionFileUrlString else {
-            throw TCError.genericError("No access or path")
-        }
-        DBService.shared.setDbUrl(path)
-    }
-
-    func updateTasks(_ uuids: Set<String>, withStatus newStatus: TCTask.Status) {
-        do {
-            try setDbUrl()
-            try DBService.shared.updatePendingTasks(uuids, withStatus: newStatus)
-            NotificationService.shared.removeNotifications(for: Array(uuids))
-            updateTasks()
-        } catch {
-            print(error)
-        }
-    }
-
-    func updateTasks() {
-        do {
-            try setDbUrl()
-            let newTasks = try DBService.shared.getPendingTasks()
-            if newTasks == tasks {
-                return
-            }
-            try withAnimation {
-                tasks = try DBService.shared.getPendingTasks()
-            }
-        } catch {
-            if !FileService.shared.isICloudAvailable() {
-                print("iCloud Unavailable")
-                isShowingICloudAlert = true
-            }
-            print(error)
-        }
-    }
-
-    func copyDatabaseIfNeeded() {
-        do {
-            if taskChampionFileUrlString != nil {
-                updateTasks()
-                return
-            }
-            taskChampionFileUrlString = try FileService.shared.copyDatabaseIfNeededAndGetDestinationPath()
-            updateTasks()
-            NotificationService.shared.requestAuthorization { success, error in
-                if success {
-                    print("Notification Authorization granted")
-                    Task {
-                        await NotificationService.shared.createReminderForTasks(tasks: tasks)
-                    }
-                } else if let error = error {
-                    print(error.localizedDescription)
+    private func sortButton(sortType: TasksHelper.TCSortType) -> some View {
+        let label = sortType == .defaultSort ? "Default" : sortType == .date ? "Date" : "Priority"
+        if self.sortType != sortType {
+            return AnyView(
+                Button(label) {
+                    self.sortType = sortType
+                    UserDefaults.standard.set(sortType.rawValue, forKey: "sortType")
+                    updateTasks()
                 }
-            }
-            return
-        } catch {
-            print(error)
+            )
         }
-    }
-
-    func handleDeepLink(url: URL) {
-        Task {
-            guard url.scheme == "taskchamp", url.host == "task" else {
-                return
+        return AnyView(
+            Button {
+                self.sortType = sortType
+                UserDefaults.standard.set(sortType.rawValue, forKey: "sortType")
+                updateTasks()
+            } label: {
+                Label(label, systemImage: SFSymbols.checkmark.rawValue)
             }
-
-            let uuidString = url.pathComponents[1]
-
-            if uuidString == "new" {
-                isShowingCreateTaskView = true
-                return
-            }
-
-            do {
-                try setDbUrl()
-                let task = try DBService.shared.getTask(uuid: uuidString)
-                pathStore.path.append(task)
-            } catch {
-                print(error)
-            }
-        }
+        )
     }
 
     public var body: some View {
         List(selection: $selection) {
-            ForEach(tasks, id: \.uuid) { task in
+            ForEach(searchedTasks, id: \.uuid) { task in
                 NavigationLink(value: task) {
                     TaskCellView(task: task)
                 }
-                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                    Button {
-                        updateTasks([task.uuid], withStatus: .completed)
-                    } label: {
-                        Label("Done", systemImage: SFSymbols.checkmark.rawValue)
+                .if(task.status != .deleted) {
+                    $0.swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                        Button {
+                            updateTasks([task.uuid], withStatus: task.isCompleted ? .pending : .completed)
+                        } label: {
+                            Label(
+                                task.isCompleted ? "Undone" : "Done",
+                                systemImage: task.isCompleted ? SFSymbols.backArrow.rawValue : SFSymbols.checkmark
+                                    .rawValue
+                            )
+                        }
+                        .tint(task.isCompleted ? .yellow : .green)
                     }
-                    .tint(.green)
                 }
                 .swipeActions(edge: .leading, allowsFullSwipe: true) {
-                    Button(role: .destructive) {
-                        updateTasks([task.uuid], withStatus: .deleted)
+                    Button(role: task.isDeleted ? .cancel : .destructive) {
+                        updateTasks([task.uuid], withStatus: task.isDeleted ? .pending : .deleted)
                     } label: {
-                        Label("Delete", systemImage: SFSymbols.trash.rawValue)
+                        Label(
+                            task.isDeleted ? "Restore" : "Delete",
+                            systemImage: task.isDeleted ? SFSymbols.backArrow.rawValue : SFSymbols.trash.rawValue
+                        )
                     }
                 }
                 .listRowBackground(Color.clear)
             }
         }
+        .searchable(text: $searchText)
+        .animation(.default, value: sortType)
+        .animation(.default, value: searchText)
         .overlay(
             Group {
                 if tasks.isEmpty {
@@ -207,6 +180,15 @@ public struct TaskListView: View {
                         // swiftlint:disable:next force_unwrapping
                         destination: URL(string: "https://github.com/marriagav/taskchamp-docs")!
                     )
+                    Divider()
+                    Menu("Sort by") {
+                        sortButton(sortType: .defaultSort)
+                        sortButton(sortType: .date)
+                        sortButton(sortType: .priority)
+                    }
+                    Button("Filters") {
+                        isShowingFilterView.toggle()
+                    }
                 } label: {
                     Label(
                         "Options",
@@ -226,11 +208,17 @@ public struct TaskListView: View {
         .onChange(of: isEditModeActive) {
             selection.removeAll()
         }
+        .onChange(of: selectedFilter) {
+            updateTasks()
+        }
         .sheet(isPresented: $isShowingCreateTaskView, onDismiss: {
             updateTasks()
         }, content: {
             CreateTaskView()
         })
+        .sheet(isPresented: $isShowingFilterView) {
+            AddFilterView(selectedFilter: $selectedFilter)
+        }
         .navigationDestination(for: TCTask.self) { task in
             EditTaskView(task: task)
                 .onDisappear {
@@ -246,7 +234,7 @@ public struct TaskListView: View {
         }
         .navigationTitle(
             tasks.isEmpty ? "" : isEditModeActive ? selection.isEmpty ? "Select Tasks" : "\(selection.count) Selected" :
-                "My Tasks"
+                selectedFilter.fullDescription
         )
         .environment(\.editMode, $editMode)
         .onOpenURL { url in
