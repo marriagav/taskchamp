@@ -48,19 +48,23 @@ public struct TaskListView: View {
     private func sortButton(sortType: TasksHelper.TCSortType) -> some View {
         let label = sortType == .defaultSort ? "Default" : sortType == .date ? "Date" : "Priority"
         if self.sortType != sortType {
-            return Button(label) {
+            return AnyView(
+                Button(label) {
+                    self.sortType = sortType
+                    UserDefaults.standard.set(sortType.rawValue, forKey: "sortType")
+                    updateTasks()
+                }
+            )
+        }
+        return AnyView(
+            Button {
                 self.sortType = sortType
                 UserDefaults.standard.set(sortType.rawValue, forKey: "sortType")
                 updateTasks()
+            } label: {
+                Label(label, systemImage: SFSymbols.checkmark.rawValue)
             }
-        }
-        return Button {
-            self.sortType = sortType
-            UserDefaults.standard.set(sortType.rawValue, forKey: "sortType")
-            updateTasks()
-        } label: {
-            Label(label, systemImage: SFSymbols.checkmark.rawValue)
-        }
+        )
     }
 
     public var body: some View {
