@@ -18,6 +18,7 @@ public struct TaskListView: View {
     @State var editMode: EditMode = .inactive
     @State var searchText = ""
     @State var isShowingFilterView = false
+    @State var isShowingObsidianSettings = false
     @State var sortType: TasksHelper.TCSortType = .init(
         rawValue: UserDefaults.standard
             .string(forKey: "sortType") ?? TasksHelper.TCSortType.defaultSort.rawValue
@@ -178,6 +179,9 @@ public struct TaskListView: View {
                         destination: URL(string: "https://github.com/marriagav/taskchamp-docs")!
                     )
                     Divider()
+                    Button("Obsidian Settings") {
+                        isShowingObsidianSettings.toggle()
+                    }
                     Menu("Sort by") {
                         sortButton(sortType: .defaultSort)
                         sortButton(sortType: .date)
@@ -225,6 +229,9 @@ public struct TaskListView: View {
         })
         .sheet(isPresented: $isShowingFilterView) {
             AddFilterView(selectedFilter: $selectedFilter)
+        }
+        .sheet(isPresented: $isShowingObsidianSettings) {
+            ObsidianSettingsView()
         }
         .navigationDestination(for: TCTask.self) { task in
             EditTaskView(task: task)
