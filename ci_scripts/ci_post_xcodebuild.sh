@@ -7,7 +7,7 @@ if [ "$CI_WORKFLOW" = "Alpha" ] || [ "$CI_WORKFLOW" = "Beta" ]; then
     mkdir TestFlight
     pushd TestFlight
       for locale in en-GB en-US es-MX es-ES; do
-        git fetch --deepen 3 && git log -3 --pretty=format:"%s" > WhatToTest.$locale.txt
+        "../WhatToTest.txt" > WhatToTest.$locale.txt
       done
     popd
   popd
