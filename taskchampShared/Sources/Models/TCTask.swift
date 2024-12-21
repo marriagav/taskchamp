@@ -32,6 +32,20 @@ public struct TCTask: Codable, Hashable {
         case due
     }
 
+    // Helper to handle dynamic keys
+    private struct DynamicCodingKey: CodingKey {
+        var stringValue: String
+        var intValue: Int? { nil }
+
+        init?(stringValue: String) {
+            self.stringValue = stringValue
+        }
+
+        init?(intValue _: Int) {
+            return nil
+        }
+    }
+
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         uuid = try container.decode(String.self, forKey: .uuid)
@@ -45,6 +59,21 @@ public struct TCTask: Codable, Hashable {
         } else {
             due = nil
         }
+        // Decode dynamic keys for annotations
+        let dynamicContainer = try decoder.container(keyedBy: DynamicCodingKey.self)
+        var obsidianNoteValue: String?
+        var noteAnnotationKey: String?
+
+        for key in dynamicContainer.allKeys where key.stringValue.starts(with: "annotation_") {
+            let annotationValue = try dynamicContainer.decode(String.self, forKey: key)
+            if annotationValue.starts(with: "task-note:") {
+                noteAnnotationKey = key.stringValue
+                obsidianNoteValue = annotationValue.replacingOccurrences(of: "task-note: ", with: "")
+                break
+            }
+        }
+        obsidianNote = obsidianNoteValue
+        self.noteAnnotationKey = noteAnnotationKey
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -57,6 +86,25 @@ public struct TCTask: Codable, Hashable {
             let timeInterval = due.timeIntervalSince1970.rounded()
             try container.encode(String(timeInterval), forKey: .due)
         }
+        // Encode dynamic annotation keys
+        var dynamicContainer = encoder.container(keyedBy: DynamicCodingKey.self)
+
+        // Add the obsidianNote as a dynamic annotation
+        if let obsidianNoteValue = obsidianNote {
+            if let existingKey = noteAnnotationKey {
+                if let dynamicKey = DynamicCodingKey(stringValue: existingKey) {
+                    try dynamicContainer.encode(
+                        "task-note: \(obsidianNoteValue)",
+                        forKey: dynamicKey
+                    )
+                }
+            }
+            let modifiedDate = String(Int(Date().timeIntervalSince1970.rounded()))
+            let dynamicKey = DynamicCodingKey(stringValue: "annotation_\(modifiedDate))")
+            if let dynamicKey = dynamicKey {
+                try dynamicContainer.encode("task-note: \(obsidianNoteValue)", forKey: dynamicKey)
+            }
+        }
     }
 
     public init(
@@ -65,7 +113,9 @@ public struct TCTask: Codable, Hashable {
         description: String,
         status: Status,
         priority: Priority? = nil,
-        due: Date? = nil
+        due: Date? = nil,
+        obsidianNote: String? = nil,
+        noteAnnotationKey: String? = nil
     ) {
         self.uuid = uuid
         self.project = project
@@ -73,6 +123,8 @@ public struct TCTask: Codable, Hashable {
         self.status = status
         self.priority = priority
         self.due = due
+        self.obsidianNote = obsidianNote
+        self.noteAnnotationKey = noteAnnotationKey
     }
 
     public let uuid: String
@@ -81,6 +133,8 @@ public struct TCTask: Codable, Hashable {
     public var status: Status
     public var priority: Priority?
     public var due: Date?
+    public var obsidianNote: String?
+    public var noteAnnotationKey: String?
 
     public var isCompleted: Bool {
         status == .completed
@@ -88,6 +142,10 @@ public struct TCTask: Codable, Hashable {
 
     public var isDeleted: Bool {
         status == .deleted
+    }
+
+    public var hasNote: Bool {
+        obsidianNote != nil
     }
 
     public var localDate: String {

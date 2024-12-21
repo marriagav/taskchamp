@@ -22,6 +22,7 @@
 public enum TaskchampAsset {
   public enum Assets {
   public static let accentColor = TaskchampColors(name: "AccentColor")
+    public static let obsidianColor = TaskchampColors(name: "ObsidianColor")
   }
   public enum PreviewAssets {
   }
