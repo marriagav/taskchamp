@@ -1,0 +1,1 @@
+Obsidian integration: Use Taskchamp to create and bind Obsidian notes to your tasks.

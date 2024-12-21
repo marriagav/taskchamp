@@ -12,6 +12,10 @@ Shortcuts: Set up app shortcuts to add tasks without even entering the App!
 
 Notifications: Get reminded of your tasks when they are due so that you do not miss any of them.
 
+Obsidian integration: Use Taskchamp to create and bind Obsidian notes to your tasks.
+
+Costum filters: Create custom filters using command line syntax to view your tasks in the way you want.
+
 And much more!
 
 
