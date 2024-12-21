@@ -2,7 +2,7 @@ import SwiftUI
 import taskchampShared
 
 public struct EditTaskView: View {
-    var task: TCTask
+    @State var task: TCTask
 
     @Environment(\.dismiss) var dismiss
 
@@ -159,6 +159,51 @@ public struct EditTaskView: View {
                 .bold()
             }
             ToolbarItemGroup(placement: .bottomBar) {
+                Button {
+                    let obsidianPath = UserDefaults.standard.string(forKey: "obsidianPath")
+                    // TODO: Implement Obsidian path setter
+                    guard let obsidianPath else {
+                        isShowingAlert = true
+                        alertTitle = "Obsidian path not set"
+                        alertMessage = "Please set the Obsidian path in the settings"
+                        return
+                    }
+                    if task.hasNote {
+                        // TODO: Implement Obsidian note opener
+                        print("Navigating to note: \(task.obsidianNote ?? "")")
+                        return
+                    }
+                    let taskNote = "task-note: \(task.description.replace(" ", with: "-"))"
+                    let newTask = TCTask(
+                        uuid: task.uuid,
+                        project: task.project,
+                        description: task.description,
+                        status: task.status,
+                        priority: task.priority,
+                        due: task.due,
+                        obsidianNote: taskNote
+                    )
+                    do {
+                        try DBService.shared.updateTask(newTask)
+                        task = newTask
+                        // TODO: Implement Obsidian note opener
+                        print("Navigating to note: \(task.obsidianNote ?? "")")
+                        return
+                    } catch {
+                        isShowingAlert = true
+                        alertTitle = "There was an error"
+                        alertMessage = "Failed to create task note. Please try again."
+                        print(error)
+                    }
+                } label: {
+                    Label(
+                        task.hasNote ? "Open Obsidian note" : "Create Obsidian note",
+                        systemImage: SFSymbols.obsidian.rawValue
+                    )
+                    .labelStyle(.titleAndIcon)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(Color(asset: TaskchampAsset.Assets.accentColor))
                 Spacer()
                 Menu {
                     Button(role: .destructive) {
