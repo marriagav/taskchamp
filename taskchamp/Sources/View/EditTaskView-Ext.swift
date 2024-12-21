@@ -1,24 +1,31 @@
 import Foundation
 import taskchampShared
+import UIKit
 
 extension EditTaskView {
+    func openExternalURL(_ urlString: String) {
+        if let url = URL(string: urlString) {
+            UIApplication.shared.open(url, options: [:], completionHandler: nil)
+        }
+    }
+
     func handleObsidianTap() {
         do {
             let obsidianVaultName = UserDefaults.standard
                 .string(forKey: "obsidianVaultName")
             let tasksFolderPath = UserDefaults.standard
                 .string(forKey: "tasksFolderPath") ?? ""
-            if obsidianVaultName == nil {
+            if obsidianVaultName == nil || obsidianVaultName?.isEmpty ?? true {
                 isShowingObsidianSettings = true
                 return
             }
             if task.hasNote {
                 let taskNoteWithPath = "\(tasksFolderPath)/\(task.obsidianNote ?? "")"
-                // TODO: Implement Obsidian note opener
-                print("Navigating to note: \(taskNoteWithPath)")
+                let urlString = "obsidian://open?vault=\(obsidianVaultName ?? "")&file=\(taskNoteWithPath)"
+                openExternalURL(urlString)
                 return
             }
-            let taskNote = "task-note: \(task.description.replace(" ", with: "-"))"
+            let taskNote = task.description.replacing(" ", with: "-")
             let newTask = TCTask(
                 uuid: task.uuid,
                 project: task.project,
@@ -31,8 +38,8 @@ extension EditTaskView {
             try DBService.shared.updateTask(newTask)
             task = newTask
             let taskNoteWithPath = "\(tasksFolderPath)/\(task.obsidianNote ?? "")"
-            // TODO: Implement Obsidian note opener
-            print("Navigating to note: \(taskNoteWithPath)")
+            let urlString = "obsidian://new?vault=\(obsidianVaultName ?? "")&file=\(taskNoteWithPath)"
+            openExternalURL(urlString)
             return
         } catch {
             isShowingAlert = true
