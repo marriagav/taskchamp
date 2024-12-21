@@ -2,28 +2,29 @@ import SwiftUI
 import taskchampShared
 
 public struct EditTaskView: View {
-    var task: TCTask
+    @State var task: TCTask
 
     @Environment(\.dismiss) var dismiss
 
-    @State private var project = ""
-    @State private var description = ""
-    @State private var status: TCTask.Status = .pending
-    @State private var priority: TCTask.Priority = .none
+    @State var project = ""
+    @State var description = ""
+    @State var status: TCTask.Status = .pending
+    @State var priority: TCTask.Priority = .none
 
-    @State private var didSetDate = false
-    @State private var didSetTime = false
-    @State private var isDateShowing = false
-    @State private var isTimeShowing = false
+    @State var didSetDate = false
+    @State var didSetTime = false
+    @State var isDateShowing = false
+    @State var isTimeShowing = false
 
-    @State private var due: Date = .init()
-    @State private var time: Date = .init()
+    @State var due: Date = .init()
+    @State var time: Date = .init()
 
-    @State private var isShowingAlert = false
-    @State private var alertTitle = ""
-    @State private var alertMessage = ""
+    @State var isShowingAlert = false
+    @State var isShowingObsidianSettings = false
+    @State var alertTitle = ""
+    @State var alertMessage = ""
 
-    @FocusState private var isFocused: Bool
+    @FocusState var isFocused: Bool
 
     var didChange: Bool {
         task.project ?? "" != project ||
@@ -90,25 +91,7 @@ public struct EditTaskView: View {
             }
             Section {
                 Button(action: {
-                    do {
-                        let newStatus: TCTask.Status = task.isCompleted ? .pending : task
-                            .isDeleted ? .pending : .completed
-                        try DBService.shared.updatePendingTasks(
-                            [task.uuid],
-                            withStatus: newStatus
-                        )
-                        if (newStatus == .completed) || (newStatus == .deleted) {
-                            NotificationService.shared.deleteReminderForTask(task: task)
-                        } else {
-                            NotificationService.shared.createReminderForTask(task: task)
-                        }
-                        dismiss()
-                    } catch {
-                        isShowingAlert = true
-                        alertTitle = "There was an error"
-                        alertMessage = "Task failed to update. Please try again."
-                        print(error)
-                    }
+                    handleTaskActionTap()
                 }, label: {
                     Label(
                         task.isDeleted ? "Restore task" : task.isCompleted ? "Mark as pending" : "Mark as completed",
@@ -124,54 +107,27 @@ public struct EditTaskView: View {
         }.toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button("Save") {
-                    if description.isEmpty {
-                        isShowingAlert = true
-                        alertTitle = "Missing field"
-                        alertMessage = "Please enter a task name"
-                        return
-                    }
-
-                    let date: Date? = didSetDate ? due : nil
-                    let time: Date? = didSetTime ? time : nil
-                    let finalDate = Calendar.current.mergeDateWithTime(date: date, time: time)
-
-                    let task = TCTask(
-                        uuid: task.uuid,
-                        project: project.isEmpty ? nil : project,
-                        description: description,
-                        status: status,
-                        priority: priority == .none ? nil : priority,
-                        due: finalDate
-                    )
-
-                    do {
-                        try DBService.shared.updateTask(task)
-                        NotificationService.shared.createReminderForTask(task: task)
-                        dismiss()
-                    } catch {
-                        isShowingAlert = true
-                        alertTitle = "There was an error"
-                        alertMessage = "Task failed to update. Please try again."
-                        print(error)
-                    }
+                    updateTask()
                 }
                 .disabled(!didChange)
                 .bold()
             }
             ToolbarItemGroup(placement: .bottomBar) {
+                Button {
+                    handleObsidianTap()
+                } label: {
+                    Label(
+                        task.hasNote ? "Open Obsidian note" : "Create Obsidian note",
+                        systemImage: SFSymbols.obsidian.rawValue
+                    )
+                    .labelStyle(.titleAndIcon)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(Color(asset: TaskchampAsset.Assets.accentColor))
                 Spacer()
                 Menu {
                     Button(role: .destructive) {
-                        do {
-                            try DBService.shared.updatePendingTasks([task.uuid], withStatus: .deleted)
-                            NotificationService.shared.deleteReminderForTask(task: task)
-                            dismiss()
-                        } catch {
-                            isShowingAlert = true
-                            alertTitle = "There was an error"
-                            alertMessage = "Task failed to update. Please try again."
-                            print(error)
-                        }
+                        deleteTask()
                     } label: {
                         Label(
                             "Delete task",
@@ -218,6 +174,9 @@ public struct EditTaskView: View {
         .animation(.default, value: didSetTime)
         .alert(isPresented: $isShowingAlert) {
             Alert(title: Text(alertTitle), message: Text(alertMessage), dismissButton: .default(Text("OK")))
+        }
+        .sheet(isPresented: $isShowingObsidianSettings) {
+            ObsidianSettingsView()
         }
         .navigationTitle(description)
     }
