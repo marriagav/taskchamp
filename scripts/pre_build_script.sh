@@ -13,11 +13,14 @@ if which swiftlint > /dev/null; then
       echo "warning: SwiftFormat not installed, download from https://github.com/nicklockwood/SwiftFormat"
     fi
 
-    swiftlint taskchamp/Sources  #TODO: replace this
-    # swiftlint taskchamp/Sources --no-cache --strict \#TODO: uncomment this
+    swiftlint taskchamp/Sources --no-cache --strict 
+    swiftlint taskchampWidget/Sources --no-cache --strict 
+    swiftlint taskchampShared/Sources --no-cache --strict 
 
   elif [ "$ACTION" = 'build' ]; then
     swiftlint taskchamp/Sources
+    swiftlint taskchampWidget/Sources
+    swiftlint taskchampShared/Sources
   fi
 
 else
