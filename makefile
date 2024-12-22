@@ -16,3 +16,7 @@ graph:
 	mise exec -- tuist graph
 debug:
 	mise exec -- tuist build -- -configuration Debug
+download_metadata:
+	fastlane deliver download_metadata
+download_screenshots:
+	fastlane deliver download_screenshots
