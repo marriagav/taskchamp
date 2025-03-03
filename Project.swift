@@ -2,6 +2,11 @@ import ProjectDescription
 
 let project = Project(
     name: "taskchamp",
+    settings: .settings(base: [
+        "SWIFT_OBJC_INTEROP_MODE": "objcxx",
+        "SWIFT_INCLUDE_PATHS": ["$(PROJECT_DIR)"],
+        "LIBRARY_SEARCH_PATHS": ["$(PROJECT_DIR)/Project/taskchampion-ios"]
+    ], defaultSettings: .recommended),
     targets: [
         .target(
             name: "taskchamp",
@@ -30,6 +35,13 @@ let project = Project(
             ),
             sources: ["taskchamp/Sources/**"],
             resources: ["taskchamp/Resources/**"],
+            copyFiles: [
+                CopyFilesAction.executables(
+                    name: "Copy taskchampion rust binaries",
+                    subpath: "taskchampion-ios/",
+                    files: ["taskchampion-ios/**"]
+                )
+            ],
             entitlements: .dictionary(
                 [
                     "com.apple.developer.icloud-container-identifiers": ["iCloud.com.mav.taskchamp"],
@@ -39,6 +51,11 @@ let project = Project(
                 ]
             ),
             scripts: [
+                // .pre(
+                //     script: "./scripts/build_taskchampion_binary.sh",
+                //     name: "Build Taskchampion Binary",
+                //     basedOnDependencyAnalysis: false
+                // ),
                 .pre(script: "./scripts/pre_build_script.sh", name: "Prebuild", basedOnDependencyAnalysis: false)
             ],
             dependencies: [
