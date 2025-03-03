@@ -51,11 +51,6 @@ let project = Project(
                 ]
             ),
             scripts: [
-                // .pre(
-                //     script: "./scripts/build_taskchampion_binary.sh",
-                //     name: "Build Taskchampion Binary",
-                //     basedOnDependencyAnalysis: false
-                // ),
                 .pre(script: "./scripts/pre_build_script.sh", name: "Prebuild", basedOnDependencyAnalysis: false)
             ],
             dependencies: [
