@@ -35,3 +35,10 @@ amplifytools.xcconfig
 ### Projects ###
 *.xcodeproj
 *.xcworkspace
+
+### Cargo
+./taskwarrior/src/taskchampion-cpp/target/
+./taskwarrior/src/taskchampion-cpp/Cargo.lock
+./taskchampion-ios/libtaskchampion_lib.a
+./taskchampion-ios/lib.rs.h
+
