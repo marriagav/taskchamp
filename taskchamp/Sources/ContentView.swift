@@ -24,6 +24,8 @@ public struct ContentView: View {
             TaskListView(isShowingICloudAlert: $isShowingAlert, selectedFilter: $selectedFilter)
         }
         .onAppear {
+            // TODO: WORKING HERE :D
+            print("MURSH8:", printAnExample())
             selectedFilter = getSelectedFilter()
             if FileService.shared.isICloudAvailable() {
                 print("iCloud Available")

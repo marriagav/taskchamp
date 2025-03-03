@@ -3,6 +3,7 @@ edit:
 install:
 	mise exec -- tuist install
 generate:
+	./scripts/build_taskchampion_binary.sh
 	mise exec -- tuist generate
 build:
 	mise exec -- tuist build
