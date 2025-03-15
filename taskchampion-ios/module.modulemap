@@ -1,4 +1,0 @@
-module taskchampion {
-    header "lib.rs.h"
-    export *
-}
