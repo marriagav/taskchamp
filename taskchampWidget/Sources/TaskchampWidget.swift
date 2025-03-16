@@ -25,8 +25,8 @@ struct Provider: TimelineProvider {
     func getTasks() -> [TCTask] {
         do {
             let destinationPath = try FileService.shared.getDestinationPath()
-            DBService.shared.setDbUrl(destinationPath)
-            let tasks = try DBService.shared.getTasks()
+            DBServiceDEPRECATED.shared.setDbUrl(destinationPath)
+            let tasks = try DBServiceDEPRECATED.shared.getTasks()
             return tasks
         } catch {
             print("Error getting tasks \(error)")
