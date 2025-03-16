@@ -1,21 +1,59 @@
+import Foundation
 import Taskchampion
 
-public func printAnExample() -> String {
-    print("hello uuid", Taskchampion.uuid_v4())
-    let replica = Taskchampion.new_replica_in_memory()
-    var tasks = replica.all_task_data()!
-    print("LENTH", tasks.len())
+public class TaskchampionService {
+    public static let shared = TaskchampionService()
+    private var replica: Replica?
 
-    var ops = Taskchampion.new_operations()
-    print("LENGTH", ops.len())
-    ops = Taskchampion.create_task(Taskchampion.uuid_v4(), ops)
-    print("LENGTH", ops.len())
+    public func setDbUrl(_: String) {
+        // TODO: use replica from disk
+        replica = Taskchampion.new_replica_in_memory()
+    }
 
-    replica.commit_operations(ops)
-    tasks = replica.all_task_data()!
-    let task = tasks.first
-    print("HERE", task)
-    print("LENTH", tasks.len())
+    public func getTasks(
+        sortType: TasksHelper.TCSortType = .defaultSort,
+        filter _: TCFilter = TCFilter.defaultFilter
+    ) throws -> [TCTask] {
+        var taskObjects: [TCTask] = []
+        let tasks = replica?.all_task_data()
+        guard let tasks else {
+            throw TCError.genericError("Query was null")
+        }
+        for task in tasks {
+            print("TASK", task)
+            // TODO: TCTask init from taskchampion task
+            // taskObjects.append(task)
+        }
+        // TODO: use filters
+        TasksHelper.sortTasksWithSortType(&taskObjects, sortType: sortType)
+        return taskObjects
+    }
 
-    return "hello!"
+    public func getTask(uuid _: String) throws -> TCTask {
+        // TODO:
+        throw TCError.genericError("Not implemented")
+    }
+
+    public func togglePendingTasksStatus(uuids _: Set<String>) throws {
+        // TODO:
+        throw TCError.genericError("Not implemented")
+    }
+
+    public func updatePendingTasks(_: Set<String>, withStatus _: TCTask.Status) throws {
+        // TODO:
+        throw TCError.genericError("Not implemented")
+    }
+
+    public func updateTask(_: TCTask) throws {
+        // TODO:
+        throw TCError.genericError("Not implemented")
+    }
+
+    public func createTask(task _: TCTask) throws {
+        // TODO:
+        let uuid = Taskchampion.uuid_v4()
+        var ops = Taskchampion.new_operations()
+        ops = Taskchampion.create_task(uuid, ops)
+        throw TCError.genericError("Not implemented")
+    }
 }

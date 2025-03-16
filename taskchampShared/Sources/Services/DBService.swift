@@ -2,13 +2,13 @@ import Foundation
 import SQLite
 import WidgetKit
 
-public class DBService {
+public class DBServiceDEPRECATED {
     enum TasksColumns {
         static let uuid = SQLite.Expression<String>("uuid")
         static let data = SQLite.Expression<String>("data")
     }
 
-    public static let shared = DBService()
+    public static let shared = DBServiceDEPRECATED()
     private var dbConnection: Connection?
 
     private init() {}

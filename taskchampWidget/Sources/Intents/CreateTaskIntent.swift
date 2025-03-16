@@ -16,10 +16,10 @@ struct CreateTaskIntent: AppIntent {
 
     func perform() async throws -> some IntentResult {
         let destinationPath = try FileService.shared.getDestinationPath()
-        DBService.shared.setDbUrl(destinationPath)
+        DBServiceDEPRECATED.shared.setDbUrl(destinationPath)
 
         let task = NLPService.shared.createTask(from: taskInput)
-        try DBService.shared.createTask(task)
+        try DBServiceDEPRECATED.shared.createTask(task)
 
         return .result()
     }
