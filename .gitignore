@@ -35,3 +35,6 @@ amplifytools.xcconfig
 ### Projects ###
 *.xcodeproj
 *.xcworkspace
+
+### Cargo
+task-champion-swift/

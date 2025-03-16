@@ -24,13 +24,13 @@ extension TaskListView {
         guard let path = taskChampionFileUrlString else {
             throw TCError.genericError("No access or path")
         }
-        DBService.shared.setDbUrl(path)
+        DBServiceDEPRECATED.shared.setDbUrl(path)
     }
 
     func updateTasks(_ uuids: Set<String>, withStatus newStatus: TCTask.Status) {
         do {
             try setDbUrl()
-            try DBService.shared.updatePendingTasks(uuids, withStatus: newStatus)
+            try DBServiceDEPRECATED.shared.updatePendingTasks(uuids, withStatus: newStatus)
             NotificationService.shared.removeNotifications(for: Array(uuids))
             updateTasks()
         } catch {
@@ -41,7 +41,7 @@ extension TaskListView {
     func updateTasks() {
         do {
             try setDbUrl()
-            let newTasks = try DBService.shared.getTasks(
+            let newTasks = try DBServiceDEPRECATED.shared.getTasks(
                 sortType: sortType,
                 filter: selectedFilter
             )
@@ -72,7 +72,7 @@ extension TaskListView {
                 if success {
                     print("Notification Authorization granted")
                     Task {
-                        let pending = try DBService.shared.getTasks(
+                        let pending = try DBServiceDEPRECATED.shared.getTasks(
                             sortType: sortType,
                             filter: .defaultFilter
                         )
@@ -103,7 +103,7 @@ extension TaskListView {
 
             do {
                 try setDbUrl()
-                let task = try DBService.shared.getTask(uuid: uuidString)
+                let task = try DBServiceDEPRECATED.shared.getTask(uuid: uuidString)
                 pathStore.path.append(task)
             } catch {
                 print(error)

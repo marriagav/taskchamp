@@ -2,6 +2,10 @@ import ProjectDescription
 
 let project = Project(
     name: "taskchamp",
+    settings: .settings(base: [
+        "SWIFT_OBJC_INTEROP_MODE": "objcxx",
+        "SWIFT_INCLUDE_PATHS": ["$(PROJECT_DIR)"]
+    ], defaultSettings: .recommended),
     targets: [
         .target(
             name: "taskchamp",
@@ -100,7 +104,8 @@ let project = Project(
             sources: "taskchampShared/Sources/**",
             dependencies: [
                 .external(name: "SQLite"),
-                .external(name: "SoulverCore")
+                .external(name: "SoulverCore"),
+                .external(name: "Taskchampion")
             ]
         )
     ]

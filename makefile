@@ -3,6 +3,10 @@ edit:
 install:
 	mise exec -- tuist install
 generate:
+	./scripts/build_taskchampion_swift.sh
+	mise exec -- tuist generate
+generate-ci:
+	./scripts/build_taskchampion_swift.sh --skip-sim
 	mise exec -- tuist generate
 build:
 	mise exec -- tuist build
@@ -20,3 +24,11 @@ download_metadata:
 	fastlane deliver download_metadata
 download_screenshots:
 	fastlane deliver download_screenshots
+lint:
+	swiftlint taskchamp/Sources
+	swiftlint taskchampWidget/Sources
+	swiftlint taskchampShared/Sources
+format:
+	swiftformat taskchamp/Sources
+	swiftformat taskchampWidget/Sources
+	swiftformat taskchampShared/Sources

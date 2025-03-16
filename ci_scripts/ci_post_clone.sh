@@ -8,8 +8,9 @@ brew install fastlane
 
 brew install mise
 mise install
+curl https://sh.rustup.rs -sSf | sh -s -- -y
 
 pushd ..
 make install
-make generate
+make generate-ci
 popd
