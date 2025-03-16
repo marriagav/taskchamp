@@ -3,6 +3,7 @@ set -e  # Exit immediately if a command exits with a non-zero status
 
 # Default value for the skip-sim flag
 SKIP_SIM=false
+export IPHONEOS_DEPLOYMENT_TARGET=17.0
 
 # Parse flags manually
 for arg in "$@"; do
@@ -79,7 +80,7 @@ install_rust_targets_for_sim() {
 
 install_rust_targets() {
     echo "Adding Rust targets..."
-    rustup target add aarch64-apple-ios x86_64-apple-ios
+    rustup target add aarch64-apple-ios
 }
 
 # Ensure cargo-lipo is installed
@@ -96,13 +97,13 @@ install_cargo_lipo() {
 # Build Taskchampion Swift
 build_taskchampion_swift_for_sim() {
     echo "Building taskchampion-swift for simulator..."
-    (cd "$TASKCHAMPION_SWIFT_DIR/taskchampion-swift" && cargo lipo --targets aarch64-apple-ios-sim)
+    (cd "$TASKCHAMPION_SWIFT_DIR/taskchampion-swift" && cargo build --target aarch64-apple-ios-sim)
 }
 
 # Build Taskchampion Swift
 build_taskchampion_swift() {
     echo "Building taskchampion-swift..."
-    (cd "$TASKCHAMPION_SWIFT_DIR/taskchampion-swift" && cargo lipo --release --targets aarch64-apple-ios,x86_64-apple-ios)
+    (cd "$TASKCHAMPION_SWIFT_DIR/taskchampion-swift" && cargo build --release --target aarch64-apple-ios)
 }
 
 add_import_if_needed() {
@@ -118,7 +119,7 @@ add_import_if_needed() {
   fi
 }
 
-SRC_BIN="$TASKCHAMPION_SWIFT_DIR/target/universal/release/libtaskchampion_swift.a"
+SRC_BIN="$TASKCHAMPION_SWIFT_DIR/target/aarch64-apple-ios/release/libtaskchampion_swift.a"
 SRC_BIN_FOR_SIM="$TASKCHAMPION_SWIFT_DIR/target/aarch64-apple-ios-sim/debug/libtaskchampion_swift.a"
 HEADER="$TASKCHAMPION_SWIFT_DIR/generated/SwiftBridgeCore.h"
 SECOND_HEADER="$TASKCHAMPION_SWIFT_DIR/generated/taskchampion-swift/taskchampion-swift.h"
@@ -176,6 +177,6 @@ if [ "$SKIP_SIM" = false ]; then
     copy_generated_files_for_sim
 fi
 install_rust_targets
-install_cargo_lipo
+# install_cargo_lipo # Not currently used
 build_taskchampion_swift
 copy_generated_files
