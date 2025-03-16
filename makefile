@@ -3,7 +3,10 @@ edit:
 install:
 	mise exec -- tuist install
 generate:
-	./scripts/build_taskchampion_binary.sh
+	./scripts/build_taskchampion_swift.sh
+	mise exec -- tuist generate
+generate-ci:
+	./scripts/build_taskchampion_swift.sh --skip-sim
 	mise exec -- tuist generate
 build:
 	mise exec -- tuist build

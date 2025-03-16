@@ -4,8 +4,7 @@ let project = Project(
     name: "taskchamp",
     settings: .settings(base: [
         "SWIFT_OBJC_INTEROP_MODE": "objcxx",
-        "SWIFT_INCLUDE_PATHS": ["$(PROJECT_DIR)"],
-        "LIBRARY_SEARCH_PATHS": ["$(PROJECT_DIR)/Project/taskchampion-ios"]
+        "SWIFT_INCLUDE_PATHS": ["$(PROJECT_DIR)"]
     ], defaultSettings: .recommended),
     targets: [
         .target(
@@ -35,13 +34,6 @@ let project = Project(
             ),
             sources: ["taskchamp/Sources/**"],
             resources: ["taskchamp/Resources/**"],
-            copyFiles: [
-                CopyFilesAction.executables(
-                    name: "Copy taskchampion rust binaries",
-                    subpath: "taskchampion-ios/",
-                    files: ["taskchampion-ios/**"]
-                )
-            ],
             entitlements: .dictionary(
                 [
                     "com.apple.developer.icloud-container-identifiers": ["iCloud.com.mav.taskchamp"],
@@ -112,7 +104,8 @@ let project = Project(
             sources: "taskchampShared/Sources/**",
             dependencies: [
                 .external(name: "SQLite"),
-                .external(name: "SoulverCore")
+                .external(name: "SoulverCore"),
+                .external(name: "Taskchampion")
             ]
         )
     ]
