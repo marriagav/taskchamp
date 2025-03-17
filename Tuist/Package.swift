@@ -16,7 +16,7 @@ let package = Package(
         Package.Dependency.package(url: "https://github.com/soulverteam/SoulverCore", from: "2.6.3"),
         Package.Dependency.package(
             name: "Taskchampion",
-            path: "../taskchampion-swift/taskchampion-swift/taskchampion-swift"
+            path: "../task-champion-swift/taskchampion-swift/taskchampion-swift/"
         )
     ]
 )
