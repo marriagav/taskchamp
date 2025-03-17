@@ -12,6 +12,7 @@ curl https://sh.rustup.rs -sSf | sh -s -- -y
 
 pushd ..
 make clone_taskchampion
-make generate-ci
+make build_taskchampion_ci
 make install
+make generate
 popd
