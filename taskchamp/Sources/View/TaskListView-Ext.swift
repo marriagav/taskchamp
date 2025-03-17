@@ -25,6 +25,7 @@ extension TaskListView {
             throw TCError.genericError("No access or path")
         }
         DBServiceDEPRECATED.shared.setDbUrl(path)
+        TaskchampionService.shared.setDbUrl(path)
     }
 
     func updateTasks(_ uuids: Set<String>, withStatus newStatus: TCTask.Status) {
@@ -45,6 +46,7 @@ extension TaskListView {
                 sortType: sortType,
                 filter: selectedFilter
             )
+            let test = try TaskchampionService.shared.getTasks()
             if newTasks == tasks {
                 return
             }

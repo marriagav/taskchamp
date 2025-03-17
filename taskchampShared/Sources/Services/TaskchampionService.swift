@@ -5,9 +5,12 @@ public class TaskchampionService {
     public static let shared = TaskchampionService()
     private var replica: Replica?
 
-    public func setDbUrl(_: String) {
-        // TODO: use replica from disk
-        replica = Taskchampion.new_replica_in_memory()
+    public func setDbUrl(_ path: String) {
+        var newPath = path
+        if path.hasSuffix("taskchampion.sqlite3") {
+            newPath = String(path.dropLast("taskchampion.sqlite3".count))
+        }
+        replica = Taskchampion.new_replica_on_disk(newPath, false, true)
     }
 
     public func getTasks(
@@ -16,13 +19,16 @@ public class TaskchampionService {
     ) throws -> [TCTask] {
         var taskObjects: [TCTask] = []
         let tasks = replica?.all_task_data()
+        print("DEBUG: Tasks: \(tasks)")
         guard let tasks else {
             throw TCError.genericError("Query was null")
         }
         for task in tasks {
-            print("TASK", task)
-            // TODO: TCTask init from taskchampion task
-            // taskObjects.append(task)
+            let properties = task.properties()
+            for property in properties {
+                print("DEBUG: Property: \(property.as_str().toString())")
+            }
+            print("DEBUG: Task UUID", task.get_uuid())
         }
         // TODO: use filters
         TasksHelper.sortTasksWithSortType(&taskObjects, sortType: sortType)
