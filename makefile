@@ -32,3 +32,5 @@ format:
 	swiftformat taskchamp/Sources
 	swiftformat taskchampWidget/Sources
 	swiftformat taskchampShared/Sources
+clone_taskchampion:
+	git clone https://github.com/LostLaplace/task-champion-swift.git
