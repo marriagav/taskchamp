@@ -21,6 +21,8 @@ Assign yourself to any issue that you would like to work on, or create a new one
 
 4. Before being able to install the dependencies, you need to have a couple of things installed on your system:
 
+This project is built using Swift, Rust for the taskchampion-swift binary, and Mise + [Tuist](https://tuist.dev/). You can install the dependencies by running the following commands:
+
 ```
 brew install swiftlint
 brew install swiftformat
