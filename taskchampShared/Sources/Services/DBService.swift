@@ -2,6 +2,9 @@ import Foundation
 import SQLite
 import WidgetKit
 
+// This class is going to be deprecated in favor of the Taskchampion service:
+// Please do not add any more features into this service, but rather make a PR to
+// https://github.com/LostLaplace/taskchampion-swift
 public class DBServiceDEPRECATED {
     enum TasksColumns {
         static let uuid = SQLite.Expression<String>("uuid")
