@@ -176,7 +176,7 @@ public struct TaskListView: View {
                     Link(
                         "Documentation",
                         // swiftlint:disable:next force_unwrapping
-                        destination: URL(string: "https://github.com/marriagav/taskchamp-docs")!
+                        destination: URL(string: "https://github.com/marriagav/taskchamp")!
                     )
                     Divider()
                     Button("Obsidian Settings") {
