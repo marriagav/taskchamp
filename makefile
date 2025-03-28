@@ -29,7 +29,7 @@ format:
 	swiftformat taskchampWidget/Sources
 	swiftformat taskchampShared/Sources
 clone_taskchampion:
-	git clone https://github.com/LostLaplace/task-champion-swift.git
+	git clone https://github.com/marriagav/task-champion-swift.git
 build_taskchampion:
 	./scripts/build_taskchampion_swift.sh
 build_taskchampion_ci:

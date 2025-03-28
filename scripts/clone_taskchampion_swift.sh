@@ -7,5 +7,4 @@ SCRIPT_DIR=$(dirname "$0")
 cd "$SCRIPT_DIR"
 
 cd ..
-git clone git@github.com:LostLaplace/task-champion-swift.git
-
+git clone git@github.com:marriagav/task-champion-swift.git # Using the fork for now before we are able to import with the new structure
