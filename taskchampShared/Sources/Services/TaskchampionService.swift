@@ -31,6 +31,7 @@ public class TaskchampionService {
 
     public func getTask(uuid _: String) throws -> TCTask {
         // TODO:
+        // let task = replica?.get_task(Uuid)
         throw TCError.genericError("Not implemented")
     }
 
