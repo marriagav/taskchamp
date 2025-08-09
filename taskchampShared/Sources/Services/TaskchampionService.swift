@@ -5,9 +5,10 @@ public class TaskchampionService {
     public static let shared = TaskchampionService()
     private var replica: Replica?
 
-    public func setDbUrl(_: String) {
+    public func setDbUrl(path: String) {
         // TODO: use replica from disk
-        replica = Taskchampion.new_replica_in_memory()
+        // replica = Taskchampion.new_replica_in_memory()
+        replica = Taskchampion.new_replica_on_disk(path, false, true)
     }
 
     public func getTasks(
@@ -15,12 +16,24 @@ public class TaskchampionService {
         filter _: TCFilter = TCFilter.defaultFilter
     ) throws -> [TCTask] {
         var taskObjects: [TCTask] = []
-        let tasks = replica?.all_task_data()
+        let tasks = replica?.pending_tasks()
         guard let tasks else {
             throw TCError.genericError("Query was null")
         }
         for task in tasks {
-            print("TASK", task)
+            print("\nTASK Desc", task.get_description().toString())
+            print("TASK UUID", task.get_uuid().to_string().toString())
+            print("TASK STATUS", task.get_status().get_value().toString())
+            print("TASK PRIO", task.get_priority().toString())
+            print("TASK DUE", task.get_due()?.toString() ?? "0")
+            print("TASK PROJECT", task.get_project()?.toString() ?? "No project")
+            for annotation in task.get_annotations() {
+                print("TASK ANNOTATION", annotation.get_description().toString())
+            }
+
+            // print("TASK DESCRIPTION", task
+            // print("TASK UUID", task.
+            // print("TASK PROJECT", task.get_project())
             // TODO: TCTask init from taskchampion task
             // taskObjects.append(task)
         }
@@ -54,6 +67,6 @@ public class TaskchampionService {
         let uuid = Taskchampion.uuid_v4()
         var ops = Taskchampion.new_operations()
         ops = Taskchampion.create_task(uuid, ops)
-        throw TCError.genericError("Not implemented")
+        // throw TCError.genericError("Not implemented")
     }
 }
