@@ -27,7 +27,7 @@ extension TaskListView {
         DBServiceDEPRECATED.shared.setDbUrl(path)
         TaskchampionService.shared
             .setDbUrl(
-                path: path
+                path: "/private/var/mobile/Library/Mobile Documents/iCloud~com~mav~taskchamp/Documents/task"
             )
     }
 
