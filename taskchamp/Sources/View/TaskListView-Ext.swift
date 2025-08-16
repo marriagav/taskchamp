@@ -27,13 +27,8 @@ extension TaskListView {
         DBServiceDEPRECATED.shared.setDbUrl(path)
         TaskchampionService.shared
             .setDbUrl(
-                path: "/private/var/mobile/Library/Mobile Documents/iCloud~com~mav~taskchamp/Documents/task"
+                path: path
             )
-        do {
-            let test = try TaskchampionService.shared.getTasks()
-        } catch {
-            print(error)
-        }
     }
 
     func updateTasks(_ uuids: Set<String>, withStatus newStatus: TCTask.Status) {
