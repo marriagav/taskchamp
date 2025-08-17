@@ -65,8 +65,6 @@ public class NLPService {
         if remainingString.range(of: "status:") != nil {
             let status = extractValue(after: "status:", from: &remainingString, isFilter: true)
             filter.setStatus(TCTask.Status(rawValue: status ?? "pending"))
-        } else {
-            filter.setStatus(.pending)
         }
 
         return filter

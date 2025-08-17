@@ -19,7 +19,7 @@ struct CreateTaskIntent: AppIntent {
         DBServiceDEPRECATED.shared.setDbUrl(destinationPath)
 
         let task = NLPService.shared.createTask(from: taskInput)
-        try DBServiceDEPRECATED.shared.createTask(task)
+        try TaskchampionService.shared.createTask(task)
 
         return .result()
     }

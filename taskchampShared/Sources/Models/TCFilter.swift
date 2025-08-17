@@ -15,6 +15,14 @@ public class TCFilter: Codable {
         return filter
     }
 
+    public var isDefaultFilter: Bool {
+        return fullDescription == Self.defaultFilter.fullDescription &&
+            project == Self.defaultFilter.project &&
+            status == Self.defaultFilter.status &&
+            priority == Self.defaultFilter.priority &&
+            due == Self.defaultFilter.due
+    }
+
     public var id = UUID()
     public var fullDescription: String = ""
     public var project: String = ""

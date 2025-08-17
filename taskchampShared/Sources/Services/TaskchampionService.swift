@@ -1,33 +1,107 @@
 import Foundation
 import Taskchampion
+import WidgetKit
 
 public class TaskchampionService {
     public static let shared = TaskchampionService()
     private var replica: Replica?
+    private var path: String?
+    private var needToSync = true
 
-    public func setDbUrl(path: String) {
-        replica = Taskchampion.new_replica_on_disk(path, false, true)
+    private enum SyncType {
+        case local
+    }
+
+    public func setDbUrl(path: String) throws {
+        if replica != nil, self.path != nil {
+            do {
+                needToSync = try sync()
+            } catch {
+                needToSync = true
+                throw TCError.genericError("Failed to sync database: \(error.localizedDescription)")
+            }
+            return
+        }
+        replica = Taskchampion.new_replica_on_disk(path, true, true)
+        guard let replica else {
+            throw TCError.genericError("Failed to create replica")
+        }
+        self.path = path
+        do {
+            needToSync = try sync()
+        } catch {
+            needToSync = true
+            throw TCError.genericError("Failed to sync database: \(error.localizedDescription)")
+        }
+    }
+
+    public func sync() throws -> Bool {
+        guard let path, let replica else {
+            throw TCError.genericError("Database not set")
+        }
+
+        let syncType: SyncType = .local
+
+        switch syncType {
+        case .local:
+            let synced = replica.sync_local_server(path)
+            if !synced { return false }
+            WidgetCenter.shared.reloadAllTimelines()
+            return synced
+        }
     }
 
     public func getTasks(
         sortType: TasksHelper.TCSortType = .defaultSort,
-        filter _: TCFilter = TCFilter.defaultFilter
+        filter: TCFilter = TCFilter.defaultFilter
     ) throws -> [TCTask] {
-        let tasks = replica?.pending_tasks()
+        guard let replica else {
+            throw TCError.genericError("Database not set")
+        }
+        var taskObjects: [TCTask] = []
+        if filter.isDefaultFilter {
+            taskObjects = try getPendingTasks()
+            TasksHelper.sortTasksWithSortType(&taskObjects, sortType: sortType)
+            return taskObjects
+        }
+
+        let tasks = replica.all_tasks()
         guard let tasks else {
             throw TCError.genericError("Query was null")
         }
-        var taskObjects: [TCTask] = tasks.map {
-            return TCTask(from: $0)
+        taskObjects = tasks.compactMap {
+            let task = TCTask.taskFactory(from: $0, withFilter: filter)
+            if let task {
+                return task
+            }
+            return nil
         }
-        // TODO: use filters
+
         TasksHelper.sortTasksWithSortType(&taskObjects, sortType: sortType)
         return taskObjects
     }
 
-    public func getTask(uuid _: String) throws -> TCTask {
-        // TODO:
-        throw TCError.genericError("Not implemented")
+    public func getPendingTasks() throws -> [TCTask] {
+        guard let replica else {
+            throw TCError.genericError("Database not set")
+        }
+
+        let tasks = replica.pending_tasks()
+        guard let tasks else {
+            throw TCError.genericError("Query was null")
+        }
+        return tasks.map { TCTask(from: $0) }
+    }
+
+    public func getTask(uuid: String) throws -> TCTask {
+        guard let replica else {
+            throw TCError.genericError("Database not set")
+        }
+        let task = replica.get_task(uuid)
+        guard let task else {
+            throw TCError.genericError("Task not found")
+        }
+        return TCTask(from: task)
     }
 
     public func togglePendingTasksStatus(uuids _: Set<String>) throws {
@@ -40,16 +114,58 @@ public class TaskchampionService {
         throw TCError.genericError("Not implemented")
     }
 
-    public func updateTask(_: TCTask) throws {
-        // TODO:
-        throw TCError.genericError("Not implemented")
+    public func updateTask(_ task: TCTask) throws {
+        guard let replica else {
+            throw TCError.genericError("Database not set")
+        }
+        let due = task.due?.timeIntervalSince1970.rounded()
+        let dueString = due != nil ? String(Int(due ?? 0)) : nil
+
+        var annotations: RustVec<Annotation>?
+        if let annotation = task.rustAnnotationFromObsidianNote {
+            annotations = RustVec<Annotation>()
+            annotations?.push(value: annotation)
+        }
+
+        let task = replica.update_task(
+            task.uuid.intoRustString(),
+            task.description.intoRustString(),
+            dueString?.intoRustString(),
+            task.priority?.rawValue.intoRustString(),
+            task.project?.intoRustString(),
+            task.status.rawValue.intoRustString(),
+            annotations
+        )
+        if task == nil {
+            throw TCError.genericError("Failed to update task")
+        }
+
+        WidgetCenter.shared.reloadAllTimelines()
     }
 
-    public func createTask(task _: TCTask) throws {
-        // TODO:
-        let uuid = Taskchampion.uuid_v4()
-        var ops = Taskchampion.new_operations()
-        ops = Taskchampion.create_task(uuid, ops)
-        // throw TCError.genericError("Not implemented")
+    public func createTask(_ task: TCTask) throws {
+        guard let replica else {
+            throw TCError.genericError("Database not set")
+        }
+        let due = task.due?.timeIntervalSince1970.rounded()
+        let dueString = due != nil ? String(Int(due ?? 0)) : nil
+        let task = replica.create_task(
+            task.uuid.intoRustString(),
+            task.description.intoRustString(),
+            dueString?.intoRustString(),
+            task.priority?.rawValue.intoRustString(),
+            task.project?.intoRustString()
+        )
+        if task == nil {
+            throw TCError.genericError("Failed to create task")
+        }
+
+        WidgetCenter.shared.reloadAllTimelines()
+        // do {
+        //     needToSync = try sync()
+        // } catch {
+        //     needToSync = true
+        //     throw TCError.genericError("Failed to sync database: \(error.localizedDescription)")
+        // }
     }
 }

@@ -24,46 +24,6 @@ public class DBServiceDEPRECATED {
         }
     }
 
-    public func getTasks(
-        sortType: TasksHelper.TCSortType = .defaultSort,
-        filter: TCFilter = TCFilter.defaultFilter
-    ) throws -> [TCTask] {
-        var taskObjects: [TCTask] = []
-        let tasks = Table("tasks")
-        var query = tasks.select(TasksColumns.data, TasksColumns.uuid)
-        for filter in filter.convertToSqlFilters() {
-            query = query.filter(TasksColumns.data.like(filter))
-        }
-        WidgetCenter.shared.reloadAllTimelines()
-        let queryTasks = try dbConnection?.prepare(query)
-        guard let queryTasks else {
-            throw TCError.genericError("Query was null")
-        }
-        for task in queryTasks {
-            if let taskObject = try parseTask(row: task) {
-                taskObjects.append(taskObject)
-            }
-        }
-        TasksHelper.sortTasksWithSortType(&taskObjects, sortType: sortType)
-        return taskObjects
-    }
-
-    public func getTask(uuid: String) throws -> TCTask {
-        let tasks = Table("tasks")
-        let query = tasks.filter(uuid == TasksColumns.uuid)
-        let queryTasks = try dbConnection?.prepare(query)
-        guard let queryTasks else {
-            throw TCError.genericError("Query was null")
-        }
-        for task in queryTasks {
-            let taskObject = try parseTask(row: task)
-            if let taskObject {
-                return taskObject
-            }
-        }
-        throw TCError.genericError("Task not found")
-    }
-
     private func parseTask(row: Row) throws -> TCTask? {
         let jsonObject = row[TasksColumns.data]
         let jsonData = jsonObject.data(using: .utf8)
@@ -182,35 +142,4 @@ public class DBServiceDEPRECATED {
         }
     }
 
-    public func createTask(_ task: TCTask) throws {
-        let jsonData = try JSONEncoder().encode(task)
-        var jsonDictionary = try? JSONSerialization
-            .jsonObject(with: jsonData, options: []) as? [String: Any]
-
-        let createdDate = String(Date().timeIntervalSince1970.rounded())
-
-        jsonDictionary?["modified"] = createdDate
-        jsonDictionary?["entry"] = createdDate
-
-        guard let jsonDictionary else {
-            throw TCError.genericError("jsonDictionary was null")
-        }
-
-        let updatedJsonData = try? JSONSerialization.data(withJSONObject: jsonDictionary, options: [])
-
-        guard let updatedJsonData else {
-            throw TCError.genericError("updatedJsonData was null")
-        }
-
-        let jsonString = String(data: updatedJsonData, encoding: .utf8)
-        guard let jsonString else {
-            throw TCError.genericError("jsonString was null")
-        }
-        let tasks = Table("tasks")
-        try dbConnection?.run(tasks.insert(
-            TasksColumns.uuid <- task.uuid.lowercased(),
-            TasksColumns.data <- jsonString
-        ))
-        WidgetCenter.shared.reloadAllTimelines()
-    }
 }

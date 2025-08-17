@@ -21,13 +21,10 @@ extension TaskListView {
     }
 
     func setDbUrl() throws {
-        guard let path = taskChampionFileUrlString else {
-            throw TCError.genericError("No access or path")
-        }
-        DBServiceDEPRECATED.shared.setDbUrl(path)
-        TaskchampionService.shared
+        let localReplicaPath = try FileService.shared.getDestinationPathForLocalReplica()
+        try TaskchampionService.shared
             .setDbUrl(
-                path: "/private/var/mobile/Library/Mobile Documents/iCloud~com~mav~taskchamp/Documents/task"
+                path: localReplicaPath
             )
     }
 
@@ -45,10 +42,7 @@ extension TaskListView {
     func updateTasks() {
         do {
             try setDbUrl()
-            let newTasks = try DBServiceDEPRECATED.shared.getTasks(
-                sortType: sortType,
-                filter: selectedFilter
-            )
+            let newTasks = try TaskchampionService.shared.getTasks(sortType: sortType, filter: selectedFilter)
             if newTasks == tasks {
                 return
             }
@@ -64,31 +58,20 @@ extension TaskListView {
         }
     }
 
-    func copyDatabaseIfNeeded() {
-        do {
-            if taskChampionFileUrlString != nil {
-                updateTasks()
-                return
-            }
-            taskChampionFileUrlString = try FileService.shared.copyDatabaseIfNeededAndGetDestinationPath()
-            updateTasks()
-            NotificationService.shared.requestAuthorization { success, error in
-                if success {
-                    print("Notification Authorization granted")
-                    Task {
-                        let pending = try DBServiceDEPRECATED.shared.getTasks(
-                            sortType: sortType,
-                            filter: .defaultFilter
-                        )
-                        await NotificationService.shared.createReminderForTasks(tasks: pending)
-                    }
-                } else if let error = error {
-                    print(error.localizedDescription)
+    func setupNotifications() {
+        NotificationService.shared.requestAuthorization { success, error in
+            if success {
+                print("Notification Authorization granted")
+                Task {
+                    let pending = try TaskchampionService.shared.getTasks(
+                        sortType: sortType,
+                        filter: .defaultFilter
+                    )
+                    await NotificationService.shared.createReminderForTasks(tasks: pending)
                 }
+            } else if let error = error {
+                print(error.localizedDescription)
             }
-            return
-        } catch {
-            print(error)
         }
     }
 
@@ -107,7 +90,7 @@ extension TaskListView {
 
             do {
                 try setDbUrl()
-                let task = try DBServiceDEPRECATED.shared.getTask(uuid: uuidString)
+                let task = try TaskchampionService.shared.getTask(uuid: uuidString)
                 pathStore.path.append(task)
             } catch {
                 print(error)

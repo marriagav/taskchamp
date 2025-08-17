@@ -69,4 +69,19 @@ public class FileService {
             }
         }
     }
+
+    public func getDestinationPathForLocalReplica() throws -> String {
+        let containerURL = FileManager.default.url(forUbiquityContainerIdentifier: nil)
+        guard let containerURL = containerURL else {
+            throw TCError.genericError("No container URL")
+        }
+
+        let documentsURL = containerURL.appendingPathComponent("Documents")
+        let taskDirectory = documentsURL.appendingPathComponent("taskchamp")
+
+        createDirectoryIfNeeded(url: documentsURL)
+        createDirectoryIfNeeded(url: taskDirectory)
+
+        return taskDirectory.path
+    }
 }

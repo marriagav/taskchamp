@@ -11,7 +11,6 @@ public struct TaskListView: View {
     @Binding var isShowingICloudAlert: Bool
     @Binding var selectedFilter: TCFilter
 
-    @State var taskChampionFileUrlString: String?
     @State var tasks: [TCTask] = []
     @State var isShowingCreateTaskView = false
     @State var selection = Set<String>()
@@ -122,7 +121,7 @@ public struct TaskListView: View {
         }
         .listStyle(.inset)
         .onAppear {
-            copyDatabaseIfNeeded()
+            setupNotifications()
         }
         .toolbar {
             ToolbarItemGroup(placement: .bottomBar) {
@@ -267,7 +266,7 @@ public struct TaskListView: View {
         }
         .onChange(of: scenePhase) { _, newScenePhase in
             if newScenePhase == .active {
-                copyDatabaseIfNeeded()
+                setupNotifications()
             }
         }
     }
