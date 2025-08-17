@@ -174,11 +174,10 @@ public class TaskchampionService {
         }
 
         WidgetCenter.shared.reloadAllTimelines()
-        // do {
-        //     needToSync = try sync()
-        // } catch {
-        //     needToSync = true
-        //     throw TCError.genericError("Failed to sync database: \(error.localizedDescription)")
-        // }
+        do {
+            needToSync = try sync()
+        } catch {
+            needToSync = true
+        }
     }
 }

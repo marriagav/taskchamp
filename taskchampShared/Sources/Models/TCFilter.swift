@@ -72,23 +72,6 @@ public class TCFilter: Codable {
         }
     }
 
-    public func convertToSqlFilters() -> [String] {
-        var sqlFilters: [String] = []
-        if didSetPrio {
-            sqlFilters.append("%\"priority\":\"\(priority.rawValue)\"%")
-        }
-        if didSetProject {
-            sqlFilters.append("%\"project\":\"\(project)\"%")
-        }
-        if didSetDue {
-            // TODO: figure out a way to implement date filter
-        }
-        if didSetStatus {
-            sqlFilters.append("%\"status\":\"\(status.rawValue)\"%")
-        }
-        return sqlFilters
-    }
-
     init(
         fullDescription: String = "",
         project: String = "",
