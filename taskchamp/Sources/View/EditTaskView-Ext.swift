@@ -54,7 +54,7 @@ extension EditTaskView {
         do {
             let newStatus: TCTask.Status = task.isCompleted ? .pending : task
                 .isDeleted ? .pending : .completed
-            try DBServiceDEPRECATED.shared.updatePendingTasks(
+            try TaskchampionService.shared.updatePendingTasks(
                 [task.uuid],
                 withStatus: newStatus
             )
@@ -107,7 +107,7 @@ extension EditTaskView {
 
     func deleteTask() {
         do {
-            try DBServiceDEPRECATED.shared.updatePendingTasks([task.uuid], withStatus: .deleted)
+            try TaskchampionService.shared.updatePendingTasks([task.uuid], withStatus: .deleted)
             NotificationService.shared.deleteReminderForTask(task: task)
             dismiss()
         } catch {

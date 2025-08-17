@@ -31,7 +31,7 @@ extension TaskListView {
     func updateTasks(_ uuids: Set<String>, withStatus newStatus: TCTask.Status) {
         do {
             try setDbUrl()
-            try DBServiceDEPRECATED.shared.updatePendingTasks(uuids, withStatus: newStatus)
+            try TaskchampionService.shared.updatePendingTasks(uuids, withStatus: newStatus)
             NotificationService.shared.removeNotifications(for: Array(uuids))
             updateTasks()
         } catch {

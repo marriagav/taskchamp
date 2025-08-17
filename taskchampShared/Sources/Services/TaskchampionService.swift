@@ -31,7 +31,6 @@ public class TaskchampionService {
             needToSync = try sync()
         } catch {
             needToSync = true
-            throw TCError.genericError("Failed to sync database: \(error.localizedDescription)")
         }
     }
 
@@ -104,14 +103,28 @@ public class TaskchampionService {
         return TCTask(from: task)
     }
 
-    public func togglePendingTasksStatus(uuids _: Set<String>) throws {
-        // TODO:
-        throw TCError.genericError("Not implemented")
+    public func togglePendingTasksStatus(uuids: Set<String>) throws {
+        for uuid in uuids {
+            let task = try getTask(uuid: uuid)
+            var newStatus: TCTask.Status = .pending
+            if task.status == .pending {
+                newStatus = .completed
+            } else if task.status == .completed {
+                newStatus = .pending
+            }
+            var updatedTask = task
+            updatedTask.status = newStatus
+            try updateTask(updatedTask)
+        }
     }
 
-    public func updatePendingTasks(_: Set<String>, withStatus _: TCTask.Status) throws {
-        // TODO:
-        throw TCError.genericError("Not implemented")
+    public func updatePendingTasks(_ uuids: Set<String>, withStatus newStatus: TCTask.Status) throws {
+        for uuid in uuids {
+            let task = try getTask(uuid: uuid)
+            var updatedTask = task
+            updatedTask.status = newStatus
+            try updateTask(updatedTask)
+        }
     }
 
     public func updateTask(_ task: TCTask) throws {
