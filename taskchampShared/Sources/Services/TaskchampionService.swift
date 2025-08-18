@@ -6,47 +6,84 @@ public class TaskchampionService {
     public static let shared = TaskchampionService()
     private var replica: Replica?
     private var path: String?
-    private var needToSync = true
+    public var needToSync = false
 
-    private enum SyncType {
+    public enum SyncType: Codable, CaseIterable {
         case local
+        case remote
+        case gcp
+        case aws
+        case none
+    }
+
+    public func getSyncServiceFromType(_ type: TaskchampionService.SyncType) -> SyncServiceProtocol.Type {
+        switch type {
+        case .none:
+            return NoSyncService.self
+        case .local:
+            return ICloudSyncService.self
+        case .remote:
+            return RemoteSyncService.self
+        case .gcp:
+            return GcpSyncService.self
+        case .aws:
+            return AwsSyncService.self
+        }
     }
 
     public func setDbUrl(path: String) throws {
-        if replica != nil, self.path != nil {
-            do {
-                needToSync = try sync()
-            } catch {
-                needToSync = true
-                throw TCError.genericError("Failed to sync database: \(error.localizedDescription)")
-            }
+        if replica != nil, self.path != nil, self.path == path {
+            try? sync()
             return
         }
         replica = Taskchampion.new_replica_on_disk(path, true, true)
-        guard let replica else {
+        if replica == nil {
             throw TCError.genericError("Failed to create replica")
         }
         self.path = path
+        try? sync()
+    }
+
+    public func sync(syncType: SyncType) throws {
+        guard let replica else {
+            throw TCError.genericError("Database not set")
+        }
+
+        let syncService = getSyncServiceFromType(syncType)
+
         do {
-            needToSync = try sync()
+            let synced = try syncService.sync(replica: replica)
+
+            if synced {
+                needToSync = false
+            } else {
+                needToSync = true
+            }
+            WidgetCenter.shared.reloadAllTimelines()
         } catch {
             needToSync = true
         }
     }
 
-    public func sync() throws -> Bool {
-        guard let path, let replica else {
+    public func sync() throws {
+        guard let replica else {
             throw TCError.genericError("Database not set")
         }
 
-        let syncType: SyncType = .local
+        let syncType: SyncType = FileService.shared.getSelectedSyncType() ?? .none
+        let syncService = getSyncServiceFromType(syncType)
 
-        switch syncType {
-        case .local:
-            let synced = replica.sync_local_server(path)
-            if !synced { return false }
+        do {
+            let synced = try syncService.sync(replica: replica)
+
+            if synced {
+                needToSync = false
+            } else {
+                needToSync = true
+            }
             WidgetCenter.shared.reloadAllTimelines()
-            return synced
+        } catch {
+            needToSync = true
         }
     }
 
@@ -153,7 +190,7 @@ public class TaskchampionService {
             throw TCError.genericError("Failed to update task")
         }
 
-        WidgetCenter.shared.reloadAllTimelines()
+        try? sync()
     }
 
     public func createTask(_ task: TCTask) throws {
@@ -173,11 +210,6 @@ public class TaskchampionService {
             throw TCError.genericError("Failed to create task")
         }
 
-        WidgetCenter.shared.reloadAllTimelines()
-        do {
-            needToSync = try sync()
-        } catch {
-            needToSync = true
-        }
+        try sync()
     }
 }

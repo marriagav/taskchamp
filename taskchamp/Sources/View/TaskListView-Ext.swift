@@ -50,11 +50,10 @@ extension TaskListView {
                 tasks = newTasks
             }
         } catch {
-            if !FileService.shared.isICloudAvailable() {
-                print("iCloud Unavailable")
+            let syncService = TaskchampionService.shared.getSyncServiceFromType(selectedSyncType ?? .none)
+            if !syncService.isAvailable() {
                 isShowingICloudAlert = true
             }
-            print(error)
         }
     }
 

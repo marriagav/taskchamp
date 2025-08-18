@@ -39,7 +39,8 @@ let project = Project(
                     "com.apple.developer.icloud-container-identifiers": ["iCloud.com.mav.taskchamp"],
                     "com.apple.developer.icloud-services": ["CloudDocuments", "CloudKit"],
                     "com.apple.developer.ubiquity-container-identifiers": ["iCloud.com.mav.taskchamp"],
-                    "com.apple.developer.usernotifications.time-sensitive": true
+                    "com.apple.developer.usernotifications.time-sensitive": true,
+                    "com.apple.security.application-groups": ["group.com.mav.taskchamp"]
                 ]
             ),
             scripts: [
@@ -48,7 +49,7 @@ let project = Project(
             dependencies: [
                 .target(name: "taskchampShared"),
                 .target(name: "taskchampWidget")
-            ]
+            ],
         ),
         .target(
             name: "taskchampTests",
@@ -87,7 +88,8 @@ let project = Project(
                 [
                     "com.apple.developer.icloud-container-identifiers": ["iCloud.com.mav.taskchamp"],
                     "com.apple.developer.icloud-services": ["CloudDocuments"],
-                    "com.apple.developer.ubiquity-container-identifiers": ["iCloud.com.mav.taskchamp"]
+                    "com.apple.developer.ubiquity-container-identifiers": ["iCloud.com.mav.taskchamp"],
+                    "com.apple.security.application-groups": ["group.com.mav.taskchamp"]
                 ]
             ),
             dependencies: [
