@@ -1,1 +1,1 @@
-Obsidian integration: Use Taskchamp to create and bind Obsidian notes to your tasks.
+Taskchampion sync server: taskchamp now uses embeded taskchampion rust binaries to talk to the DB, including integration for the sync server.
