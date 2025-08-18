@@ -1,94 +1,134 @@
+import SwiftData
 import SwiftUI
+import taskchampShared
 import UIKit
 
+// swiftlint:disable:next type_body_length
 public struct TaskListView: View {
-    @State private var taskChampionFileUrlString: String?
-    @State private var tasks: [Task] = []
-    @State private var isShowingCreateTaskView = false
-    @State private var selection = Set<String>()
+    @Environment(PathStore.self) var pathStore: PathStore
+    @Environment(\.scenePhase) var scenePhase
 
-    @State private var editMode: EditMode = .inactive
+    @Binding var isShowingICloudAlert: Bool
+    @Binding var selectedFilter: TCFilter
+    @Binding var selectedSyncType: TaskchampionService.SyncType?
 
-    private var isEditModeActive: Bool {
-        return editMode.isEditing == true
-    }
+    @State var tasks: [TCTask] = []
+    @State var isShowingCreateTaskView = false
+    @State var selection = Set<String>()
+    @State var editMode: EditMode = .inactive
+    @State var searchText = ""
+    @State var isShowingFilterView = false
+    @State var isShowingObsidianSettings = false
+    @State var isShowingSyncSettings = false
+    @State var sortType: TasksHelper.TCSortType = .init(
+        rawValue: UserDefaults.standard
+            .string(forKey: "sortType") ?? TasksHelper.TCSortType.defaultSort.rawValue
+    ) ?? .defaultSort
 
-    public init() {
+    public init(
+        isShowingICloudAlert: Binding<Bool>,
+        selectedFilter: Binding<TCFilter>,
+        selectedSyncType: Binding<TaskchampionService.SyncType?>
+    ) {
         UINavigationBar.appearance().largeTitleTextAttributes = [.foregroundColor: UIColor.tintColor]
+        _isShowingICloudAlert = isShowingICloudAlert
+        _selectedFilter = selectedFilter
+        _selectedSyncType = selectedSyncType
     }
 
-    func setDbUrl() throws {
-        guard let path = taskChampionFileUrlString else {
-            throw TCError.genericError("No access or path")
+    private func sortButton(sortType: TasksHelper.TCSortType) -> some View {
+        let label = sortType == .defaultSort ? "Default" : sortType == .date ? "Date" : "Priority"
+        if self.sortType != sortType {
+            return AnyView(
+                Button(label) {
+                    self.sortType = sortType
+                    UserDefaults.standard.set(sortType.rawValue, forKey: "sortType")
+                    updateTasks()
+                }
+            )
         }
-        DBService.shared.setDbUrl(path)
-    }
-
-    func updateTasks(_ uuids: Set<String>, withStatus newStatus: Task.Status) {
-        do {
-            try setDbUrl()
-            try DBService.shared.updatePendingTasks(uuids, withStatus: newStatus)
-            updateTasks()
-        } catch {
-            print(error)
-        }
-    }
-
-    func updateTasks() {
-        do {
-            try setDbUrl()
-            let newTasks = try DBService.shared.getPendingTasks()
-            if newTasks == tasks {
-                return
+        return AnyView(
+            Button {
+                self.sortType = sortType
+                UserDefaults.standard.set(sortType.rawValue, forKey: "sortType")
+                updateTasks()
+            } label: {
+                Label(label, systemImage: SFSymbols.checkmark.rawValue)
             }
-            try withAnimation {
-                tasks = try DBService.shared.getPendingTasks()
-            }
-        } catch {
-            print(error)
-        }
-    }
-
-    func copyDatabaseIfNeeded() {
-        do {
-            taskChampionFileUrlString = try FileService.shared.copyDatabaseIfNeededAndGetDestinationPath()
-            updateTasks()
-            return
-        } catch {
-            print(error)
-        }
+        )
     }
 
     public var body: some View {
         List(selection: $selection) {
-            ForEach(tasks, id: \.uuid) { task in
+            ForEach(searchedTasks, id: \.uuid) { task in
                 NavigationLink(value: task) {
                     TaskCellView(task: task)
                 }
-                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                    Button {
-                        updateTasks([task.uuid], withStatus: .completed)
-                    } label: {
-                        Label("Done", systemImage: SFSymbols.checkmark.rawValue)
+                .if(task.status != .deleted) {
+                    $0.swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                        Button {
+                            updateTasks([task.uuid], withStatus: task.isCompleted ? .pending : .completed)
+                        } label: {
+                            Label(
+                                task.isCompleted ? "Undone" : "Done",
+                                systemImage: task.isCompleted ? SFSymbols.backArrow.rawValue : SFSymbols.checkmark
+                                    .rawValue
+                            )
+                        }
+                        .tint(task.isCompleted ? .yellow : .green)
                     }
-                    .tint(.green)
                 }
                 .swipeActions(edge: .leading, allowsFullSwipe: true) {
-                    Button(role: .destructive) {
-                        updateTasks([task.uuid], withStatus: .deleted)
+                    Button(role: task.isDeleted ? .cancel : .destructive) {
+                        updateTasks([task.uuid], withStatus: task.isDeleted ? .pending : .deleted)
                     } label: {
-                        Label("Delete", systemImage: SFSymbols.trash.rawValue)
+                        Label(
+                            task.isDeleted ? "Restore" : "Delete",
+                            systemImage: task.isDeleted ? SFSymbols.backArrow.rawValue : SFSymbols.trash.rawValue
+                        )
                     }
                 }
                 .listRowBackground(Color.clear)
             }
         }
+        .animation(.default, value: sortType)
+        .animation(.default, value: searchText)
+        .overlay(
+            Group {
+                if tasks.isEmpty {
+                    ContentUnavailableView {
+                        Label(
+                            selectedFilter.fullDescription == TCFilter.defaultFilter
+                                .fullDescription ? "No new tasks" : "No tasks found",
+                            systemImage: "bolt.heart"
+                        )
+                    } description: {
+                        Text(
+                            selectedFilter.fullDescription == TCFilter.defaultFilter
+                                .fullDescription ? "Use this time to relax or add new tasks!" :
+                                "Try changing the filters or search terms."
+                        )
+                    } actions: {
+                        Button("New task") {
+                            isShowingCreateTaskView.toggle()
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
+                }
+            }
+        )
         .refreshable {
-            updateTasks()
+            do {
+                try await Task.sleep(nanoseconds: UInt64(1.5 * Double(NSEC_PER_SEC)))
+                updateTasks()
+            } catch {}
+        }
+        .if(!tasks.isEmpty) {
+            $0.searchable(text: $searchText)
         }
         .listStyle(.inset)
         .onAppear {
-            copyDatabaseIfNeeded()
+            setupNotifications()
         }
         .toolbar {
             ToolbarItemGroup(placement: .bottomBar) {
@@ -138,7 +178,38 @@ public struct TaskListView: View {
                 }
             }
             ToolbarItemGroup(placement: .topBarTrailing) {
-                Button {} label: {
+                Menu {
+                    Link(
+                        "Documentation",
+                        // swiftlint:disable:next force_unwrapping
+                        destination: URL(string: "https://github.com/marriagav/taskchamp")!
+                    )
+                    Divider()
+                    Button("Sync Settings") {
+                        isShowingSyncSettings.toggle()
+                    }
+                    Button("Obsidian Settings") {
+                        isShowingObsidianSettings.toggle()
+                    }
+                    Menu("Sort by") {
+                        sortButton(sortType: .defaultSort)
+                        sortButton(sortType: .date)
+                        sortButton(sortType: .priority)
+                    }
+                    Button("Filters") {
+                        isShowingFilterView.toggle()
+                    }
+                    Button("Clear filters") {
+                        withAnimation {
+                            selectedFilter = .defaultFilter
+                            do {
+                                let res = try JSONEncoder().encode(selectedFilter)
+                                UserDefaults.standard.set(res, forKey: "selectedFilter")
+                            } catch { print(error) }
+                        }
+                    }
+                    .disabled(selectedFilter.fullDescription == TCFilter.defaultFilter.fullDescription)
+                } label: {
                     Label(
                         "Options",
                         systemImage: SFSymbols.ellipsisCircle.rawValue
@@ -149,18 +220,38 @@ public struct TaskListView: View {
                 }
             }
             ToolbarItemGroup(placement: .topBarLeading) {
-                EditButton()
+                if !searchedTasks.isEmpty {
+                    EditButton()
+                }
             }
         }
         .onChange(of: isEditModeActive) {
             selection.removeAll()
+        }
+        .onChange(of: selectedFilter) {
+            updateTasks()
+        }
+        .onChange(of: selectedSyncType) {
+            updateTasks()
         }
         .sheet(isPresented: $isShowingCreateTaskView, onDismiss: {
             updateTasks()
         }, content: {
             CreateTaskView()
         })
-        .navigationDestination(for: Task.self) { task in
+        .sheet(isPresented: $isShowingFilterView) {
+            AddFilterView(selectedFilter: $selectedFilter)
+        }
+        .sheet(isPresented: $isShowingObsidianSettings) {
+            ObsidianSettingsView()
+        }
+        .sheet(isPresented: $isShowingSyncSettings) {
+            SyncServiceView(
+                isShowingSyncServiceModal: $isShowingSyncSettings,
+                selectedSyncType: $selectedSyncType
+            )
+        }
+        .navigationDestination(for: TCTask.self) { task in
             EditTaskView(task: task)
                 .onDisappear {
                     updateTasks()
@@ -174,15 +265,28 @@ public struct TaskListView: View {
                 }
         }
         .navigationTitle(
-            isEditModeActive ? selection.isEmpty ? "Select Tasks" : "\(selection.count) Selected" :
-                "My Tasks"
+            (searchedTasks.isEmpty && selectedFilter.fullDescription == TCFilter.defaultFilter.fullDescription) ? "" :
+                isEditModeActive ?
+                selection
+                .isEmpty ? "Select Tasks" : "\(selection.count) Selected" :
+                selectedFilter.fullDescription
         )
         .environment(\.editMode, $editMode)
-    }
-}
-
-struct TaskListView_Previews: PreviewProvider {
-    static var previews: some View {
-        TaskListView()
+        .onOpenURL { url in
+            handleDeepLink(url: url)
+        }
+        .onReceive(NotificationCenter.default.publisher(
+            for: .TCTappedDeepLinkNotification
+        )) { notification in
+            guard let url = notification.object as? URL else {
+                return
+            }
+            handleDeepLink(url: url)
+        }
+        .onChange(of: scenePhase) { _, newScenePhase in
+            if newScenePhase == .active {
+                setupNotifications()
+            }
+        }
     }
 }

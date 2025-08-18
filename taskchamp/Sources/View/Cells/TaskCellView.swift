@@ -1,17 +1,15 @@
 import SwiftUI
+import taskchampShared
 
 public struct TaskCellView: View {
-    private let task: Task
-
-    init(task: Task) {
-        self.task = task
-    }
+    let task: TCTask
 
     public var body: some View {
         VStack {
             HStack {
                 Text(task.description)
-                    .font(.headline)
+                    .strikethrough(task.isCompleted || task.isDeleted, color: task.isDeleted ? .red : nil)
+                    .foregroundStyle(task.isCompleted ? .secondary : task.isDeleted ? Color.red : .primary)
                 Spacer()
                 if let project = task.project {
                     Text(project)
@@ -19,7 +17,7 @@ public struct TaskCellView: View {
                         .foregroundStyle(.secondary)
                 }
             }
-            .padding(.vertical, 5)
+            .padding(.vertical, 3)
             HStack {
                 if task.due != nil {
                     Text(task.localDate)

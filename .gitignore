@@ -2,6 +2,7 @@
 variables.json
 .vscode
 .nvim
+buildServer.json
 Tuist/.build
 #amplify-do-not-edit-begin
 amplify/\#current-cloud-backend
@@ -35,3 +36,6 @@ amplifytools.xcconfig
 ### Projects ###
 *.xcodeproj
 *.xcworkspace
+
+### Cargo
+task-champion-swift/
