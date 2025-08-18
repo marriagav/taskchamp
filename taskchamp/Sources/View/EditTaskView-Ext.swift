@@ -35,7 +35,7 @@ extension EditTaskView {
                 due: task.due,
                 obsidianNote: taskNote
             )
-            try DBServiceDEPRECATED.shared.updateTask(newTask)
+            try TaskchampionService.shared.updateTask(newTask)
             task = newTask
             let taskNoteWithPath = "\(tasksFolderPath)/\(task.obsidianNote ?? "")"
             let urlString = "obsidian://new?vault=\(obsidianVaultName ?? "")&file=\(taskNoteWithPath)"
@@ -54,7 +54,7 @@ extension EditTaskView {
         do {
             let newStatus: TCTask.Status = task.isCompleted ? .pending : task
                 .isDeleted ? .pending : .completed
-            try DBServiceDEPRECATED.shared.updatePendingTasks(
+            try TaskchampionService.shared.updatePendingTasks(
                 [task.uuid],
                 withStatus: newStatus
             )
@@ -94,7 +94,7 @@ extension EditTaskView {
         )
 
         do {
-            try DBServiceDEPRECATED.shared.updateTask(task)
+            try TaskchampionService.shared.updateTask(task)
             NotificationService.shared.createReminderForTask(task: task)
             dismiss()
         } catch {
@@ -107,7 +107,7 @@ extension EditTaskView {
 
     func deleteTask() {
         do {
-            try DBServiceDEPRECATED.shared.updatePendingTasks([task.uuid], withStatus: .deleted)
+            try TaskchampionService.shared.updatePendingTasks([task.uuid], withStatus: .deleted)
             NotificationService.shared.deleteReminderForTask(task: task)
             dismiss()
         } catch {

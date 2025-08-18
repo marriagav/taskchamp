@@ -10,8 +10,8 @@ public struct TaskListView: View {
 
     @Binding var isShowingICloudAlert: Bool
     @Binding var selectedFilter: TCFilter
+    @Binding var selectedSyncType: TaskchampionService.SyncType?
 
-    @State var taskChampionFileUrlString: String?
     @State var tasks: [TCTask] = []
     @State var isShowingCreateTaskView = false
     @State var selection = Set<String>()
@@ -19,15 +19,21 @@ public struct TaskListView: View {
     @State var searchText = ""
     @State var isShowingFilterView = false
     @State var isShowingObsidianSettings = false
+    @State var isShowingSyncSettings = false
     @State var sortType: TasksHelper.TCSortType = .init(
         rawValue: UserDefaults.standard
             .string(forKey: "sortType") ?? TasksHelper.TCSortType.defaultSort.rawValue
     ) ?? .defaultSort
 
-    public init(isShowingICloudAlert: Binding<Bool>, selectedFilter: Binding<TCFilter>) {
+    public init(
+        isShowingICloudAlert: Binding<Bool>,
+        selectedFilter: Binding<TCFilter>,
+        selectedSyncType: Binding<TaskchampionService.SyncType?>
+    ) {
         UINavigationBar.appearance().largeTitleTextAttributes = [.foregroundColor: UIColor.tintColor]
         _isShowingICloudAlert = isShowingICloudAlert
         _selectedFilter = selectedFilter
+        _selectedSyncType = selectedSyncType
     }
 
     private func sortButton(sortType: TasksHelper.TCSortType) -> some View {
@@ -122,7 +128,7 @@ public struct TaskListView: View {
         }
         .listStyle(.inset)
         .onAppear {
-            copyDatabaseIfNeeded()
+            setupNotifications()
         }
         .toolbar {
             ToolbarItemGroup(placement: .bottomBar) {
@@ -179,6 +185,9 @@ public struct TaskListView: View {
                         destination: URL(string: "https://github.com/marriagav/taskchamp")!
                     )
                     Divider()
+                    Button("Sync Settings") {
+                        isShowingSyncSettings.toggle()
+                    }
                     Button("Obsidian Settings") {
                         isShowingObsidianSettings.toggle()
                     }
@@ -222,6 +231,9 @@ public struct TaskListView: View {
         .onChange(of: selectedFilter) {
             updateTasks()
         }
+        .onChange(of: selectedSyncType) {
+            updateTasks()
+        }
         .sheet(isPresented: $isShowingCreateTaskView, onDismiss: {
             updateTasks()
         }, content: {
@@ -232,6 +244,12 @@ public struct TaskListView: View {
         }
         .sheet(isPresented: $isShowingObsidianSettings) {
             ObsidianSettingsView()
+        }
+        .sheet(isPresented: $isShowingSyncSettings) {
+            SyncServiceView(
+                isShowingSyncServiceModal: $isShowingSyncSettings,
+                selectedSyncType: $selectedSyncType
+            )
         }
         .navigationDestination(for: TCTask.self) { task in
             EditTaskView(task: task)
@@ -267,7 +285,7 @@ public struct TaskListView: View {
         }
         .onChange(of: scenePhase) { _, newScenePhase in
             if newScenePhase == .active {
-                copyDatabaseIfNeeded()
+                setupNotifications()
             }
         }
     }
