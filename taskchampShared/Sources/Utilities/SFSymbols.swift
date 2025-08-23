@@ -16,4 +16,5 @@ public enum SFSymbols: String {
     case obsidian = "suit.diamond.fill"
     case cloud
     case cloudSlash = "icloud.slash"
+    case folder
 }

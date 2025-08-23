@@ -57,7 +57,10 @@ public struct SyncServiceView: View {
                         selectedSyncType: $selectedSyncType
                     )
                 case .gcp:
-                    Text("Not Implemented Yet")
+                    GcpSettingsView(
+                        isShowingSyncServiceModal: $isShowingSyncServiceModal,
+                        selectedSyncType: $selectedSyncType
+                    )
                 case .aws:
                     Text("Not Implemented Yet")
                 case .none:

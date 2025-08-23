@@ -138,4 +138,9 @@ public class FileService {
             toPath: url.path
         )
     }
+
+    public func getFIleNameFromPath(path: String) -> String {
+        let url = URL(fileURLWithPath: path)
+        return url.lastPathComponent
+    }
 }
