@@ -26,8 +26,8 @@ public class NoSyncService: SyncServiceProtocol {
         return true
     }
 
-    public static func sync(replica _: Replica) throws -> Bool {
-        return true // No sync needed for NoSyncService
+    public static func sync(replica: Replica) throws -> Bool {
+        return replica.sync_no_server()
     }
 }
 
