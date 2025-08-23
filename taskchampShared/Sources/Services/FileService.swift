@@ -88,8 +88,14 @@ public class FileService {
     }
 
     public func getDestinationPathForRemote() throws -> String {
-        let fileManager = FileManager.default
-        guard let containerURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first else {
+        guard let containerURL = FileManager
+            .default
+            .containerURL(
+                forSecurityApplicationGroupIdentifier:
+                "group.com.mav.taskchamp"
+            ) else
+        // swiftlint:disable:next opening_brace
+        {
             throw TCError.genericError("No container URL")
         }
 
