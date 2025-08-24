@@ -46,20 +46,26 @@ public struct SyncServiceView: View {
             .navigationBarTitleDisplayMode(.large)
             .navigationDestination(for: TaskchampionService.SyncType.self) { syncType in
                 switch syncType {
-                case .local:
-                    ICloudSettingsView(
-                        isShowingSyncServiceModal: $isShowingSyncServiceModal,
-                        selectedSyncType: $selectedSyncType
-                    )
                 case .remote:
                     RemoteSettingsView(
                         isShowingSyncServiceModal: $isShowingSyncServiceModal,
                         selectedSyncType: $selectedSyncType
                     )
-                case .gcp:
-                    Text("Not Implemented Yet")
                 case .aws:
-                    Text("Not Implemented Yet")
+                    AwsSettingsView(
+                        isShowingSyncServiceModal: $isShowingSyncServiceModal,
+                        selectedSyncType: $selectedSyncType
+                    )
+                case .gcp:
+                    GcpSettingsView(
+                        isShowingSyncServiceModal: $isShowingSyncServiceModal,
+                        selectedSyncType: $selectedSyncType
+                    )
+                case .local:
+                    ICloudSettingsView(
+                        isShowingSyncServiceModal: $isShowingSyncServiceModal,
+                        selectedSyncType: $selectedSyncType
+                    )
                 case .none:
                     NoSyncServiceView(
                         isShowingSyncServiceModal: $isShowingSyncServiceModal,

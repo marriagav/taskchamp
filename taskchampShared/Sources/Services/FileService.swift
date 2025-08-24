@@ -40,16 +40,8 @@ public class FileService {
     }
 
     public func getSelectedSyncType() -> TaskchampionService.SyncType? {
-        do {
-            if let data = UserDefaults(suiteName: "group.com.mav.taskchamp")?.data(forKey: "selectedSyncType") {
-                let res = try JSONDecoder().decode(TaskchampionService.SyncType.self, from: data)
-                return res
-            } else {
-                return nil
-            }
-        } catch {
-            return nil
-        }
+        let value: TaskchampionService.SyncType? = UserDefaultsManager.shared.getDecodedValue(forKey: .selectedSyncType)
+        return value
     }
 
     public func getDestinationPathForLocalReplica(syncType: TaskchampionService.SyncType) throws -> String {
@@ -88,8 +80,14 @@ public class FileService {
     }
 
     public func getDestinationPathForRemote() throws -> String {
-        let fileManager = FileManager.default
-        guard let containerURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first else {
+        guard let containerURL = FileManager
+            .default
+            .containerURL(
+                forSecurityApplicationGroupIdentifier:
+                UserDefaultsManager.suiteName
+            ) else
+        // swiftlint:disable:next opening_brace
+        {
             throw TCError.genericError("No container URL")
         }
 
@@ -137,5 +135,10 @@ public class FileService {
             atPath: legacyDestinationPath,
             toPath: url.path
         )
+    }
+
+    public func getFIleNameFromPath(path: String) -> String {
+        let url = URL(fileURLWithPath: path)
+        return url.lastPathComponent
     }
 }

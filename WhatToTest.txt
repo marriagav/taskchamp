@@ -1,1 +1,1 @@
-Taskchampion sync server: taskchamp now uses embeded taskchampion rust binaries to talk to the DB, including integration for the sync server.
+Sync servers: Taskchamp now has three additional sync options: GCP, AWS and taskchampion sync server. 

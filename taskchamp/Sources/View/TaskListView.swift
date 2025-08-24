@@ -21,8 +21,8 @@ public struct TaskListView: View {
     @State var isShowingObsidianSettings = false
     @State var isShowingSyncSettings = false
     @State var sortType: TasksHelper.TCSortType = .init(
-        rawValue: UserDefaults.standard
-            .string(forKey: "sortType") ?? TasksHelper.TCSortType.defaultSort.rawValue
+        rawValue: UserDefaultsManager.standard
+            .getValue(forKey: .sortType) ?? TasksHelper.TCSortType.defaultSort.rawValue
     ) ?? .defaultSort
 
     public init(
@@ -42,7 +42,7 @@ public struct TaskListView: View {
             return AnyView(
                 Button(label) {
                     self.sortType = sortType
-                    UserDefaults.standard.set(sortType.rawValue, forKey: "sortType")
+                    UserDefaultsManager.standard.set(value: sortType.rawValue, forKey: .sortType)
                     updateTasks()
                 }
             )
@@ -50,7 +50,7 @@ public struct TaskListView: View {
         return AnyView(
             Button {
                 self.sortType = sortType
-                UserDefaults.standard.set(sortType.rawValue, forKey: "sortType")
+                UserDefaultsManager.standard.set(value: sortType.rawValue, forKey: .sortType)
                 updateTasks()
             } label: {
                 Label(label, systemImage: SFSymbols.checkmark.rawValue)
@@ -204,7 +204,7 @@ public struct TaskListView: View {
                             selectedFilter = .defaultFilter
                             do {
                                 let res = try JSONEncoder().encode(selectedFilter)
-                                UserDefaults.standard.set(res, forKey: "selectedFilter")
+                                UserDefaultsManager.standard.set(value: res, forKey: .selectedFilter)
                             } catch { print(error) }
                         }
                     }

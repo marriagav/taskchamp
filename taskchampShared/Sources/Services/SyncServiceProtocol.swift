@@ -26,8 +26,8 @@ public class NoSyncService: SyncServiceProtocol {
         return true
     }
 
-    public static func sync(replica _: Replica) throws -> Bool {
-        return true // No sync needed for NoSyncService
+    public static func sync(replica: Replica) throws -> Bool {
+        return replica.sync_no_server()
     }
 }
 
@@ -67,46 +67,18 @@ public class RemoteSyncService: SyncServiceProtocol {
     private init() {}
 
     public static func getRemoteServerUrl() -> String? {
-        do {
-            if let data = UserDefaults(suiteName: "group.com.mav.taskchamp")?.data(forKey: "remoteServerUrl") {
-                let res = try JSONDecoder().decode(String.self, from: data)
-                return res
-            } else {
-                return nil
-            }
-        } catch {
-            return nil
-        }
+        let value: String? = UserDefaultsManager.shared.getValue(forKey: .remoteServerUrl)
+        return value
     }
 
     public static func getRemoteClientId() -> String? {
-        do {
-            if let data = UserDefaults(suiteName: "group.com.mav.taskchamp")?.data(forKey: "remoteServerClientId") {
-                let res = try JSONDecoder().decode(String.self, from: data)
-                return res
-            } else {
-                return nil
-            }
-        } catch {
-            return nil
-        }
+        let value: String? = UserDefaultsManager.shared.getValue(forKey: .remoteServerClientId)
+        return value
     }
 
     public static func getRemoteEncryptionSecret() -> String? {
-        do {
-            // swiftlint:disable all
-            if let data = UserDefaults(suiteName: "group.com.mav.taskchamp")?
-                .data(forKey: "remoteServerEncryptionSecret")
-            {
-                // swiftlint:enable all
-                let res = try JSONDecoder().decode(String.self, from: data)
-                return res
-            } else {
-                return nil
-            }
-        } catch {
-            return nil
-        }
+        let value: String? = UserDefaultsManager.shared.getValue(forKey: .remoteServerEncryptionSecret)
+        return value
     }
 
     public static func isAvailable() -> Bool {
@@ -143,46 +115,18 @@ public class GcpSyncService: SyncServiceProtocol {
     private init() {}
 
     public static func getGcpBucket() -> String? {
-        do {
-            if let data = UserDefaults(suiteName: "group.com.mav.taskchamp")?.data(forKey: "gcpServerBucket") {
-                let res = try JSONDecoder().decode(String.self, from: data)
-                return res
-            } else {
-                return nil
-            }
-        } catch {
-            return nil
-        }
+        let value: String? = UserDefaultsManager.shared.getValue(forKey: .gcpServerBucket)
+        return value
     }
 
     public static func getGcpCredentialPath() -> String? {
-        do {
-            if let data = UserDefaults(suiteName: "group.com.mav.taskchamp")?.data(forKey: "gcpServerCredentialPath") {
-                let res = try JSONDecoder().decode(String.self, from: data)
-                return res
-            } else {
-                return nil
-            }
-        } catch {
-            return nil
-        }
+        let value: String? = UserDefaultsManager.shared.getValue(forKey: .gcpServerCredentialPath)
+        return value
     }
 
     public static func getGcpEncryptionSecret() -> String? {
-        do {
-            // swiftlint:disable all
-            if let data = UserDefaults(suiteName: "group.com.mav.taskchamp")?
-                .data(forKey: "gcpServerEncryptionSecret")
-            {
-                // swiftlint:enable all
-                let res = try JSONDecoder().decode(String.self, from: data)
-                return res
-            } else {
-                return nil
-            }
-        } catch {
-            return nil
-        }
+        let value: String? = UserDefaultsManager.shared.getValue(forKey: .gcpServerEncryptionSecret)
+        return value
     }
 
     public static func isAvailable() -> Bool {
@@ -214,13 +158,58 @@ public class AwsSyncService: SyncServiceProtocol {
     public static let errorMessage =
         "Make sure that you have the correct AWS configuration"
 
+    public static func getAwsBucket() -> String? {
+        let value: String? = UserDefaultsManager.shared.getValue(forKey: .awsServerBucket)
+        return value
+    }
+
+    public static func getAwsRegion() -> String? {
+        let value: String? = UserDefaultsManager.shared.getValue(forKey: .awsServerRegion)
+        return value
+    }
+
+    public static func getAwsAccessKeyId() -> String? {
+        let value: String? = UserDefaultsManager.shared.getValue(forKey: .awsServerAccessKeyId)
+        return value
+    }
+
+    public static func getAwsSecretAccessKey() -> String? {
+        let value: String? = UserDefaultsManager.shared.getValue(forKey: .awsServerSecretAccessKey)
+        return value
+    }
+
+    public static func getAwsEncryptionSecret() -> String? {
+        let value: String? = UserDefaultsManager.shared.getValue(forKey: .awsServerEncryptionSecret)
+        return value
+    }
+
     private init() {}
 
     public static func isAvailable() -> Bool {
-        return false // TODO: Implement AWS Sync Service
+        return getAwsBucket() != nil &&
+            getAwsRegion() != nil &&
+            getAwsAccessKeyId() != nil &&
+            getAwsSecretAccessKey() != nil &&
+            getAwsEncryptionSecret() != nil
     }
 
-    public static func sync(replica _: Replica) throws -> Bool {
-        return false // TODO: Implement AWS Sync Service
+    public static func sync(replica: Replica) throws -> Bool {
+        // swiftlint:disable all
+        guard let bucket = getAwsBucket(),
+              let region = getAwsRegion(),
+              let accessKeyId = getAwsAccessKeyId(),
+              let secretAccessKey = getAwsSecretAccessKey(),
+              let encryptionSecret = getAwsEncryptionSecret() else
+        {
+            // swiftlint:enable all
+            throw TCError.genericError("AWS configuration is incomplete")
+        }
+        return replica.sync_aws(
+            region.intoRustString(),
+            bucket.intoRustString(),
+            accessKeyId.intoRustString(),
+            secretAccessKey.intoRustString(),
+            encryptionSecret.intoRustString()
+        )
     }
 }
