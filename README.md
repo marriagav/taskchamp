@@ -18,6 +18,9 @@ Taskchamp can work as a standalone iOS app, but it's recommended to use it with 
 
 There are currently thrww ways to setup Taskchamp to work with Taskwarrior: using a Taskchampion Sync Server, using AWS, using GCP, or using iCloud Drive.
 
+> [!IMPORTANT]
+> You only need to setup one of these methods, not all of them.
+
 The documentation for how sync works in Taskwarrior can be found [here](https://taskwarrior.org/docs/sync/).
 
 ### Setup with Taskchampion Sync Server
@@ -42,6 +45,8 @@ The documentation for how sync works in Taskwarrior can be found [here](https://
 
 ### Setup with AWS
 
+> AWS Sync works by connecting to an S3 bucket that will handle the synchronization of your tasks across devices.
+
 1. Setup an S3 bucket that is compatible with taskwarrior sync by following the instructions [here](https://man.archlinux.org/man/extra/task/task-sync.5.en#Amazon_Web_Services).
 
 2. Open the Taskchamp app on your phone and select `Amazon Web Services` as your sync service.
@@ -57,6 +62,8 @@ The documentation for how sync works in Taskwarrior can be found [here](https://
 6. Your tasks should now be synced between your computer and your phone. You can add tasks from the command line using Taskwarrior, `task sync`, and they will appear on Taskchamp.
 
 ### Setup with GCP
+
+> GCP Sync works by connecting to a GCP bucket that will handle the synchronization of your tasks across devices.
 
 1. Setup a GCP bucket that is compatible with taskwarrior sync by following the instructions [here](https://man.archlinux.org/man/extra/task/task-sync.5.en#Google_Cloud_Platform).
 
@@ -76,26 +83,30 @@ The documentation for how sync works in Taskwarrior can be found [here](https://
 
 > Taskchamp can also use iCloud Drive to sync tasks between your computer and your phone. This is described on the Taskwarrior docs [here](https://man.archlinux.org/man/extra/task/task-sync.5.en#ALTERNATIVE:_FILE_SHARING_SERVICES).
 
-** This sync method is not as reliable as using a sync server and is not officially supported by taskwarrior, there is a chance that it might lead to DB corruption ** , it is a decent alternative if you don't want to set up server (any of the previous methods) and make sure to backup your data in case of corruption.
+**This sync method is not as reliable as using a sync server and is not officially supported by taskwarrior, there is a chance that it might lead to DB corruption** , it is an okay alternative if you don't want to set up server (any of the previous methods) and make sure to backup your data in case of corruption.
 
 > [!IMPORTANT]
 > The following instructions are specific for macOS.
 
-> [!NOTE] > **For Linux Users**
+> [!NOTE]
+> **For Linux Users**
 > : If you are using Linux, feel free to follow along but you might need to make some modifications.
 > Linux users must use the new [iCloud Drive support in rclone](https://github.com/rclone/rclone/pull/7717)
 
 To setup iCloud Drive Sync, follow these steps:
 
 1. Make sure to have an iCloud account signed in on your phone and computer. Also make sure to have iCloud Drive enabled.
-   > Ensure that you disable "Optimize Mac Storage" in iCloud Drive's settings
+
+> Ensure that you disable "Optimize Mac Storage" in iCloud Drive's settings
+
 2. Open the Taskchamp app on your phone and select `iCloud Sync` as your sync service. This will create a folder in iCloud Drive called `taskchamp`, this is where your tasks database file will live.
 
 > Sometimes it may take some time for the folder to appear on the finder and files app, but you can access it via terminal.
 
 3. After the folder is created, navigate to it from your computer, and copy your `taskchampion.sqlite3` file into `~/Library/Mobile Documents/iCloud~com~mav~taskchamp/Documents/taskchamp/`. Replace the existing file if there is one.
 
-> Note: you do not need to move the file, just a copy will do. This is just to make sure that the files have a shared starting point.
+> [!NOTE]
+> You do not need to move the file, just a copy will do. This is just to make sure that the files have a shared starting point.
 
 - If you want to use a new taskwarrior database, you can skip this step.
 
