@@ -6,6 +6,8 @@ Use [Taskwarrior](https://taskwarrior.org/), a simple command line interface to 
 
 > For contributing to Taskchamp, please read the [CONTRIBUTING.md](CONTRIBUTING.md) file.
 
+[TOC]
+
 ## Installation
 
 To install Taskchamp, download the latest [release from the App Store](https://apps.apple.com/us/app/taskchamp-tasks-for-devs/id6633442700).
