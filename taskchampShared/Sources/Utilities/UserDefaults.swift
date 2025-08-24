@@ -2,16 +2,26 @@ import Foundation
 
 public enum TCUserDefaults: String {
     case selectedFilter
-    case selectedSyncType
     case sortType
+
     case obsidianVaultName
     case tasksFolderPath
+
+    case selectedSyncType
+
     case remoteServerUrl
     case remoteServerClientId
     case remoteServerEncryptionSecret
+
     case gcpServerBucket
     case gcpServerCredentialPath
     case gcpServerEncryptionSecret
+
+    case awsServerBucket
+    case awsServerRegion
+    case awsServerAccessKeyId
+    case awsServerSecretAccessKey
+    case awsServerEncryptionSecret
 }
 
 public class UserDefaultsManager {

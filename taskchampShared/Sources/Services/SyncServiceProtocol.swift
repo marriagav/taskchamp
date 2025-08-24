@@ -158,38 +158,58 @@ public class AwsSyncService: SyncServiceProtocol {
     public static let errorMessage =
         "Make sure that you have the correct AWS configuration"
 
-    // public static func getAwsBucket() -> String? {
-    //     if let bucket = UserDefaults(suiteName: "group.com.mav.taskchamp")?.string(forKey: "awsServerBucket") {
-    //         return bucket
-    //     } else {
-    //         return nil
-    //     }
-    // }
-    //
-    // public static func getAwsRegion() -> String? {
-    //     if let region = UserDefaults(suiteName: "group.com.mav.taskchamp")?.string(forKey: "awsServerRegion") {
-    //         return region
-    //     } else {
-    //         return nil
-    //     }
-    // }
+    public static func getAwsBucket() -> String? {
+        let value: String? = UserDefaultsManager.shared.getValue(forKey: .awsServerBucket)
+        return value
+    }
+
+    public static func getAwsRegion() -> String? {
+        let value: String? = UserDefaultsManager.shared.getValue(forKey: .awsServerRegion)
+        return value
+    }
+
+    public static func getAwsAccessKeyId() -> String? {
+        let value: String? = UserDefaultsManager.shared.getValue(forKey: .awsServerAccessKeyId)
+        return value
+    }
+
+    public static func getAwsSecretAccessKey() -> String? {
+        let value: String? = UserDefaultsManager.shared.getValue(forKey: .awsServerSecretAccessKey)
+        return value
+    }
+
+    public static func getAwsEncryptionSecret() -> String? {
+        let value: String? = UserDefaultsManager.shared.getValue(forKey: .awsServerEncryptionSecret)
+        return value
+    }
 
     private init() {}
 
     public static func isAvailable() -> Bool {
-        return false // TODO: Implement AWS Sync Service
+        return getAwsBucket() != nil &&
+            getAwsRegion() != nil &&
+            getAwsAccessKeyId() != nil &&
+            getAwsSecretAccessKey() != nil &&
+            getAwsEncryptionSecret() != nil
     }
 
-    public static func sync(replica _: Replica) throws -> Bool {
-        // return replica.sync_aws()
-
-        // let synced = replica.sync_aws(
-        //     bucket.intoRustString(),
-        //     getGcpCredentialPath()?.intoRustString(),
-        //     encryptionSecret.intoRustString()
-        // )
-        // return synced
-        //
-        return false
+    public static func sync(replica: Replica) throws -> Bool {
+        // swiftlint:disable all
+        guard let bucket = getAwsBucket(),
+              let region = getAwsRegion(),
+              let accessKeyId = getAwsAccessKeyId(),
+              let secretAccessKey = getAwsSecretAccessKey(),
+              let encryptionSecret = getAwsEncryptionSecret() else
+        {
+            // swiftlint:enable all
+            throw TCError.genericError("AWS configuration is incomplete")
+        }
+        return replica.sync_aws(
+            region.intoRustString(),
+            bucket.intoRustString(),
+            accessKeyId.intoRustString(),
+            secretAccessKey.intoRustString(),
+            encryptionSecret.intoRustString()
+        )
     }
 }
