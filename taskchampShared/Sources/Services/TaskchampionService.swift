@@ -9,10 +9,10 @@ public class TaskchampionService {
     public var needToSync = false
 
     public enum SyncType: Codable, CaseIterable {
-        case local
         case remote
-        case gcp
         case aws
+        case gcp
+        case local
         case none
     }
 
