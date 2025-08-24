@@ -10,7 +10,7 @@ Use [Taskwarrior](https://taskwarrior.org/), a simple command line interface to 
 
 <!-- TOC start -->
 
-- [Contributing](<(CONTRIBUTING.md)>)
+- [Contributing](CONTRIBUTING.md)
 - [Installation](#installation)
 - [Setup with Taskwarrior](#setup-with-taskwarrior)
   - [Setup with Taskchampion Sync Server](#setup-with-taskchampion-sync-server)
