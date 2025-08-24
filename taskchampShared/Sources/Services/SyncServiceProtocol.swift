@@ -67,46 +67,18 @@ public class RemoteSyncService: SyncServiceProtocol {
     private init() {}
 
     public static func getRemoteServerUrl() -> String? {
-        do {
-            if let data = UserDefaults(suiteName: "group.com.mav.taskchamp")?.data(forKey: "remoteServerUrl") {
-                let res = try JSONDecoder().decode(String.self, from: data)
-                return res
-            } else {
-                return nil
-            }
-        } catch {
-            return nil
-        }
+        let value: String? = UserDefaultsManager.shared.getValue(forKey: .remoteServerUrl)
+        return value
     }
 
     public static func getRemoteClientId() -> String? {
-        do {
-            if let data = UserDefaults(suiteName: "group.com.mav.taskchamp")?.data(forKey: "remoteServerClientId") {
-                let res = try JSONDecoder().decode(String.self, from: data)
-                return res
-            } else {
-                return nil
-            }
-        } catch {
-            return nil
-        }
+        let value: String? = UserDefaultsManager.shared.getValue(forKey: .remoteServerClientId)
+        return value
     }
 
     public static func getRemoteEncryptionSecret() -> String? {
-        do {
-            // swiftlint:disable all
-            if let data = UserDefaults(suiteName: "group.com.mav.taskchamp")?
-                .data(forKey: "remoteServerEncryptionSecret")
-            {
-                // swiftlint:enable all
-                let res = try JSONDecoder().decode(String.self, from: data)
-                return res
-            } else {
-                return nil
-            }
-        } catch {
-            return nil
-        }
+        let value: String? = UserDefaultsManager.shared.getValue(forKey: .remoteServerEncryptionSecret)
+        return value
     }
 
     public static func isAvailable() -> Bool {
@@ -143,46 +115,18 @@ public class GcpSyncService: SyncServiceProtocol {
     private init() {}
 
     public static func getGcpBucket() -> String? {
-        do {
-            if let data = UserDefaults(suiteName: "group.com.mav.taskchamp")?.data(forKey: "gcpServerBucket") {
-                let res = try JSONDecoder().decode(String.self, from: data)
-                return res
-            } else {
-                return nil
-            }
-        } catch {
-            return nil
-        }
+        let value: String? = UserDefaultsManager.shared.getValue(forKey: .gcpServerBucket)
+        return value
     }
 
     public static func getGcpCredentialPath() -> String? {
-        do {
-            if let data = UserDefaults(suiteName: "group.com.mav.taskchamp")?.data(forKey: "gcpServerCredentialPath") {
-                let res = try JSONDecoder().decode(String.self, from: data)
-                return res
-            } else {
-                return nil
-            }
-        } catch {
-            return nil
-        }
+        let value: String? = UserDefaultsManager.shared.getValue(forKey: .gcpServerCredentialPath)
+        return value
     }
 
     public static func getGcpEncryptionSecret() -> String? {
-        do {
-            // swiftlint:disable all
-            if let data = UserDefaults(suiteName: "group.com.mav.taskchamp")?
-                .data(forKey: "gcpServerEncryptionSecret")
-            {
-                // swiftlint:enable all
-                let res = try JSONDecoder().decode(String.self, from: data)
-                return res
-            } else {
-                return nil
-            }
-        } catch {
-            return nil
-        }
+        let value: String? = UserDefaultsManager.shared.getValue(forKey: .gcpServerEncryptionSecret)
+        return value
     }
 
     public static func isAvailable() -> Bool {
@@ -214,6 +158,22 @@ public class AwsSyncService: SyncServiceProtocol {
     public static let errorMessage =
         "Make sure that you have the correct AWS configuration"
 
+    // public static func getAwsBucket() -> String? {
+    //     if let bucket = UserDefaults(suiteName: "group.com.mav.taskchamp")?.string(forKey: "awsServerBucket") {
+    //         return bucket
+    //     } else {
+    //         return nil
+    //     }
+    // }
+    //
+    // public static func getAwsRegion() -> String? {
+    //     if let region = UserDefaults(suiteName: "group.com.mav.taskchamp")?.string(forKey: "awsServerRegion") {
+    //         return region
+    //     } else {
+    //         return nil
+    //     }
+    // }
+
     private init() {}
 
     public static func isAvailable() -> Bool {
@@ -221,6 +181,15 @@ public class AwsSyncService: SyncServiceProtocol {
     }
 
     public static func sync(replica _: Replica) throws -> Bool {
-        return false // TODO: Implement AWS Sync Service
+        // return replica.sync_aws()
+
+        // let synced = replica.sync_aws(
+        //     bucket.intoRustString(),
+        //     getGcpCredentialPath()?.intoRustString(),
+        //     encryptionSecret.intoRustString()
+        // )
+        // return synced
+        //
+        return false
     }
 }

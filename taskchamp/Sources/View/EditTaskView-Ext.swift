@@ -11,10 +11,8 @@ extension EditTaskView {
 
     func handleObsidianTap() {
         do {
-            let obsidianVaultName = UserDefaults.standard
-                .string(forKey: "obsidianVaultName")
-            let tasksFolderPath = UserDefaults.standard
-                .string(forKey: "tasksFolderPath") ?? ""
+            let obsidianVaultName: String? = UserDefaultsManager.standard.getValue(forKey: .obsidianVaultName)
+            let tasksFolderPath: String = UserDefaultsManager.standard.getValue(forKey: .tasksFolderPath) ?? ""
             if obsidianVaultName == nil || obsidianVaultName?.isEmpty ?? true {
                 isShowingObsidianSettings = true
                 return

@@ -1,6 +1,8 @@
 import SwiftUI
 import taskchampShared
 
+// MARK: - ICloudSettingsViewModel
+
 @Observable
 class ICloudSettingsViewModel: UseSyncServiceViewModel {
     var isShowingAlert = false
@@ -73,6 +75,8 @@ class ICloudSettingsViewModel: UseSyncServiceViewModel {
         isShowingSyncServiceModal.wrappedValue = false
     }
 }
+
+// MARK: - ICloudSettingsView
 
 struct ICloudSettingsView: View {
     @Binding var isShowingSyncServiceModal: Bool

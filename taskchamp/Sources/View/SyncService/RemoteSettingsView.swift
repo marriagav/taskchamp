@@ -22,21 +22,9 @@ class RemoteSettingsViewModel: UseSyncServiceViewModel {
     }
 
     func setOtherUserDefaults() {
-        do {
-            let encodedUrl = try JSONEncoder().encode(remoteServerUrl)
-            let encodedClientId = try JSONEncoder().encode(remoteClientId)
-            let encodedEncryptionSecret = try JSONEncoder().encode(remoteEncryptionSecret)
-            let defaults = UserDefaults(suiteName: "group.com.mav.taskchamp")
-            guard let defaults else {
-                isShowingAlert = true
-                return
-            }
-            defaults.set(encodedUrl, forKey: "remoteServerUrl")
-            defaults.set(encodedClientId, forKey: "remoteServerClientId")
-            defaults.set(encodedEncryptionSecret, forKey: "remoteServerEncryptionSecret")
-        } catch {
-            isShowingAlert = true
-        }
+        UserDefaultsManager.shared.set(value: remoteServerUrl, forKey: .remoteServerUrl)
+        UserDefaultsManager.shared.set(value: remoteClientId, forKey: .remoteServerClientId)
+        UserDefaultsManager.shared.set(value: remoteEncryptionSecret, forKey: .remoteServerEncryptionSecret)
     }
 
     func onAppear() {

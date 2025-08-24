@@ -4,8 +4,8 @@ import taskchampShared
 
 struct ObsidianSettingsView: View {
     @Environment(\.dismiss) var dismiss
-    @State private var obsidianVaultName = UserDefaults.standard.string(forKey: "obsidianVaultName") ?? ""
-    @State private var tasksFolderPath = UserDefaults.standard.string(forKey: "tasksFolderPath") ?? ""
+    @State private var obsidianVaultName = UserDefaultsManager.standard.getValue(forKey: .obsidianVaultName) ?? ""
+    @State private var tasksFolderPath = UserDefaultsManager.standard.getValue(forKey: .tasksFolderPath) ?? ""
     @State private var showObsidianInfoPopover = false
 
     var body: some View {
@@ -59,11 +59,11 @@ struct ObsidianSettingsView: View {
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
-                        UserDefaults.standard.set(obsidianVaultName, forKey: "obsidianVaultName")
+                        UserDefaultsManager.standard.set(value: obsidianVaultName, forKey: .obsidianVaultName)
                         if tasksFolderPath.last == "/" {
                             tasksFolderPath = String(tasksFolderPath.dropLast(1))
                         }
-                        UserDefaults.standard.set(tasksFolderPath, forKey: "tasksFolderPath")
+                        UserDefaultsManager.standard.set(value: tasksFolderPath, forKey: .tasksFolderPath)
                         dismiss()
                     }
                 }

@@ -23,21 +23,9 @@ class GcpSettingsViewModel: UseSyncServiceViewModel {
     }
 
     func setOtherUserDefaults() {
-        do {
-            let encodedBucket = try JSONEncoder().encode(gcpBucket)
-            let encodedCredentialPath = try JSONEncoder().encode(gcpServerCredentialPath)
-            let encodedEncryptionSecret = try JSONEncoder().encode(gcpServerEncryptionSecret)
-            let defaults = UserDefaults(suiteName: "group.com.mav.taskchamp")
-            guard let defaults else {
-                isShowingAlert = true
-                return
-            }
-            defaults.set(encodedBucket, forKey: "gcpServerBucket")
-            defaults.set(encodedCredentialPath, forKey: "gcpServerCredentialPath")
-            defaults.set(encodedEncryptionSecret, forKey: "gcpServerEncryptionSecret")
-        } catch {
-            isShowingAlert = true
-        }
+        UserDefaultsManager.shared.set(value: gcpBucket, forKey: .gcpServerBucket)
+        UserDefaultsManager.shared.set(value: gcpServerCredentialPath, forKey: .gcpServerCredentialPath)
+        UserDefaultsManager.shared.set(value: gcpServerEncryptionSecret, forKey: .gcpServerEncryptionSecret)
     }
 
     func onAppear() {

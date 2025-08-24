@@ -1,6 +1,8 @@
 import SwiftUI
 import taskchampShared
 
+// MARK: - NoSyncServiceViewModel
+
 @Observable
 class NoSyncServiceViewModel: UseSyncServiceViewModel {
     var isShowingAlert = false
@@ -37,8 +39,9 @@ class NoSyncServiceViewModel: UseSyncServiceViewModel {
         selectedSyncType.wrappedValue = syncType
         isShowingSyncServiceModal.wrappedValue = false
     }
-
 }
+
+// MARK: - NoSyncServiceView
 
 struct NoSyncServiceView: View {
     @Binding var isShowingSyncServiceModal: Bool

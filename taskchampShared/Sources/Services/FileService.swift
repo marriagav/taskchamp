@@ -40,16 +40,8 @@ public class FileService {
     }
 
     public func getSelectedSyncType() -> TaskchampionService.SyncType? {
-        do {
-            if let data = UserDefaults(suiteName: "group.com.mav.taskchamp")?.data(forKey: "selectedSyncType") {
-                let res = try JSONDecoder().decode(TaskchampionService.SyncType.self, from: data)
-                return res
-            } else {
-                return nil
-            }
-        } catch {
-            return nil
-        }
+        let value: TaskchampionService.SyncType? = UserDefaultsManager.shared.getDecodedValue(forKey: .selectedSyncType)
+        return value
     }
 
     public func getDestinationPathForLocalReplica(syncType: TaskchampionService.SyncType) throws -> String {
@@ -92,7 +84,7 @@ public class FileService {
             .default
             .containerURL(
                 forSecurityApplicationGroupIdentifier:
-                "group.com.mav.taskchamp"
+                UserDefaultsManager.suiteName
             ) else
         // swiftlint:disable:next opening_brace
         {

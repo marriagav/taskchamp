@@ -9,16 +9,11 @@ public struct ContentView: View {
     @State private var isShowingSyncServiceModal = false
 
     private func getSelectedFilter() -> TCFilter {
-        do {
-            if let data = UserDefaults.standard.data(forKey: "selectedFilter") {
-                let res = try JSONDecoder().decode(TCFilter.self, from: data)
-                return res
-            } else {
-                return .defaultFilter
-            }
-        } catch {
-            return .defaultFilter
+        let value: TCFilter? = UserDefaultsManager.standard.getDecodedValue(forKey: .selectedFilter)
+        if let value = value {
+            return value
         }
+        return .defaultFilter
     }
 
     private func getSelectedSyncType() -> TaskchampionService.SyncType? {

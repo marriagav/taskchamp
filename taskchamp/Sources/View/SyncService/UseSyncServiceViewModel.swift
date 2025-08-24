@@ -31,12 +31,7 @@ extension UseSyncServiceViewModel {
     }
 
     func setUserDefaults() throws {
-        let res = try JSONEncoder().encode(syncType)
-        let defaults = UserDefaults(suiteName: "group.com.mav.taskchamp")
-        guard let defaults else {
-            throw TCError.genericError("No UserDefaults found")
-        }
-        defaults.set(res, forKey: "selectedSyncType")
+        try UserDefaultsManager.shared.setEncodableValue(syncType, forKey: .selectedSyncType)
     }
 
     func setOtherUserDefaults() {
