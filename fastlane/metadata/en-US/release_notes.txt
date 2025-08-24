@@ -1,1 +1,1 @@
-Bugfixes and improvements!
+Sync your tasks with taskchampion sync server, GCP or AWS!

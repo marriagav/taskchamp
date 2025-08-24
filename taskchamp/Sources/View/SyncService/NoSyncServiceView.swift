@@ -1,51 +1,77 @@
 import SwiftUI
 import taskchampShared
 
+// MARK: - NoSyncServiceViewModel
+
+@Observable
+class NoSyncServiceViewModel: UseSyncServiceViewModel {
+    var isShowingAlert = false
+
+    var syncType: TaskchampionService.SyncType {
+        .none
+    }
+
+    func isDisabled(for syncType: TaskchampionService.SyncType?) -> Bool {
+        syncType == self.syncType
+    }
+
+    func buttonTitle(for selectedSyncType: TaskchampionService.SyncType?) -> String {
+        isDisabled(for: selectedSyncType) ? "No Sync Enabled" : "Continue Without Sync"
+    }
+
+    var summary: String {
+        // swiftlint:disable:next line_length
+        "No Sync means that your tasks will not be synchronized across devices. You will only be able to access them on this device. You can always enable sync later."
+    }
+
+    func completeAction(
+        isShowingSyncServiceModal: Binding<Bool>,
+        selectedSyncType: Binding<TaskchampionService.SyncType?>,
+        isShowingAlert: Binding<Bool>
+    ) {
+        do {
+            try setReplica()
+            try setUserDefaults()
+        } catch {
+            isShowingAlert.wrappedValue = true
+            return
+        }
+        selectedSyncType.wrappedValue = syncType
+        isShowingSyncServiceModal.wrappedValue = false
+    }
+}
+
+// MARK: - NoSyncServiceView
+
 struct NoSyncServiceView: View {
     @Binding var isShowingSyncServiceModal: Bool
     @Binding var selectedSyncType: TaskchampionService.SyncType?
     @Environment(PathStore.self) var pathStore: PathStore
-    @State private var isShowingAlert = false
 
-    var isDisabled: Bool {
-        selectedSyncType == TaskchampionService.SyncType.none
+    @State private var viewModel = NoSyncServiceViewModel()
+
+    func completeAction() {
+        viewModel.completeAction(
+            isShowingSyncServiceModal: $isShowingSyncServiceModal,
+            selectedSyncType: $selectedSyncType,
+            isShowingAlert: $viewModel.isShowingAlert
+        )
     }
 
-    var buttonTitle: String {
-        isDisabled ? "No Sync Enabled" : "Continue Without Sync"
+    func buttonTitle() -> String {
+        viewModel.buttonTitle(for: selectedSyncType)
     }
 
     var body: some View {
-        Form {
-            Section {
-                Text(
-                    // swiftlint:disable:next line_length
-                    "No Sync means that your tasks will not be synchronized across devices. You will only be able to access them on this device. You can always enable sync later."
-                )
-                .foregroundStyle(.secondary)
-            }
-            Section {
-                Button(action: {
-                    do {
-                        try SyncServiceViewHelper.setReplica(syncType: .none)
-                        try SyncServiceViewHelper.setUserDefaults(syncType: .none)
-                    } catch {
-                        isShowingAlert = true
-                        return
-                    }
-                    selectedSyncType = TaskchampionService.SyncType.none
-                    isShowingSyncServiceModal = false
-                }, label: {
-                    Label(buttonTitle, systemImage: SFSymbols.cloudSlash.rawValue)
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-                })
-                .buttonStyle(.borderedProminent)
-                .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
-                .disabled(isDisabled)
-            }
+        TCInstructionsView(summary: viewModel.summary, instructions: viewModel.instructions) {
+            TCSyncServiceButtonSectionView(
+                buttonTitle: viewModel.buttonTitle(for: selectedSyncType),
+                action: completeAction,
+                isDisabled: viewModel.isDisabled(for: selectedSyncType),
+                systemImage: SFSymbols.cloudSlash.rawValue,
+            )
         }
-        .alert(isPresented: $isShowingAlert) {
+        .alert(isPresented: $viewModel.isShowingAlert) {
             Alert(
                 title: Text("There was an error"),
                 message: Text("Please try again later."),

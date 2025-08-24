@@ -7,19 +7,13 @@ Assign yourself to any issue that you would like to work on, or create a new one
 ### Getting the code
 
 > [!IMPORTANT]
-> We are currently ongoing a refactor of crucial parts of the codebase, in favor of the use of [taskchampion-swift](https://github.com/LostLaplace/taskchampion-swift) as a dependency for the app.
->
-> - This could include full sync support since it's built into the upstream taskchampion library.
-> - If the changes that you want to make are related to the sync/database part of the app (basically anything on the `DBService.swift` file), please make your contribution to that repository instead.
-> - Otherwise, you can continue with the instructions below.
+> Taskchamp depends on the [taskchampion-swift](https://github.com/marriagav/task-champion-swift) rust library for interacting with the taskchampion backend and syncing services. Contribute there if you want to make changes to the sync/database part of the app.
 
-1. Fork the repo: Fork the repo. Make sure to keep your code up-to-date with the upstream repository.
+1. Clone the repo: Clone the repo to your local machine and checkout the `dev` branch.
 
-2. Clone the repo: Clone the forked repo to your local machine and checkout the `dev` branch.
+2. Create a new branch: You should always work on a new branch on your fork, that **should be branched off from the `dev` branch**.
 
-3. Create a new branch: You should always work on a new branch on your fork, that **should be branched off from the `dev` branch**.
-
-4. Before being able to install the dependencies, you need to have a couple of things installed on your system:
+3. Before being able to install the dependencies, you need to have a couple of things installed on your system:
 
 This project is built using Swift, Rust for the taskchampion-swift binary, and Mise + [Tuist](https://tuist.dev/). You can install the dependencies by running the following commands:
 
@@ -31,10 +25,8 @@ curl https://sh.rustup.rs -sSf | sh -s -- -y
 ```
 
 5. To start working on the project:
-
    1. Navigate to the root of the project and run `mise install`
    2. Run `make up`:
-
    - This will install the https://github.com/LostLaplace/taskchampion-swift rust binary
    - It will also install all the swift/xcode dependencies
    - Finally, it will generate the xcode project and open it in xcode.

@@ -20,6 +20,12 @@ public struct AddFilterView: View {
 
     @FocusState private var isFocusedNLP: Bool
 
+    private func setSelectedFilterUserDefault(selectedFilter: TCFilter) {
+        do {
+            try UserDefaultsManager.standard.setEncodableValue(selectedFilter, forKey: .selectedFilter)
+        } catch { print(error) }
+    }
+
     public var body: some View {
         NavigationStack {
             Form {
@@ -51,10 +57,7 @@ public struct AddFilterView: View {
                                 modelContext.insert(nlpFilter)
                                 selectedFilter = nlpFilter
 
-                                do {
-                                    let res = try JSONEncoder().encode(selectedFilter)
-                                    UserDefaults.standard.set(res, forKey: "selectedFilter")
-                                } catch { print(error) }
+                                setSelectedFilterUserDefault(selectedFilter: selectedFilter)
 
                                 nlpInput = ""
                                 isFocusedNLP = false
@@ -103,10 +106,7 @@ public struct AddFilterView: View {
                                 } else {
                                     selectedFilter = filter
                                 }
-                                do {
-                                    let res = try JSONEncoder().encode(selectedFilter)
-                                    UserDefaults.standard.set(res, forKey: "selectedFilter")
-                                } catch { print(error) }
+                                setSelectedFilterUserDefault(selectedFilter: selectedFilter)
                                 dismiss()
                             } label: {
                                 HStack {
@@ -126,10 +126,7 @@ public struct AddFilterView: View {
                                         modelContext.delete(filter)
                                         if filter == selectedFilter {
                                             selectedFilter = TCFilter.defaultFilter
-                                            do {
-                                                let res = try JSONEncoder().encode(selectedFilter)
-                                                UserDefaults.standard.set(res, forKey: "selectedFilter")
-                                            } catch { print(error) }
+                                            setSelectedFilterUserDefault(selectedFilter: selectedFilter)
                                         }
                                     }
                                 } label: {
