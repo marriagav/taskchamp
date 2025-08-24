@@ -14,12 +14,69 @@ Taskchamp can work as a standalone iOS app, but it's recommended to use it with 
 
 > Taskchamp is only compatible with Taskwarrior 3.0.0 or later.
 
-> [!CAUTION]
-> Latest version of Taskwarrior breaks Taskchamp sync, for the moment please use Taskwarrior 3.1.0 until I fix this issue: https://github.com/marriagav/taskchamp-docs/issues/2
-
 ## Setup with Taskwarrior
 
-> Taskchamp uses iCloud Drive to sync tasks between your computer and your phone. This is described on the Taskwarrior docs [here](https://man.archlinux.org/man/extra/task/task-sync.5.en#ALTERNATIVE:_FILE_SHARING_SERVICES).
+There are currently thrww ways to setup Taskchamp to work with Taskwarrior: using a Taskchampion Sync Server, using AWS, using GCP, or using iCloud Drive.
+
+The documentation for how sync works in Taskwarrior can be found [here](https://taskwarrior.org/docs/sync/).
+
+### Setup with Taskchampion Sync Server
+
+> Remote Sync works by connecting to a remote taskchampion-sync-server that will handle the synchronization of your tasks across devices.
+
+1. Setup a Taskchampion Sync Server by following the instructions [here](https://gothenburgbitfactory.org/taskchampion-sync-server/introduction.html).
+
+2. Connect to the server from your computer by following the instructions [here](https://man.archlinux.org/man/extra/task/task-sync.5.en#Sync_Server).
+
+3. Open the Taskchamp app on your phone and select `Taskchampion Sync Server` as your sync service.
+
+4. Enter the URL of your sync server, your client id and encryption secret.
+
+5. You will be able to trigger the sync from your computer by executing: `task sync`.
+
+- Read more about Taskwarrior sync [here](https://taskwarrior.org/docs/commands/synchronize/).
+
+6. Run this command whenever you want to sync your tasks. You can also create a cron job to run run it every few minutes.
+
+7. Your tasks should now be synced between your computer and your phone. You can add tasks from the command line using Taskwarrior, `task sync`, and they will appear on Taskchamp.
+
+### Setup with AWS
+
+1. Setup an S3 bucket that is compatible with taskwarrior sync by following the instructions [here](https://man.archlinux.org/man/extra/task/task-sync.5.en#Amazon_Web_Services).
+
+2. Open the Taskchamp app on your phone and select `Amazon Web Services` as your sync service.
+
+3. Enter the bucket name, region, access key id, secret access key and encryption secret.
+
+4. You will be able to trigger the sync from your computer by executing: `task sync`.
+
+- Read more about Taskwarrior sync [here](https://taskwarrior.org/docs/commands/synchronize/).
+
+5. Run this command whenever you want to sync your tasks. You can also create a cron job to run run it every few minutes.
+
+6. Your tasks should now be synced between your computer and your phone. You can add tasks from the command line using Taskwarrior, `task sync`, and they will appear on Taskchamp.
+
+### Setup with GCP
+
+1. Setup a GCP bucket that is compatible with taskwarrior sync by following the instructions [here](https://man.archlinux.org/man/extra/task/task-sync.5.en#Google_Cloud_Platform).
+
+2. Open the Taskchamp app on your phone and select `Google Cloud Platform` as your sync service.
+
+3. Enter the bucket name, select your GCP credentials JSON file and encryption secret.
+
+4. You will be able to trigger the sync from your computer by executing: `task sync`.
+
+- Read more about Taskwarrior sync [here](https://taskwarrior.org/docs/commands/synchronize/).
+
+5. Run this command whenever you want to sync your tasks. You can also create a cron job to run run it every few minutes.
+
+6. Your tasks should now be synced between your computer and your phone. You can add tasks from the command line using Taskwarrior, `task sync`, and they will appear on Taskchamp.
+
+### Setup with iCloud Drive
+
+> Taskchamp can also use iCloud Drive to sync tasks between your computer and your phone. This is described on the Taskwarrior docs [here](https://man.archlinux.org/man/extra/task/task-sync.5.en#ALTERNATIVE:_FILE_SHARING_SERVICES).
+
+** This sync method is not as reliable as using a sync server and is not officially supported by taskwarrior, there is a chance that it might lead to DB corruption ** , it is a decent alternative if you don't want to set up server (any of the previous methods) and make sure to backup your data in case of corruption.
 
 > [!IMPORTANT]
 > The following instructions are specific for macOS.
@@ -28,56 +85,36 @@ Taskchamp can work as a standalone iOS app, but it's recommended to use it with 
 > : If you are using Linux, feel free to follow along but you might need to make some modifications.
 > Linux users must use the new [iCloud Drive support in rclone](https://github.com/rclone/rclone/pull/7717)
 
-To setup Taskchamp with Taskwarrior, follow these steps:
+To setup iCloud Drive Sync, follow these steps:
 
 1. Make sure to have an iCloud account signed in on your phone and computer. Also make sure to have iCloud Drive enabled.
    > Ensure that you disable "Optimize Mac Storage" in iCloud Drive's settings
-2. Open the Taskchamp app on your phone. This will create a folder in iCloud Drive called `taskchamp`, this is where your tasks database file will live.
+2. Open the Taskchamp app on your phone and select `iCloud Sync` as your sync service. This will create a folder in iCloud Drive called `taskchamp`, this is where your tasks database file will live.
 
 > Sometimes it may take some time for the folder to appear on the finder and files app, but you can access it via terminal.
 
-3. Open the taskwarrior configuration file, usually located at `~/.taskrc`, and add the following line:
+3. After the folder is created, navigate to it from your computer, and copy your `taskchampion.sqlite3` file into `~/Library/Mobile Documents/iCloud~com~mav~taskchamp/Documents/taskchamp/`. Replace the existing file if there is one.
+
+> Note: you do not need to move the file, just a copy will do. This is just to make sure that the files have a shared starting point.
+
+- If you want to use a new taskwarrior database, you can skip this step.
+
+4. Open the taskwarrior configuration file, usually located at `~/.taskrc`, and add the following line:
 
 ```bash
-data.location=~/Library/Mobile Documents/iCloud~com~mav~taskchamp/Documents/task
+sync.local.server_dir=~/Library/Mobile Documents/iCloud~com~mav~taskchamp/Documents/taskchamp
 ```
 
-- This will tell Taskwarrior to use the `taskchamp` folder in iCloud Drive to store the tasks database file.
-- This path might be a bit different depending on your system (Linux), but you can find the correct path by navigating to the `taskchamp` folder in iCloud Drive and copying the path from the finder, or accessing the directory from your terminal. In MacOS this is `Library/Mobile Documents/iCloud~com~mav~taskchamp/Documents/task`.
-- If you want to use an existing taskwarrior database, you can copy your existing `taskchampion.sqlite3` file to the `~/Library/Mobile Documents/iCloud~com~mav~taskchamp/Documents/task
-` folder in iCloud Drive, replacing the existing file. You can do the same for your `hooks` folder if you have any hooks you want to use.
+- This will tell Taskwarrior to use the `taskchamp` folder in iCloud Drive as a sync directory.
+- This path might be a bit different depending on your system (Linux), but you can find the correct path by navigating to the `taskchamp` folder in iCloud Drive and copying the path from the finder, or accessing the directory from your terminal. In MacOS this is `Library/Mobile Documents/iCloud~com~mav~taskchamp/Documents/taskchamp`.
 
-4. iCloud syncing has proven to be less reliable when syncing changes from your iPhone to your computer (works flawlessly the other way around). For this, a shell script has been created to sync the database, ensuring tasks edited on your phone are accurately reflected on your computer.
+5. You will be able to trigger the sync from your computer by executing: `task sync`.
 
-> I recommend running this script whenever you have made changes on your phone that you want to see on your computer.
+- Read more about Taskwarrior sync [here](https://taskwarrior.org/docs/commands/synchronize/).
 
-The script is very simple, essentially all ot does is reads the file a couple of times (which tells iCloud to sync it):
+6. Run this command whenever you want to sync your tasks. You can also create a cron job to run run it every few minutes.
 
-```bash
-#!/bin/bash
-
-task_file="<PATH TO DB FILE>/taskchampion.sqlite3"
-
-# Read the file to trigger the sync
-echo "Syncing iCloud file: ${task_file}"
-cat "${task_file}" > /dev/null
-
-# Wait for sync
-sleep 5
-cat "${task_file}" > /dev/null
-
-# Wait for sync
-sleep 5
-cat "${task_file}" > /dev/null
-```
-
-> Make sure to set the correct Path to the taskchampion.sqlite3 file
-
-5. Save this script to a file, for example `sync.sh`, and make it executable by running `chmod +x sync.sh`.
-
-6. Run the script whenever you want to sync your tasks. You can also create a cron job to run the script every few minutes. Another option is to create an alias for the script, so you can run it from the command line easily.
-
-7. Your tasks should now be synced between your computer and your phone. You can add tasks from the command line using Taskwarrior, and they will appear on Taskchamp.
+7. Your tasks should now be synced between your computer and your phone. You can add tasks from the command line using Taskwarrior, `task sync`, and they will appear on Taskchamp.
 
 ## Obsidian integration
 

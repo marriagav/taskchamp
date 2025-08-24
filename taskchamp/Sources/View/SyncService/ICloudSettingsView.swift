@@ -95,8 +95,7 @@ struct ICloudSettingsView: View {
 
     var body: some View {
         return TCInstructionsView(
-            summary: viewModel.summary,
-            instructions: viewModel.instructions,
+            summary: viewModel.summary, instructions: viewModel.instructions
         ) {
             TCSyncServiceButtonSectionView(
                 buttonTitle: viewModel.buttonTitle(for: selectedSyncType),
