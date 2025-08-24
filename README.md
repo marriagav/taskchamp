@@ -1,3 +1,19 @@
+<!-- TOC start -->
+
+- [Taskchamp](#taskchamp)
+  - [Installation](#installation)
+  - [Setup with Taskwarrior](#setup-with-taskwarrior)
+    - [Setup with Taskchampion Sync Server](#setup-with-taskchampion-sync-server)
+    - [Setup with AWS](#setup-with-aws)
+    - [Setup with GCP](#setup-with-gcp)
+    - [Setup with iCloud Drive](#setup-with-icloud-drive)
+  - [Obsidian integration](#obsidian-integration)
+    - [Interact with Obsidian notes from Taskwarrior](#interact-with-obsidian-notes-from-taskwarrior)
+
+<!-- TOC end -->
+
+<!-- TOC --><a name="taskchamp"></a>
+
 # Taskchamp
 
 ![image](https://github.com/user-attachments/assets/9520b546-c709-4a62-bda0-e20816985e14)
@@ -6,7 +22,7 @@ Use [Taskwarrior](https://taskwarrior.org/), a simple command line interface to 
 
 > For contributing to Taskchamp, please read the [CONTRIBUTING.md](CONTRIBUTING.md) file.
 
-[TOC]
+<!-- TOC --><a name="installation"></a>
 
 ## Installation
 
@@ -16,6 +32,8 @@ Taskchamp can work as a standalone iOS app, but it's recommended to use it with 
 
 > Taskchamp is only compatible with Taskwarrior 3.0.0 or later.
 
+<!-- TOC --><a name="setup-with-taskwarrior"></a>
+
 ## Setup with Taskwarrior
 
 There are currently thrww ways to setup Taskchamp to work with Taskwarrior: using a Taskchampion Sync Server, using AWS, using GCP, or using iCloud Drive.
@@ -24,6 +42,8 @@ There are currently thrww ways to setup Taskchamp to work with Taskwarrior: usin
 > You only need to setup one of these methods, not all of them.
 
 The documentation for how sync works in Taskwarrior can be found [here](https://taskwarrior.org/docs/sync/).
+
+<!-- TOC --><a name="setup-with-taskchampion-sync-server"></a>
 
 ### Setup with Taskchampion Sync Server
 
@@ -45,6 +65,8 @@ The documentation for how sync works in Taskwarrior can be found [here](https://
 
 7. Your tasks should now be synced between your computer and your phone. You can add tasks from the command line using Taskwarrior, `task sync`, and they will appear on Taskchamp.
 
+<!-- TOC --><a name="setup-with-aws"></a>
+
 ### Setup with AWS
 
 > AWS Sync works by connecting to an S3 bucket that will handle the synchronization of your tasks across devices.
@@ -63,6 +85,8 @@ The documentation for how sync works in Taskwarrior can be found [here](https://
 
 6. Your tasks should now be synced between your computer and your phone. You can add tasks from the command line using Taskwarrior, `task sync`, and they will appear on Taskchamp.
 
+<!-- TOC --><a name="setup-with-gcp"></a>
+
 ### Setup with GCP
 
 > GCP Sync works by connecting to a GCP bucket that will handle the synchronization of your tasks across devices.
@@ -80,6 +104,8 @@ The documentation for how sync works in Taskwarrior can be found [here](https://
 5. Run this command whenever you want to sync your tasks. You can also create a cron job to run run it every few minutes.
 
 6. Your tasks should now be synced between your computer and your phone. You can add tasks from the command line using Taskwarrior, `task sync`, and they will appear on Taskchamp.
+
+<!-- TOC --><a name="setup-with-icloud-drive"></a>
 
 ### Setup with iCloud Drive
 
@@ -129,6 +155,8 @@ sync.local.server_dir=~/Library/Mobile Documents/iCloud~com~mav~taskchamp/Docume
 
 7. Your tasks should now be synced between your computer and your phone. You can add tasks from the command line using Taskwarrior, `task sync`, and they will appear on Taskchamp.
 
+<!-- TOC --><a name="obsidian-integration"></a>
+
 ## Obsidian integration
 
 Taskchamp is able to create Obsidian notes for your tasks. Learn more about Obsidian [here](https://obsidian.md/). In order to set Taskchamp to work with Obsidian follow the following steps:
@@ -144,6 +172,8 @@ Taskchamp is able to create Obsidian notes for your tasks. Learn more about Obsi
 The way this works is very simple, a new annotation will be created on the task, which contains the title of the task (with some parsing, like removing whitespaces)
 
 > Note: if you delete the task note or modify its title, you will need to manually update the annotation on the task so that Taskchamp is aware that that note not longer exists or it changed name.
+
+<!-- TOC --><a name="interact-with-obsidian-notes-from-taskwarrior"></a>
 
 ### Interact with Obsidian notes from Taskwarrior
 
