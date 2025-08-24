@@ -9,7 +9,7 @@ Use [Taskwarrior](https://taskwarrior.org/), a simple command line interface to 
 > For contributing to Taskchamp, please read the [CONTRIBUTING.md](CONTRIBUTING.md) file.
 
 > [!IMPORTANT]
-> We are looking for beta testers to help us test new builds before releasin to the App Store, or simply if you want to test the app before buying it. For becoming a beta tester, please go to the [TestFlight page](https://testflight.apple.com/join/K4wrKrzg).
+> We are looking for beta testers to help us test new builds before releasing them to the App Store, or simply if you want to test the app before buying it. For becoming a beta tester, please go to the [TestFlight page](https://testflight.apple.com/join/K4wrKrzg).
 
 <!-- TOC start -->
 
