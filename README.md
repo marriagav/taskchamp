@@ -6,22 +6,19 @@
 
 Use [Taskwarrior](https://taskwarrior.org/), a simple command line interface to manage your tasks from you computer, and a beautiful native app to manage them from your phone. Create notes for your tasks with seamless [Obsidian](https://obsidian.md/) integration.
 
-<!-- TOC --><a name="contributing"></a>
-
 > For contributing to Taskchamp, please read the [CONTRIBUTING.md](CONTRIBUTING.md) file.
 
 <!-- TOC start -->
 
-- [Taskchamp](#taskchamp)
-  - [Contributing](#contributing)
-  - [Installation](#installation)
-  - [Setup with Taskwarrior](#setup-with-taskwarrior)
-    - [Setup with Taskchampion Sync Server](#setup-with-taskchampion-sync-server)
-    - [Setup with AWS](#setup-with-aws)
-    - [Setup with GCP](#setup-with-gcp)
-    - [Setup with iCloud Drive](#setup-with-icloud-drive)
-  - [Obsidian integration](#obsidian-integration)
-    - [Interact with Obsidian notes from Taskwarrior](#interact-with-obsidian-notes-from-taskwarrior)
+- [Contributing](<(CONTRIBUTING.md)>)
+- [Installation](#installation)
+- [Setup with Taskwarrior](#setup-with-taskwarrior)
+  - [Setup with Taskchampion Sync Server](#setup-with-taskchampion-sync-server)
+  - [Setup with AWS](#setup-with-aws)
+  - [Setup with GCP](#setup-with-gcp)
+  - [Setup with iCloud Drive](#setup-with-icloud-drive)
+- [Obsidian integration](#obsidian-integration)
+  - [Interact with Obsidian notes from Taskwarrior](#interact-with-obsidian-notes-from-taskwarrior)
 
 <!-- TOC end -->
 
