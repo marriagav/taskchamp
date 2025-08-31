@@ -35,9 +35,6 @@ Taskchamp can work as a standalone iOS app, but it's recommended to use it with 
 
 > Taskchamp is only compatible with Taskwarrior 3.0.0 or later.
 
-> [!IMPORTANT]
-> Currently AWS and GCP are not working, this is being tracked in https://github.com/marriagav/taskchamp/issues/49 and https://github.com/GothenburgBitFactory/taskchampion/issues/608.
-
 <!-- TOC --><a name="setup-with-taskwarrior"></a>
 
 ## Setup with Taskwarrior
@@ -45,6 +42,9 @@ Taskchamp can work as a standalone iOS app, but it's recommended to use it with 
 There are currently thrww ways to setup Taskchamp to work with Taskwarrior: using a Taskchampion Sync Server, using AWS, using GCP, or using iCloud Drive.
 
 > [!IMPORTANT]
+> Currently AWS and GCP are not working, this is being tracked in https://github.com/marriagav/taskchamp/issues/49 and https://github.com/GothenburgBitFactory/taskchampion/issues/608.
+
+> [!NOTE]
 > You only need to setup one of these methods, not all of them.
 
 The documentation for how sync works in Taskwarrior can be found [here](https://taskwarrior.org/docs/sync/).
