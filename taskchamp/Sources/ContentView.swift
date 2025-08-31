@@ -8,6 +8,11 @@ public struct ContentView: View {
     @State private var selectedSyncType: TaskchampionService.SyncType?
     @State private var isShowingSyncServiceModal = false
     @State private var isLoading = true
+    @State var isShowingCreateTaskView = false
+
+    public init() {
+        UINavigationBar.appearance().largeTitleTextAttributes = [.foregroundColor: UIColor.tintColor]
+    }
 
     private func getSelectedFilter() -> TCFilter {
         let value: TCFilter? = UserDefaultsManager.standard.getDecodedValue(forKey: .selectedFilter)
@@ -27,6 +32,28 @@ public struct ContentView: View {
         try await TaskchampionService.shared.sync()
     }
 
+    func handleDeepLink(url: URL) {
+        Task {
+            guard url.scheme == "taskchamp", url.host == "task" else {
+                return
+            }
+
+            let uuidString = url.pathComponents[1]
+
+            if uuidString == "new" {
+                isShowingCreateTaskView = true
+                return
+            }
+
+            do {
+                let task = try TaskchampionService.shared.getTask(uuid: uuidString)
+                pathStore.path.append(task)
+            } catch {
+                print(error)
+            }
+        }
+    }
+
     public var body: some View {
         NavigationStack(path: $pathStore.path) {
             if isLoading {
@@ -35,9 +62,21 @@ public struct ContentView: View {
                 TaskListView(
                     isShowingICloudAlert: $isShowingAlert,
                     selectedFilter: $selectedFilter,
-                    selectedSyncType: $selectedSyncType
+                    selectedSyncType: $selectedSyncType,
+                    isShowingCreateTaskView: $isShowingCreateTaskView
                 )
             }
+        }
+        .onOpenURL { url in
+            handleDeepLink(url: url)
+        }
+        .onReceive(NotificationCenter.default.publisher(
+            for: .TCTappedDeepLinkNotification
+        )) { notification in
+            guard let url = notification.object as? URL else {
+                return
+            }
+            handleDeepLink(url: url)
         }
         .task {
             isLoading = true
