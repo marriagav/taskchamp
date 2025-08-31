@@ -283,17 +283,6 @@ public struct TaskListView: View {
                 selectedFilter.fullDescription
         )
         .environment(\.editMode, $editMode)
-        // .onOpenURL { url in
-        //     handleDeepLink(url: url)
-        // }
-        // .onReceive(NotificationCenter.default.publisher(
-        //     for: .TCTappedDeepLinkNotification
-        // )) { notification in
-        //     guard let url = notification.object as? URL else {
-        //         return
-        //     }
-        //     handleDeepLink(url: url)
-        // }
         .onChange(of: scenePhase) { _, newScenePhase in
             if newScenePhase == .active {
                 setupNotifications()
