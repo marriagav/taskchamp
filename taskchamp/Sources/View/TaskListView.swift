@@ -11,10 +11,10 @@ public struct TaskListView: View {
     @Binding var isShowingICloudAlert: Bool
     @Binding var selectedFilter: TCFilter
     @Binding var selectedSyncType: TaskchampionService.SyncType?
+    @Binding var isShowingCreateTaskView: Bool
 
     @State var isLoading = true
     @State var tasks: [TCTask] = []
-    @State var isShowingCreateTaskView = false
     @State var selection = Set<String>()
     @State var editMode: EditMode = .inactive
     @State var searchText = ""
@@ -29,12 +29,14 @@ public struct TaskListView: View {
     public init(
         isShowingICloudAlert: Binding<Bool>,
         selectedFilter: Binding<TCFilter>,
-        selectedSyncType: Binding<TaskchampionService.SyncType?>
+        selectedSyncType: Binding<TaskchampionService.SyncType?>,
+        isShowingCreateTaskView: Binding<Bool>
     ) {
         UINavigationBar.appearance().largeTitleTextAttributes = [.foregroundColor: UIColor.tintColor]
         _isShowingICloudAlert = isShowingICloudAlert
         _selectedFilter = selectedFilter
         _selectedSyncType = selectedSyncType
+        _isShowingCreateTaskView = isShowingCreateTaskView
     }
 
     private func sortButton(sortType: TasksHelper.TCSortType) -> some View {
@@ -281,17 +283,6 @@ public struct TaskListView: View {
                 selectedFilter.fullDescription
         )
         .environment(\.editMode, $editMode)
-        .onOpenURL { url in
-            handleDeepLink(url: url)
-        }
-        .onReceive(NotificationCenter.default.publisher(
-            for: .TCTappedDeepLinkNotification
-        )) { notification in
-            guard let url = notification.object as? URL else {
-                return
-            }
-            handleDeepLink(url: url)
-        }
         .onChange(of: scenePhase) { _, newScenePhase in
             if newScenePhase == .active {
                 setupNotifications()

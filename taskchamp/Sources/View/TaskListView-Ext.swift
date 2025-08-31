@@ -81,26 +81,4 @@ extension TaskListView {
             }
         }
     }
-
-    func handleDeepLink(url: URL) {
-        Task {
-            guard url.scheme == "taskchamp", url.host == "task" else {
-                return
-            }
-
-            let uuidString = url.pathComponents[1]
-
-            if uuidString == "new" {
-                isShowingCreateTaskView = true
-                return
-            }
-
-            do {
-                let task = try TaskchampionService.shared.getTask(uuid: uuidString)
-                pathStore.path.append(task)
-            } catch {
-                print(error)
-            }
-        }
-    }
 }
