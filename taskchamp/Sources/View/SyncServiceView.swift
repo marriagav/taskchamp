@@ -7,7 +7,10 @@ public struct SyncServiceView: View {
     @State private var pathStore = PathStore()
 
     var allValidCases: [TaskchampionService.SyncType] {
-        TaskchampionService.SyncType.allCases
+        TaskchampionService.SyncType.allCases.filter { filter in
+            // TODO: Re-enable AWS and GCP when ready
+            filter != .aws && filter != .gcp
+        }
     }
 
     public var body: some View {
