@@ -44,6 +44,20 @@ public class TaskchampionService {
         try? sync()
     }
 
+    public func deleteReplica() throws {
+        guard let path else {
+            throw TCError.genericError("Database not set")
+        }
+        do {
+            let newPath = path + "/taskchampion.sqlite3"
+            try FileManager.default.removeItem(atPath: newPath)
+            replica = nil
+            self.path = nil
+        } catch {
+            throw TCError.genericError("Failed to delete replica: \(error.localizedDescription)")
+        }
+    }
+
     public func sync(syncType: SyncType) throws {
         guard let replica else {
             throw TCError.genericError("Database not set")

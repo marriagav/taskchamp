@@ -44,9 +44,23 @@ class GcpSettingsViewModel: UseSyncServiceViewModel {
     func onFileImportWithResult(_ result: Result<[URL], Error>) {
         switch result {
         case let .success(urls):
-            if let url = urls.first {
-                gcpServerCredentialPath = url.path
+            guard let url = urls.first else {
+                return
             }
+            guard url.startAccessingSecurityScopedResource() else {
+                isShowingAlert = true
+                return
+            }
+
+            let localPath = try? FileService.shared.copyItemToBundle(atPath: url.path)
+
+            guard let localPath else {
+                url.stopAccessingSecurityScopedResource()
+                return
+            }
+
+            gcpServerCredentialPath = localPath
+            url.stopAccessingSecurityScopedResource()
         case .failure:
             isShowingAlert = true
         }
@@ -87,7 +101,7 @@ struct GcpSettingsView: View {
                 }, label: {
                     Label(
                         viewModel.gcpServerCredentialPath.isEmpty ? "Import GCP Credential File" : FileService.shared
-                            .getFIleNameFromPath(path: viewModel.gcpServerCredentialPath),
+                            .getFileNameFromPath(path: viewModel.gcpServerCredentialPath),
                         systemImage: SFSymbols.folder.rawValue
                     )
                 })
