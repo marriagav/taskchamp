@@ -44,9 +44,23 @@ class GcpSettingsViewModel: UseSyncServiceViewModel {
     func onFileImportWithResult(_ result: Result<[URL], Error>) {
         switch result {
         case let .success(urls):
-            if let url = urls.first {
-                gcpServerCredentialPath = url.path
+            guard let url = urls.first else {
+                return
             }
+            guard url.startAccessingSecurityScopedResource() else {
+                isShowingAlert = true
+                return
+            }
+
+            let localPath = try? FileService.shared.copyItemToBundle(atPath: url.path)
+
+            guard let localPath else {
+                url.stopAccessingSecurityScopedResource()
+                return
+            }
+
+            gcpServerCredentialPath = localPath
+            url.stopAccessingSecurityScopedResource()
         case .failure:
             isShowingAlert = true
         }
@@ -59,13 +73,18 @@ struct GcpSettingsView: View {
     @Environment(PathStore.self) var pathStore: PathStore
 
     @State private var viewModel = GcpSettingsViewModel()
+    @State private var isLoading = false
 
     func completeAction() {
-        viewModel.completeAction(
-            isShowingSyncServiceModal: $isShowingSyncServiceModal,
-            selectedSyncType: $selectedSyncType,
-            isShowingAlert: $viewModel.isShowingAlert
-        )
+        Task {
+            isLoading = true
+            await viewModel.completeAction(
+                isShowingSyncServiceModal: $isShowingSyncServiceModal,
+                selectedSyncType: $selectedSyncType,
+                isShowingAlert: $viewModel.isShowingAlert
+            )
+            isLoading = false
+        }
     }
 
     var body: some View {
@@ -87,7 +106,7 @@ struct GcpSettingsView: View {
                 }, label: {
                     Label(
                         viewModel.gcpServerCredentialPath.isEmpty ? "Import GCP Credential File" : FileService.shared
-                            .getFIleNameFromPath(path: viewModel.gcpServerCredentialPath),
+                            .getFileNameFromPath(path: viewModel.gcpServerCredentialPath),
                         systemImage: SFSymbols.folder.rawValue
                     )
                 })
@@ -98,7 +117,11 @@ struct GcpSettingsView: View {
                 SecureField("Remote Encryption Secret", text: $viewModel.gcpServerEncryptionSecret)
                     .autocapitalization(.none)
             }
-            TCSyncServiceButtonSectionView(buttonTitle: viewModel.buttonTitle(), action: completeAction)
+            TCSyncServiceButtonSectionView(
+                buttonTitle: viewModel.buttonTitle(),
+                action: completeAction,
+                isDisabled: isLoading
+            )
         }
         .alert(isPresented: $viewModel.isShowingAlert) {
             Alert(
@@ -118,6 +141,11 @@ struct GcpSettingsView: View {
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             viewModel.onAppear()
+        }
+        .overlay {
+            if isLoading {
+                TCSpinnerView()
+            }
         }
     }
 }

@@ -12,6 +12,7 @@ public struct TaskListView: View {
     @Binding var selectedFilter: TCFilter
     @Binding var selectedSyncType: TaskchampionService.SyncType?
 
+    @State var isLoading = true
     @State var tasks: [TCTask] = []
     @State var isShowingCreateTaskView = false
     @State var selection = Set<String>()
@@ -58,7 +59,22 @@ public struct TaskListView: View {
         )
     }
 
+    private func loadingView() -> some View {
+        VStack {
+            ProgressView()
+                .progressViewStyle(CircularProgressViewStyle(tint: .accentColor))
+                .scaleEffect(2)
+        }
+    }
+
     public var body: some View {
+        if isLoading {
+            loadingView()
+                .onAppear {
+                    updateTasks()
+                    isLoading = false
+                }
+        }
         List(selection: $selection) {
             ForEach(searchedTasks, id: \.uuid) { task in
                 NavigationLink(value: task) {
@@ -95,7 +111,7 @@ public struct TaskListView: View {
         .animation(.default, value: searchText)
         .overlay(
             Group {
-                if tasks.isEmpty {
+                if tasks.isEmpty && !isLoading {
                     ContentUnavailableView {
                         Label(
                             selectedFilter.fullDescription == TCFilter.defaultFilter
@@ -120,7 +136,7 @@ public struct TaskListView: View {
         .refreshable {
             do {
                 try await Task.sleep(nanoseconds: UInt64(1.5 * Double(NSEC_PER_SEC)))
-                updateTasks()
+                await updateTasksWithSync()
             } catch {}
         }
         .if(!tasks.isEmpty) {
@@ -255,13 +271,6 @@ public struct TaskListView: View {
             EditTaskView(task: task)
                 .onDisappear {
                     updateTasks()
-                }
-                .onAppear {
-                    do {
-                        try setDbUrl()
-                    } catch {
-                        print(error)
-                    }
                 }
         }
         .navigationTitle(

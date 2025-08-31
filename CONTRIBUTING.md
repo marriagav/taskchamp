@@ -27,7 +27,7 @@ curl https://sh.rustup.rs -sSf | sh -s -- -y
 5. To start working on the project:
    1. Navigate to the root of the project and run `mise install`
    2. Run `make up`:
-   - This will install the https://github.com/LostLaplace/taskchampion-swift rust binary
+   - This will install the [taskchampion-swift](https://github.com/marriagav/task-champion-swift) rust binary
    - It will also install all the swift/xcode dependencies
    - Finally, it will generate the xcode project and open it in xcode.
 

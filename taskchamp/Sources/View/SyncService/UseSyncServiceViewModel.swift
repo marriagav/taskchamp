@@ -17,7 +17,7 @@ protocol UseSyncServiceViewModel {
         isShowingSyncServiceModal: Binding<Bool>,
         selectedSyncType: Binding<TaskchampionService.SyncType?>,
         isShowingAlert: Binding<Bool>
-    )
+    ) async
 }
 
 extension UseSyncServiceViewModel {
@@ -42,11 +42,11 @@ extension UseSyncServiceViewModel {
         isShowingSyncServiceModal: Binding<Bool>,
         selectedSyncType: Binding<TaskchampionService.SyncType?>,
         isShowingAlert: Binding<Bool>
-    ) {
+    ) async {
         setOtherUserDefaults()
         do {
             try setReplica()
-            try TaskchampionService.shared.sync(syncType: syncType)
+            try await TaskchampionService.shared.sync(syncType: syncType)
             let needsSync = TaskchampionService.shared.needToSync
             if needsSync {
                 isShowingAlert.wrappedValue = true

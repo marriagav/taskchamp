@@ -137,7 +137,37 @@ public class FileService {
         )
     }
 
-    public func getFIleNameFromPath(path: String) -> String {
+    public func copyItemToBundle(atPath: String) throws -> String {
+        guard let containerURL = FileManager
+            .default
+            .containerURL(
+                forSecurityApplicationGroupIdentifier:
+                UserDefaultsManager.suiteName
+            ) else
+        // swiftlint:disable:next opening_brace
+        {
+            throw TCError.genericError("No container URL")
+        }
+
+        let taskDirectory = containerURL.appendingPathComponent("taskchamp")
+        createDirectoryIfNeeded(url: taskDirectory)
+
+        let fileName = getFileNameFromPath(path: atPath)
+        let url = URL(fileURLWithPath: taskDirectory.path).appendingPathComponent(fileName)
+
+        if FileManager.default.fileExists(atPath: url.path) {
+            try FileManager.default.removeItem(at: url)
+        }
+
+        try FileManager.default.copyItem(atPath: atPath, toPath: url.path)
+        return url.path
+    }
+
+    public func copyItem(atPath: String, toPath: String) throws {
+        try FileManager.default.copyItem(atPath: atPath, toPath: toPath)
+    }
+
+    public func getFileNameFromPath(path: String) -> String {
         let url = URL(fileURLWithPath: path)
         return url.lastPathComponent
     }

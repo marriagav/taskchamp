@@ -1,1 +1,1 @@
-Sync servers: Taskchamp now has three additional sync options: GCP, AWS and taskchampion sync server. 
+Taskchampion sync server slowness improvements: please test the performance and reliability of the sync server after recent optimizations.
