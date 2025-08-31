@@ -8,6 +8,9 @@ Use [Taskwarrior](https://taskwarrior.org/), a simple command line interface to 
 
 > For contributing to Taskchamp, please read the [CONTRIBUTING.md](CONTRIBUTING.md) file.
 
+> [!IMPORTANT]
+> We are looking for beta testers to help us test new builds before releasing them to the App Store, or simply if you want to test the app before buying it. For becoming a beta tester, please go to the [TestFlight page](https://testflight.apple.com/join/K4wrKrzg).
+
 <!-- TOC start -->
 
 - [Contributing](CONTRIBUTING.md)
@@ -39,6 +42,9 @@ Taskchamp can work as a standalone iOS app, but it's recommended to use it with 
 There are currently thrww ways to setup Taskchamp to work with Taskwarrior: using a Taskchampion Sync Server, using AWS, using GCP, or using iCloud Drive.
 
 > [!IMPORTANT]
+> Currently AWS and GCP are not working, this is being tracked in https://github.com/marriagav/taskchamp/issues/49 and https://github.com/GothenburgBitFactory/taskchampion/issues/608.
+
+> [!NOTE]
 > You only need to setup one of these methods, not all of them.
 
 The documentation for how sync works in Taskwarrior can be found [here](https://taskwarrior.org/docs/sync/).

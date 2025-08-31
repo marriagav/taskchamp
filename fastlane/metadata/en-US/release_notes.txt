@@ -1,1 +1,1 @@
-Sync your tasks with taskchampion sync server, GCP or AWS!
+Sync your tasks with taskchampion sync server!

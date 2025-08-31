@@ -9,10 +9,10 @@ public class TaskchampionService {
     public var needToSync = false
 
     public enum SyncType: Codable, CaseIterable {
-        case local
         case remote
-        case gcp
         case aws
+        case gcp
+        case local
         case none
     }
 
@@ -33,7 +33,6 @@ public class TaskchampionService {
 
     public func setDbUrl(path: String) throws {
         if replica != nil, self.path != nil, self.path == path {
-            try? sync()
             return
         }
         replica = Taskchampion.new_replica_on_disk(path, true, true)
@@ -41,10 +40,23 @@ public class TaskchampionService {
             throw TCError.genericError("Failed to create replica")
         }
         self.path = path
-        try? sync()
     }
 
-    public func sync(syncType: SyncType) throws {
+    public func deleteReplica() throws {
+        guard let path else {
+            throw TCError.genericError("Database not set")
+        }
+        do {
+            let newPath = path + "/taskchampion.sqlite3"
+            try FileManager.default.removeItem(atPath: newPath)
+            replica = nil
+            self.path = nil
+        } catch {
+            throw TCError.genericError("Failed to delete replica: \(error.localizedDescription)")
+        }
+    }
+
+    public func sync(syncType: SyncType) async throws {
         guard let replica else {
             throw TCError.genericError("Database not set")
         }
@@ -52,7 +64,7 @@ public class TaskchampionService {
         let syncService = getSyncServiceFromType(syncType)
 
         do {
-            let synced = try syncService.sync(replica: replica)
+            let synced = try await syncService.sync(replica: replica)
 
             if synced {
                 needToSync = false
@@ -65,7 +77,7 @@ public class TaskchampionService {
         }
     }
 
-    public func sync() throws {
+    public func sync() async throws {
         guard let replica else {
             throw TCError.genericError("Database not set")
         }
@@ -74,7 +86,7 @@ public class TaskchampionService {
         let syncService = getSyncServiceFromType(syncType)
 
         do {
-            let synced = try syncService.sync(replica: replica)
+            let synced = try await syncService.sync(replica: replica)
 
             if synced {
                 needToSync = false
@@ -190,7 +202,11 @@ public class TaskchampionService {
             throw TCError.genericError("Failed to update task")
         }
 
-        try? sync()
+        replica.sync_no_server() // rebuild the working set
+
+        _Concurrency.Task {
+            try? await sync()
+        }
     }
 
     public func createTask(_ task: TCTask) throws {
@@ -210,6 +226,10 @@ public class TaskchampionService {
             throw TCError.genericError("Failed to create task")
         }
 
-        try sync()
+        replica.sync_no_server() // rebuild the working set
+
+        _Concurrency.Task {
+            try? await sync()
+        }
     }
 }

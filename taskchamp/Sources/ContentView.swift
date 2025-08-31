@@ -7,6 +7,7 @@ public struct ContentView: View {
     @State private var selectedFilter: TCFilter = .defaultFilter
     @State private var selectedSyncType: TaskchampionService.SyncType?
     @State private var isShowingSyncServiceModal = false
+    @State private var isLoading = true
 
     private func getSelectedFilter() -> TCFilter {
         let value: TCFilter? = UserDefaultsManager.standard.getDecodedValue(forKey: .selectedFilter)
@@ -20,28 +21,43 @@ public struct ContentView: View {
         return FileService.shared.getSelectedSyncType()
     }
 
-    public var tasklistView: TaskListView {
-        TaskListView(
-            isShowingICloudAlert: $isShowingAlert,
-            selectedFilter: $selectedFilter,
-            selectedSyncType: $selectedSyncType
-        )
+    func setReplicaAndSync() async throws {
+        let localReplicaPath = try FileService.shared.getDestinationPathForLocalReplica()
+        try TaskchampionService.shared.setDbUrl(path: localReplicaPath)
+        try await TaskchampionService.shared.sync()
     }
 
     public var body: some View {
         NavigationStack(path: $pathStore.path) {
-            tasklistView
+            if isLoading {
+                VStack {}
+            } else {
+                TaskListView(
+                    isShowingICloudAlert: $isShowingAlert,
+                    selectedFilter: $selectedFilter,
+                    selectedSyncType: $selectedSyncType
+                )
+            }
         }
-        .onAppear {
+        .task {
+            isLoading = true
             selectedSyncType = getSelectedSyncType()
             guard let selectedSyncType = selectedSyncType else {
                 isShowingSyncServiceModal = true
+                isLoading = false
                 return
             }
             selectedFilter = getSelectedFilter()
             let syncService = TaskchampionService.shared.getSyncServiceFromType(selectedSyncType)
             if !syncService.isAvailable() {
                 isShowingAlert = true
+            }
+            do {
+                try await setReplicaAndSync()
+                isLoading = false
+            } catch {
+                isShowingAlert = true
+                isLoading = false
             }
         }
         .fullScreenCover(isPresented: $isShowingSyncServiceModal) {

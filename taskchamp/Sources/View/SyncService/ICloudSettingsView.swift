@@ -39,7 +39,7 @@ class ICloudSettingsViewModel: UseSyncServiceViewModel {
         isShowingSyncServiceModal: Binding<Bool>,
         selectedSyncType: Binding<TaskchampionService.SyncType?>,
         isShowingAlert: Binding<Bool>
-    ) {
+    ) async {
         if isDisabled(for: selectedSyncType.wrappedValue) {
             return
         }
@@ -55,7 +55,7 @@ class ICloudSettingsViewModel: UseSyncServiceViewModel {
         }
         do {
             try setReplica()
-            try TaskchampionService.shared.sync(syncType: syncType)
+            try await TaskchampionService.shared.sync(syncType: syncType)
             let needsSync = TaskchampionService.shared.needToSync
             if needsSync {
                 isShowingAlert.wrappedValue = true
@@ -84,13 +84,18 @@ struct ICloudSettingsView: View {
     @Environment(PathStore.self) var pathStore: PathStore
 
     @State private var viewModel = ICloudSettingsViewModel()
+    @State private var isLoading = false
 
     func completeAction() {
-        viewModel.completeAction(
-            isShowingSyncServiceModal: $isShowingSyncServiceModal,
-            selectedSyncType: $selectedSyncType,
-            isShowingAlert: $viewModel.isShowingAlert
-        )
+        Task {
+            isLoading = true
+            await viewModel.completeAction(
+                isShowingSyncServiceModal: $isShowingSyncServiceModal,
+                selectedSyncType: $selectedSyncType,
+                isShowingAlert: $viewModel.isShowingAlert
+            )
+            isLoading = false
+        }
     }
 
     var body: some View {
@@ -100,7 +105,7 @@ struct ICloudSettingsView: View {
             TCSyncServiceButtonSectionView(
                 buttonTitle: viewModel.buttonTitle(for: selectedSyncType),
                 action: completeAction,
-                isDisabled: viewModel.isDisabled(for: selectedSyncType),
+                isDisabled: viewModel.isDisabled(for: selectedSyncType) || isLoading,
             )
         }
         .alert(isPresented: $viewModel.isShowingAlert) {
@@ -112,5 +117,10 @@ struct ICloudSettingsView: View {
         }
         .navigationTitle("iCloud Sync")
         .navigationBarTitleDisplayMode(.inline)
+        .overlay {
+            if isLoading {
+                TCSpinnerView()
+            }
+        }
     }
 }
