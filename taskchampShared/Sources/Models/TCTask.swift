@@ -1,4 +1,5 @@
 import Foundation
+import Taskchampion
 
 public struct TCTask: Codable, Hashable {
     public enum Status: String, Codable, CaseIterable {
@@ -44,6 +45,61 @@ public struct TCTask: Codable, Hashable {
         init?(intValue _: Int) {
             return nil
         }
+    }
+
+    public static func taskFactory(from rustTask: TaskRef, withFilter filter: TCFilter) -> TCTask? {
+        let prio = rustTask.get_priority().toString()
+        if filter.didSetPrio {
+            if prio != filter.priority.rawValue {
+                return nil
+            }
+        }
+
+        let project = rustTask.get_project()?.toString() ?? ""
+        if filter.didSetProject {
+            if project != filter.project {
+                return nil
+            }
+        }
+
+        let statusValue = rustTask.get_status().get_value().toString().lowercased()
+        if filter.didSetStatus {
+            if statusValue != filter.status.rawValue {
+                return nil
+            }
+        }
+
+        return TCTask(from: rustTask)
+    }
+
+    public init(from rustTask: TaskRef) {
+        let uuid = rustTask.get_uuid().to_string().toString()
+        let description = rustTask.get_description().toString()
+        let status = rustTask.get_status().get_value().toString().lowercased()
+        let prio = rustTask.get_priority().toString()
+        let due = rustTask.get_due()?.toString()
+        let project = rustTask.get_project()?.toString()
+        let annotations = rustTask.get_annotations().map { $0.get_description().toString() }
+
+        // Initialize
+        self.uuid = uuid
+        self.description = description
+        self.status = Status(rawValue: status) ?? .pending
+        if !prio.isEmpty, let priority = Priority(rawValue: prio) {
+            self.priority = priority
+        }
+        if let due, let timeInterval = TimeInterval(due) {
+            self.due = Date(timeIntervalSince1970: timeInterval)
+        }
+        self.project = project
+
+        // Look for obsidian note in annotations
+        var obsidianNoteValue: String?
+        for annotation in annotations where annotation.starts(with: "task-note:") {
+            obsidianNoteValue = annotation.replacingOccurrences(of: "task-note: ", with: "")
+            break
+        }
+        obsidianNote = obsidianNoteValue
     }
 
     public init(from decoder: Decoder) throws {
@@ -135,6 +191,25 @@ public struct TCTask: Codable, Hashable {
     public var due: Date?
     public var obsidianNote: String?
     public var noteAnnotationKey: String?
+
+    public var obsidianNoteAnnotation: String? {
+        guard let note = obsidianNote else {
+            return nil
+        }
+        return "task-note: \(note)"
+    }
+
+    public var rustAnnotationFromObsidianNote: Annotation? {
+        guard let note = obsidianNoteAnnotation else {
+            return nil
+        }
+
+        let annotation = Taskchampion.create_annotation(
+            note,
+            String(Int(Date().timeIntervalSince1970.rounded()))
+        )
+        return annotation
+    }
 
     public var isCompleted: Bool {
         status == .completed

@@ -1,1 +1,1 @@
-Obsidian integration: Use Taskchamp to create and bind Obsidian notes to your tasks.
+Taskchampion sync server slowness improvements: please test the performance and reliability of the sync server after recent optimizations.

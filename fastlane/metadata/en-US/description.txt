@@ -2,7 +2,7 @@ The ultimate tasks app for software developers! Do you enjoy using your terminal
 
 KEY FEATURES
 
-Two-way Taskwarrior sync: Easily connect taskchamp to Taskwarrior via iCloud, to manage your tasks from your command line and your phone simultaneously.
+Two-way Taskwarrior sync: Easily connect taskchamp to Taskwarrior via Taskchampion Sync Server or iCloud, to manage your tasks from your command line and your phone simultaneously.
 
 Command-line input: Use Taskwarrior's command line syntax and natural language to add new tasks blazingly fast.
 
@@ -17,7 +17,3 @@ Obsidian integration: Use Taskchamp to create and bind Obsidian notes to your ta
 Costum filters: Create custom filters using command line syntax to view your tasks in the way you want.
 
 And much more!
-
-
-
-

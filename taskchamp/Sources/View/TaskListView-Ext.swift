@@ -20,17 +20,9 @@ extension TaskListView {
         return editMode.isEditing == true
     }
 
-    func setDbUrl() throws {
-        guard let path = taskChampionFileUrlString else {
-            throw TCError.genericError("No access or path")
-        }
-        DBService.shared.setDbUrl(path)
-    }
-
     func updateTasks(_ uuids: Set<String>, withStatus newStatus: TCTask.Status) {
         do {
-            try setDbUrl()
-            try DBService.shared.updatePendingTasks(uuids, withStatus: newStatus)
+            try TaskchampionService.shared.updatePendingTasks(uuids, withStatus: newStatus)
             NotificationService.shared.removeNotifications(for: Array(uuids))
             updateTasks()
         } catch {
@@ -38,13 +30,10 @@ extension TaskListView {
         }
     }
 
-    func updateTasks() {
+    func updateTasksWithSync() async {
         do {
-            try setDbUrl()
-            let newTasks = try DBService.shared.getTasks(
-                sortType: sortType,
-                filter: selectedFilter
-            )
+            try await TaskchampionService.shared.sync()
+            let newTasks = try TaskchampionService.shared.getTasks(sortType: sortType, filter: selectedFilter)
             if newTasks == tasks {
                 return
             }
@@ -52,61 +41,43 @@ extension TaskListView {
                 tasks = newTasks
             }
         } catch {
-            if !FileService.shared.isICloudAvailable() {
-                print("iCloud Unavailable")
+            let syncService = TaskchampionService.shared.getSyncServiceFromType(selectedSyncType ?? .none)
+            if !syncService.isAvailable() {
                 isShowingICloudAlert = true
             }
-            print(error)
         }
     }
 
-    func copyDatabaseIfNeeded() {
+    func updateTasks() {
         do {
-            if taskChampionFileUrlString != nil {
-                updateTasks()
+            let newTasks = try TaskchampionService.shared.getTasks(sortType: sortType, filter: selectedFilter)
+            if newTasks == tasks {
                 return
             }
-            taskChampionFileUrlString = try FileService.shared.copyDatabaseIfNeededAndGetDestinationPath()
-            updateTasks()
-            NotificationService.shared.requestAuthorization { success, error in
-                if success {
-                    print("Notification Authorization granted")
-                    Task {
-                        let pending = try DBService.shared.getTasks(
-                            sortType: sortType,
-                            filter: .defaultFilter
-                        )
-                        await NotificationService.shared.createReminderForTasks(tasks: pending)
-                    }
-                } else if let error = error {
-                    print(error.localizedDescription)
-                }
+            withAnimation {
+                tasks = newTasks
             }
-            return
         } catch {
-            print(error)
+            let syncService = TaskchampionService.shared.getSyncServiceFromType(selectedSyncType ?? .none)
+            if !syncService.isAvailable() {
+                isShowingICloudAlert = true
+            }
         }
     }
 
-    func handleDeepLink(url: URL) {
-        Task {
-            guard url.scheme == "taskchamp", url.host == "task" else {
-                return
-            }
-
-            let uuidString = url.pathComponents[1]
-
-            if uuidString == "new" {
-                isShowingCreateTaskView = true
-                return
-            }
-
-            do {
-                try setDbUrl()
-                let task = try DBService.shared.getTask(uuid: uuidString)
-                pathStore.path.append(task)
-            } catch {
-                print(error)
+    func setupNotifications() {
+        NotificationService.shared.requestAuthorization { success, error in
+            if success {
+                print("Notification Authorization granted")
+                Task {
+                    let pending = try TaskchampionService.shared.getTasks(
+                        sortType: sortType,
+                        filter: .defaultFilter
+                    )
+                    await NotificationService.shared.createReminderForTasks(tasks: pending)
+                }
+            } else if let error = error {
+                print(error.localizedDescription)
             }
         }
     }

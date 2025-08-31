@@ -15,6 +15,14 @@ public class TCFilter: Codable {
         return filter
     }
 
+    public var isDefaultFilter: Bool {
+        return fullDescription == Self.defaultFilter.fullDescription &&
+            project == Self.defaultFilter.project &&
+            status == Self.defaultFilter.status &&
+            priority == Self.defaultFilter.priority &&
+            due == Self.defaultFilter.due
+    }
+
     public var id = UUID()
     public var fullDescription: String = ""
     public var project: String = ""
@@ -62,23 +70,6 @@ public class TCFilter: Codable {
             self.status = status
             didSetStatus = true
         }
-    }
-
-    public func convertToSqlFilters() -> [String] {
-        var sqlFilters: [String] = []
-        if didSetPrio {
-            sqlFilters.append("%\"priority\":\"\(priority.rawValue)\"%")
-        }
-        if didSetProject {
-            sqlFilters.append("%\"project\":\"\(project)\"%")
-        }
-        if didSetDue {
-            // TODO: figure out a way to implement date filter
-        }
-        if didSetStatus {
-            sqlFilters.append("%\"status\":\"\(status.rawValue)\"%")
-        }
-        return sqlFilters
     }
 
     init(

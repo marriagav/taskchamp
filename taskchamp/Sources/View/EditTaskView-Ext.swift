@@ -11,10 +11,8 @@ extension EditTaskView {
 
     func handleObsidianTap() {
         do {
-            let obsidianVaultName = UserDefaults.standard
-                .string(forKey: "obsidianVaultName")
-            let tasksFolderPath = UserDefaults.standard
-                .string(forKey: "tasksFolderPath") ?? ""
+            let obsidianVaultName: String? = UserDefaultsManager.standard.getValue(forKey: .obsidianVaultName)
+            let tasksFolderPath: String = UserDefaultsManager.standard.getValue(forKey: .tasksFolderPath) ?? ""
             if obsidianVaultName == nil || obsidianVaultName?.isEmpty ?? true {
                 isShowingObsidianSettings = true
                 return
@@ -35,7 +33,7 @@ extension EditTaskView {
                 due: task.due,
                 obsidianNote: taskNote
             )
-            try DBService.shared.updateTask(newTask)
+            try TaskchampionService.shared.updateTask(newTask)
             task = newTask
             let taskNoteWithPath = "\(tasksFolderPath)/\(task.obsidianNote ?? "")"
             let urlString = "obsidian://new?vault=\(obsidianVaultName ?? "")&file=\(taskNoteWithPath)"
@@ -54,7 +52,7 @@ extension EditTaskView {
         do {
             let newStatus: TCTask.Status = task.isCompleted ? .pending : task
                 .isDeleted ? .pending : .completed
-            try DBService.shared.updatePendingTasks(
+            try TaskchampionService.shared.updatePendingTasks(
                 [task.uuid],
                 withStatus: newStatus
             )
@@ -94,7 +92,7 @@ extension EditTaskView {
         )
 
         do {
-            try DBService.shared.updateTask(task)
+            try TaskchampionService.shared.updateTask(task)
             NotificationService.shared.createReminderForTask(task: task)
             dismiss()
         } catch {
@@ -107,7 +105,7 @@ extension EditTaskView {
 
     func deleteTask() {
         do {
-            try DBService.shared.updatePendingTasks([task.uuid], withStatus: .deleted)
+            try TaskchampionService.shared.updatePendingTasks([task.uuid], withStatus: .deleted)
             NotificationService.shared.deleteReminderForTask(task: task)
             dismiss()
         } catch {

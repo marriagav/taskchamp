@@ -2,6 +2,10 @@ import ProjectDescription
 
 let project = Project(
     name: "taskchamp",
+    settings: .settings(base: [
+        "SWIFT_OBJC_INTEROP_MODE": "objcxx",
+        "SWIFT_INCLUDE_PATHS": ["$(PROJECT_DIR)"]
+    ], defaultSettings: .recommended),
     targets: [
         .target(
             name: "taskchamp",
@@ -25,7 +29,7 @@ let project = Project(
                                 "NSUbiquitousContainerSupportedFolderLevels": "Any"
                             ]
                     ],
-                    "CFBundleShortVersionString": "1.2"
+                    "CFBundleShortVersionString": "1.3"
                 ]
             ),
             sources: ["taskchamp/Sources/**"],
@@ -35,7 +39,8 @@ let project = Project(
                     "com.apple.developer.icloud-container-identifiers": ["iCloud.com.mav.taskchamp"],
                     "com.apple.developer.icloud-services": ["CloudDocuments", "CloudKit"],
                     "com.apple.developer.ubiquity-container-identifiers": ["iCloud.com.mav.taskchamp"],
-                    "com.apple.developer.usernotifications.time-sensitive": true
+                    "com.apple.developer.usernotifications.time-sensitive": true,
+                    "com.apple.security.application-groups": ["group.com.mav.taskchamp"]
                 ]
             ),
             scripts: [
@@ -44,7 +49,7 @@ let project = Project(
             dependencies: [
                 .target(name: "taskchampShared"),
                 .target(name: "taskchampWidget")
-            ]
+            ],
         ),
         .target(
             name: "taskchampTests",
@@ -76,14 +81,15 @@ let project = Project(
                             "NSUbiquitousContainerSupportedFolderLevels": "Any"
                         ]
                 ],
-                "CFBundleShortVersionString": "1.2"
+                "CFBundleShortVersionString": "1.3"
             ]),
             sources: "taskchampWidget/Sources/**",
             entitlements: .dictionary(
                 [
                     "com.apple.developer.icloud-container-identifiers": ["iCloud.com.mav.taskchamp"],
                     "com.apple.developer.icloud-services": ["CloudDocuments"],
-                    "com.apple.developer.ubiquity-container-identifiers": ["iCloud.com.mav.taskchamp"]
+                    "com.apple.developer.ubiquity-container-identifiers": ["iCloud.com.mav.taskchamp"],
+                    "com.apple.security.application-groups": ["group.com.mav.taskchamp"]
                 ]
             ),
             dependencies: [
@@ -99,8 +105,8 @@ let project = Project(
             infoPlist: .default,
             sources: "taskchampShared/Sources/**",
             dependencies: [
-                .external(name: "SQLite"),
-                .external(name: "SoulverCore")
+                .external(name: "SoulverCore"),
+                .external(name: "Taskchampion")
             ]
         )
     ]

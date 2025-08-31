@@ -14,4 +14,7 @@ public enum SFSymbols: String {
     case questionmarkCircle = "questionmark.circle"
     case backArrow = "arrow.counterclockwise"
     case obsidian = "suit.diamond.fill"
+    case cloud
+    case cloudSlash = "icloud.slash"
+    case folder
 }

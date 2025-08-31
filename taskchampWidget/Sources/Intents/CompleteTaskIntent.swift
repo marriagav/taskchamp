@@ -15,10 +15,10 @@ struct CompleteTaskIntent: AppIntent {
     init() {}
 
     func perform() async throws -> some IntentResult {
-        let destinationPath = try FileService.shared.getDestinationPath()
-        DBService.shared.setDbUrl(destinationPath)
+        let destinationPath = try FileService.shared.getDestinationPathForLocalReplica()
+        try TaskchampionService.shared.setDbUrl(path: destinationPath)
 
-        try? DBService.shared.togglePendingTasksStatus(uuids: [taskId])
+        try? TaskchampionService.shared.togglePendingTasksStatus(uuids: [taskId])
         NotificationService.shared.removeNotifications(for: [taskId])
 
         try? await Task.sleep(nanoseconds: 1_000_000_000)

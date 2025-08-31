@@ -10,24 +10,33 @@ public struct TaskListView: View {
 
     @Binding var isShowingICloudAlert: Bool
     @Binding var selectedFilter: TCFilter
+    @Binding var selectedSyncType: TaskchampionService.SyncType?
+    @Binding var isShowingCreateTaskView: Bool
 
-    @State var taskChampionFileUrlString: String?
+    @State var isLoading = true
     @State var tasks: [TCTask] = []
-    @State var isShowingCreateTaskView = false
     @State var selection = Set<String>()
     @State var editMode: EditMode = .inactive
     @State var searchText = ""
     @State var isShowingFilterView = false
     @State var isShowingObsidianSettings = false
+    @State var isShowingSyncSettings = false
     @State var sortType: TasksHelper.TCSortType = .init(
-        rawValue: UserDefaults.standard
-            .string(forKey: "sortType") ?? TasksHelper.TCSortType.defaultSort.rawValue
+        rawValue: UserDefaultsManager.standard
+            .getValue(forKey: .sortType) ?? TasksHelper.TCSortType.defaultSort.rawValue
     ) ?? .defaultSort
 
-    public init(isShowingICloudAlert: Binding<Bool>, selectedFilter: Binding<TCFilter>) {
+    public init(
+        isShowingICloudAlert: Binding<Bool>,
+        selectedFilter: Binding<TCFilter>,
+        selectedSyncType: Binding<TaskchampionService.SyncType?>,
+        isShowingCreateTaskView: Binding<Bool>
+    ) {
         UINavigationBar.appearance().largeTitleTextAttributes = [.foregroundColor: UIColor.tintColor]
         _isShowingICloudAlert = isShowingICloudAlert
         _selectedFilter = selectedFilter
+        _selectedSyncType = selectedSyncType
+        _isShowingCreateTaskView = isShowingCreateTaskView
     }
 
     private func sortButton(sortType: TasksHelper.TCSortType) -> some View {
@@ -36,7 +45,7 @@ public struct TaskListView: View {
             return AnyView(
                 Button(label) {
                     self.sortType = sortType
-                    UserDefaults.standard.set(sortType.rawValue, forKey: "sortType")
+                    UserDefaultsManager.standard.set(value: sortType.rawValue, forKey: .sortType)
                     updateTasks()
                 }
             )
@@ -44,7 +53,7 @@ public struct TaskListView: View {
         return AnyView(
             Button {
                 self.sortType = sortType
-                UserDefaults.standard.set(sortType.rawValue, forKey: "sortType")
+                UserDefaultsManager.standard.set(value: sortType.rawValue, forKey: .sortType)
                 updateTasks()
             } label: {
                 Label(label, systemImage: SFSymbols.checkmark.rawValue)
@@ -52,7 +61,22 @@ public struct TaskListView: View {
         )
     }
 
+    private func loadingView() -> some View {
+        VStack {
+            ProgressView()
+                .progressViewStyle(CircularProgressViewStyle(tint: .accentColor))
+                .scaleEffect(2)
+        }
+    }
+
     public var body: some View {
+        if isLoading {
+            loadingView()
+                .onAppear {
+                    updateTasks()
+                    isLoading = false
+                }
+        }
         List(selection: $selection) {
             ForEach(searchedTasks, id: \.uuid) { task in
                 NavigationLink(value: task) {
@@ -89,7 +113,7 @@ public struct TaskListView: View {
         .animation(.default, value: searchText)
         .overlay(
             Group {
-                if tasks.isEmpty {
+                if tasks.isEmpty && !isLoading {
                     ContentUnavailableView {
                         Label(
                             selectedFilter.fullDescription == TCFilter.defaultFilter
@@ -114,7 +138,7 @@ public struct TaskListView: View {
         .refreshable {
             do {
                 try await Task.sleep(nanoseconds: UInt64(1.5 * Double(NSEC_PER_SEC)))
-                updateTasks()
+                await updateTasksWithSync()
             } catch {}
         }
         .if(!tasks.isEmpty) {
@@ -122,7 +146,7 @@ public struct TaskListView: View {
         }
         .listStyle(.inset)
         .onAppear {
-            copyDatabaseIfNeeded()
+            setupNotifications()
         }
         .toolbar {
             ToolbarItemGroup(placement: .bottomBar) {
@@ -176,9 +200,12 @@ public struct TaskListView: View {
                     Link(
                         "Documentation",
                         // swiftlint:disable:next force_unwrapping
-                        destination: URL(string: "https://github.com/marriagav/taskchamp-docs")!
+                        destination: URL(string: "https://github.com/marriagav/taskchamp")!
                     )
                     Divider()
+                    Button("Sync Settings") {
+                        isShowingSyncSettings.toggle()
+                    }
                     Button("Obsidian Settings") {
                         isShowingObsidianSettings.toggle()
                     }
@@ -195,7 +222,7 @@ public struct TaskListView: View {
                             selectedFilter = .defaultFilter
                             do {
                                 let res = try JSONEncoder().encode(selectedFilter)
-                                UserDefaults.standard.set(res, forKey: "selectedFilter")
+                                UserDefaultsManager.standard.set(value: res, forKey: .selectedFilter)
                             } catch { print(error) }
                         }
                     }
@@ -222,6 +249,9 @@ public struct TaskListView: View {
         .onChange(of: selectedFilter) {
             updateTasks()
         }
+        .onChange(of: selectedSyncType) {
+            updateTasks()
+        }
         .sheet(isPresented: $isShowingCreateTaskView, onDismiss: {
             updateTasks()
         }, content: {
@@ -233,17 +263,16 @@ public struct TaskListView: View {
         .sheet(isPresented: $isShowingObsidianSettings) {
             ObsidianSettingsView()
         }
+        .sheet(isPresented: $isShowingSyncSettings) {
+            SyncServiceView(
+                isShowingSyncServiceModal: $isShowingSyncSettings,
+                selectedSyncType: $selectedSyncType
+            )
+        }
         .navigationDestination(for: TCTask.self) { task in
             EditTaskView(task: task)
                 .onDisappear {
                     updateTasks()
-                }
-                .onAppear {
-                    do {
-                        try setDbUrl()
-                    } catch {
-                        print(error)
-                    }
                 }
         }
         .navigationTitle(
@@ -254,20 +283,9 @@ public struct TaskListView: View {
                 selectedFilter.fullDescription
         )
         .environment(\.editMode, $editMode)
-        .onOpenURL { url in
-            handleDeepLink(url: url)
-        }
-        .onReceive(NotificationCenter.default.publisher(
-            for: .TCTappedDeepLinkNotification
-        )) { notification in
-            guard let url = notification.object as? URL else {
-                return
-            }
-            handleDeepLink(url: url)
-        }
         .onChange(of: scenePhase) { _, newScenePhase in
             if newScenePhase == .active {
-                copyDatabaseIfNeeded()
+                setupNotifications()
             }
         }
     }
