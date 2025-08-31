@@ -47,13 +47,18 @@ struct RemoteSettingsView: View {
     @Environment(PathStore.self) var pathStore: PathStore
 
     @State private var viewModel = RemoteSettingsViewModel()
+    @State private var isLoading = false
 
     func completeAction() {
-        viewModel.completeAction(
-            isShowingSyncServiceModal: $isShowingSyncServiceModal,
-            selectedSyncType: $selectedSyncType,
-            isShowingAlert: $viewModel.isShowingAlert
-        )
+        Task {
+            isLoading = true
+            await viewModel.completeAction(
+                isShowingSyncServiceModal: $isShowingSyncServiceModal,
+                selectedSyncType: $selectedSyncType,
+                isShowingAlert: $viewModel.isShowingAlert
+            )
+            isLoading = false
+        }
     }
 
     var body: some View {
@@ -82,7 +87,8 @@ struct RemoteSettingsView: View {
             }
             TCSyncServiceButtonSectionView(
                 buttonTitle: viewModel.buttonTitle(),
-                action: completeAction
+                action: completeAction,
+                isDisabled: isLoading
             )
         }
         .alert(isPresented: $viewModel.isShowingAlert) {
@@ -96,6 +102,11 @@ struct RemoteSettingsView: View {
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             viewModel.onAppear()
+        }
+        .overlay {
+            if isLoading {
+                TCSpinnerView()
+            }
         }
     }
 }

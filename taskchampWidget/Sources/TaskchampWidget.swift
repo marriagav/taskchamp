@@ -29,6 +29,9 @@ struct Provider: TimelineProvider {
                 .setDbUrl(
                     path: localReplicaPath
                 )
+            Task {
+                try await TaskchampionService.shared.sync()
+            }
             let tasks = try TaskchampionService.shared.getTasks()
             return tasks
         } catch {

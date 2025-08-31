@@ -73,13 +73,18 @@ struct GcpSettingsView: View {
     @Environment(PathStore.self) var pathStore: PathStore
 
     @State private var viewModel = GcpSettingsViewModel()
+    @State private var isLoading = false
 
     func completeAction() {
-        viewModel.completeAction(
-            isShowingSyncServiceModal: $isShowingSyncServiceModal,
-            selectedSyncType: $selectedSyncType,
-            isShowingAlert: $viewModel.isShowingAlert
-        )
+        Task {
+            isLoading = true
+            await viewModel.completeAction(
+                isShowingSyncServiceModal: $isShowingSyncServiceModal,
+                selectedSyncType: $selectedSyncType,
+                isShowingAlert: $viewModel.isShowingAlert
+            )
+            isLoading = false
+        }
     }
 
     var body: some View {
@@ -112,7 +117,11 @@ struct GcpSettingsView: View {
                 SecureField("Remote Encryption Secret", text: $viewModel.gcpServerEncryptionSecret)
                     .autocapitalization(.none)
             }
-            TCSyncServiceButtonSectionView(buttonTitle: viewModel.buttonTitle(), action: completeAction)
+            TCSyncServiceButtonSectionView(
+                buttonTitle: viewModel.buttonTitle(),
+                action: completeAction,
+                isDisabled: isLoading
+            )
         }
         .alert(isPresented: $viewModel.isShowingAlert) {
             Alert(
@@ -132,6 +141,11 @@ struct GcpSettingsView: View {
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             viewModel.onAppear()
+        }
+        .overlay {
+            if isLoading {
+                TCSpinnerView()
+            }
         }
     }
 }

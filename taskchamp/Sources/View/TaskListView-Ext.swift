@@ -20,17 +20,8 @@ extension TaskListView {
         return editMode.isEditing == true
     }
 
-    func setDbUrl() throws {
-        let localReplicaPath = try FileService.shared.getDestinationPathForLocalReplica()
-        try TaskchampionService.shared
-            .setDbUrl(
-                path: localReplicaPath
-            )
-    }
-
     func updateTasks(_ uuids: Set<String>, withStatus newStatus: TCTask.Status) {
         do {
-            try setDbUrl()
             try TaskchampionService.shared.updatePendingTasks(uuids, withStatus: newStatus)
             NotificationService.shared.removeNotifications(for: Array(uuids))
             updateTasks()
@@ -39,9 +30,26 @@ extension TaskListView {
         }
     }
 
+    func updateTasksWithSync() async {
+        do {
+            try await TaskchampionService.shared.sync()
+            let newTasks = try TaskchampionService.shared.getTasks(sortType: sortType, filter: selectedFilter)
+            if newTasks == tasks {
+                return
+            }
+            withAnimation {
+                tasks = newTasks
+            }
+        } catch {
+            let syncService = TaskchampionService.shared.getSyncServiceFromType(selectedSyncType ?? .none)
+            if !syncService.isAvailable() {
+                isShowingICloudAlert = true
+            }
+        }
+    }
+
     func updateTasks() {
         do {
-            try setDbUrl()
             let newTasks = try TaskchampionService.shared.getTasks(sortType: sortType, filter: selectedFilter)
             if newTasks == tasks {
                 return
@@ -88,7 +96,6 @@ extension TaskListView {
             }
 
             do {
-                try setDbUrl()
                 let task = try TaskchampionService.shared.getTask(uuid: uuidString)
                 pathStore.path.append(task)
             } catch {
