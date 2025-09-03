@@ -103,10 +103,5 @@ struct RemoteSettingsView: View {
         .onAppear {
             viewModel.onAppear()
         }
-        .overlay {
-            if isLoading {
-                TCSpinnerView()
-            }
-        }
     }
 }

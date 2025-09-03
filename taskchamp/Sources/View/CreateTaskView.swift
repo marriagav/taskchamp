@@ -3,6 +3,7 @@ import taskchampShared
 
 public struct CreateTaskView: View {
     @Environment(\.dismiss) var dismiss
+    @Environment(GlobalState.self) var globalState: GlobalState
 
     @State private var nlpInput = ""
     @State private var nlpPlaceholder = "New Task due:tomorrow at 1pm project:my-project prio:M"
@@ -151,7 +152,10 @@ public struct CreateTaskView: View {
                         )
 
                         do {
-                            try TaskchampionService.shared.createTask(task)
+                            globalState.isSyncingTasks = true
+                            try TaskchampionService.shared.createTask(task) {
+                                globalState.isSyncingTasks = false
+                            }
                             NotificationService.shared.requestAuthorization()
                             NotificationService.shared.createReminderForTask(task: task)
                             dismiss()

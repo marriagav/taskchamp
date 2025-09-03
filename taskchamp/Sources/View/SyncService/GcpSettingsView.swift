@@ -142,10 +142,5 @@ struct GcpSettingsView: View {
         .onAppear {
             viewModel.onAppear()
         }
-        .overlay {
-            if isLoading {
-                TCSpinnerView()
-            }
-        }
     }
 }
