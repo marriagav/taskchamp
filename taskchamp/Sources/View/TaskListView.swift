@@ -7,13 +7,14 @@ import UIKit
 public struct TaskListView: View {
     @Environment(PathStore.self) var pathStore: PathStore
     @Environment(\.scenePhase) var scenePhase
+    @Environment(GlobalState.self) var globalState: GlobalState
 
     @Binding var isShowingICloudAlert: Bool
     @Binding var selectedFilter: TCFilter
     @Binding var selectedSyncType: TaskchampionService.SyncType?
     @Binding var isShowingCreateTaskView: Bool
 
-    @State var isLoading = true
+    @State var rebuildingCache = true
     @State var tasks: [TCTask] = []
     @State var selection = Set<String>()
     @State var editMode: EditMode = .inactive
@@ -62,21 +63,14 @@ public struct TaskListView: View {
     }
 
     private func loadingView() -> some View {
-        VStack {
+        HStack {
+            Text("Syncing...")
             ProgressView()
-                .progressViewStyle(CircularProgressViewStyle(tint: .accentColor))
-                .scaleEffect(2)
+                .progressViewStyle(CircularProgressViewStyle())
         }
     }
 
     public var body: some View {
-        if isLoading {
-            loadingView()
-                .onAppear {
-                    updateTasks()
-                    isLoading = false
-                }
-        }
         List(selection: $selection) {
             ForEach(searchedTasks, id: \.uuid) { task in
                 NavigationLink(value: task) {
@@ -113,7 +107,7 @@ public struct TaskListView: View {
         .animation(.default, value: searchText)
         .overlay(
             Group {
-                if tasks.isEmpty && !isLoading {
+                if tasks.isEmpty && !rebuildingCache {
                     ContentUnavailableView {
                         Label(
                             selectedFilter.fullDescription == TCFilter.defaultFilter
@@ -136,10 +130,7 @@ public struct TaskListView: View {
             }
         )
         .refreshable {
-            do {
-                try await Task.sleep(nanoseconds: UInt64(1.5 * Double(NSEC_PER_SEC)))
-                await updateTasksWithSync()
-            } catch {}
+            await updateTasksWithSync()
         }
         .if(!tasks.isEmpty) {
             $0.searchable(text: $searchText)
@@ -242,6 +233,14 @@ public struct TaskListView: View {
                     EditButton()
                 }
             }
+            ToolbarItemGroup(placement: .principal) {
+                if globalState.isSyncingTasks {
+                    loadingView()
+                }
+            }
+        }
+        .onAppear {
+            updateTasks()
         }
         .onChange(of: isEditModeActive) {
             selection.removeAll()
