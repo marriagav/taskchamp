@@ -117,10 +117,5 @@ struct ICloudSettingsView: View {
         }
         .navigationTitle("iCloud Sync")
         .navigationBarTitleDisplayMode(.inline)
-        .overlay {
-            if isLoading {
-                TCSpinnerView()
-            }
-        }
     }
 }

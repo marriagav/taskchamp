@@ -7,6 +7,7 @@ public class TaskchampionService {
     private var replica: Replica?
     private var path: String?
     public var needToSync = false
+    private var currentTask: _Concurrency.Task<Void, Error>?
 
     public enum SyncType: Codable, CaseIterable {
         case remote
@@ -56,47 +57,63 @@ public class TaskchampionService {
         }
     }
 
-    public func sync(syncType: SyncType) async throws {
-        guard let replica else {
-            throw TCError.genericError("Database not set")
-        }
-
-        let syncService = getSyncServiceFromType(syncType)
-
-        do {
-            let synced = try await syncService.sync(replica: replica)
-
-            if synced {
-                needToSync = false
-            } else {
-                needToSync = true
+    public func sync(syncType: SyncType, onSync: @escaping () -> Void = {}) async throws {
+        currentTask?.cancel()
+        currentTask = .init {
+            guard let replica else {
+                throw TCError.genericError("Database not set")
             }
-            WidgetCenter.shared.reloadAllTimelines()
-        } catch {
-            needToSync = true
+
+            let syncService = getSyncServiceFromType(syncType)
+
+            do {
+                let synced = try await syncService.sync(replica: replica)
+
+                if synced {
+                    needToSync = false
+                } else {
+                    needToSync = true
+                }
+                WidgetCenter.shared.reloadAllTimelines()
+                onSync()
+            } catch is CancellationError {
+                // do nothing: task was canceled before finishing
+            } catch {
+                needToSync = true
+                onSync()
+            }
         }
+        try await currentTask?.value
     }
 
-    public func sync() async throws {
-        guard let replica else {
-            throw TCError.genericError("Database not set")
-        }
-
-        let syncType: SyncType = FileService.shared.getSelectedSyncType() ?? .none
-        let syncService = getSyncServiceFromType(syncType)
-
-        do {
-            let synced = try await syncService.sync(replica: replica)
-
-            if synced {
-                needToSync = false
-            } else {
-                needToSync = true
+    public func sync(onSync: @escaping () -> Void = {}) async throws {
+        currentTask?.cancel()
+        currentTask = .init {
+            guard let replica else {
+                throw TCError.genericError("Database not set")
             }
-            WidgetCenter.shared.reloadAllTimelines()
-        } catch {
-            needToSync = true
+
+            let syncType: SyncType = FileService.shared.getSelectedSyncType() ?? .none
+            let syncService = getSyncServiceFromType(syncType)
+
+            do {
+                let synced = try await syncService.sync(replica: replica)
+
+                if synced {
+                    needToSync = false
+                } else {
+                    needToSync = true
+                }
+                WidgetCenter.shared.reloadAllTimelines()
+                onSync()
+            } catch is CancellationError {
+                // do nothing: task was canceled before finishing
+            } catch {
+                needToSync = true
+                onSync()
+            }
         }
+        try await currentTask?.value
     }
 
     public func getTasks(
@@ -152,7 +169,7 @@ public class TaskchampionService {
         return TCTask(from: task)
     }
 
-    public func togglePendingTasksStatus(uuids: Set<String>) throws {
+    public func togglePendingTasksStatus(uuids: Set<String>, onSync: @escaping () -> Void = {}) throws {
         for uuid in uuids {
             let task = try getTask(uuid: uuid)
             var newStatus: TCTask.Status = .pending
@@ -163,20 +180,34 @@ public class TaskchampionService {
             }
             var updatedTask = task
             updatedTask.status = newStatus
-            try updateTask(updatedTask)
+            try updateTask(updatedTask, skipSync: true)
+        }
+        _Concurrency.Task.detached {
+            try? await self.sync {
+                onSync()
+            }
         }
     }
 
-    public func updatePendingTasks(_ uuids: Set<String>, withStatus newStatus: TCTask.Status) throws {
+    public func updatePendingTasks(
+        _ uuids: Set<String>,
+        withStatus newStatus: TCTask.Status,
+        onSync: @escaping () -> Void = {}
+    ) throws {
         for uuid in uuids {
             let task = try getTask(uuid: uuid)
             var updatedTask = task
             updatedTask.status = newStatus
-            try updateTask(updatedTask)
+            try updateTask(updatedTask, skipSync: true)
+        }
+        _Concurrency.Task.detached {
+            try? await self.sync {
+                onSync()
+            }
         }
     }
 
-    public func updateTask(_ task: TCTask) throws {
+    public func updateTask(_ task: TCTask, skipSync: Bool = false, onSync: @escaping () -> Void = {}) throws {
         guard let replica else {
             throw TCError.genericError("Database not set")
         }
@@ -204,12 +235,18 @@ public class TaskchampionService {
 
         replica.sync_no_server() // rebuild the working set
 
-        _Concurrency.Task {
-            try? await sync()
+        if skipSync {
+            return
+        }
+
+        _Concurrency.Task.detached {
+            try? await self.sync {
+                onSync()
+            }
         }
     }
 
-    public func createTask(_ task: TCTask) throws {
+    public func createTask(_ task: TCTask, onSync: @escaping () -> Void = {}) throws {
         guard let replica else {
             throw TCError.genericError("Database not set")
         }
@@ -228,8 +265,10 @@ public class TaskchampionService {
 
         replica.sync_no_server() // rebuild the working set
 
-        _Concurrency.Task {
-            try? await sync()
+        _Concurrency.Task.detached {
+            try? await self.sync {
+                onSync()
+            }
         }
     }
 }

@@ -1,13 +1,19 @@
 import SwiftUI
 import taskchampShared
 
+@Observable
+class GlobalState: ObservableObject {
+    var isSyncingTasks = true
+}
+
 public struct ContentView: View {
     @State private var pathStore = PathStore()
+    @State private var globalState = GlobalState()
+
     @State private var isShowingAlert = false
     @State private var selectedFilter: TCFilter = .defaultFilter
     @State private var selectedSyncType: TaskchampionService.SyncType?
     @State private var isShowingSyncServiceModal = false
-    @State private var isLoading = true
     @State var isShowingCreateTaskView = false
 
     public init() {
@@ -29,7 +35,9 @@ public struct ContentView: View {
     func setReplicaAndSync() async throws {
         let localReplicaPath = try FileService.shared.getDestinationPathForLocalReplica()
         try TaskchampionService.shared.setDbUrl(path: localReplicaPath)
-        try await TaskchampionService.shared.sync()
+        try await TaskchampionService.shared.sync {
+            globalState.isSyncingTasks = false
+        }
     }
 
     func handleDeepLink(url: URL) {
@@ -56,16 +64,12 @@ public struct ContentView: View {
 
     public var body: some View {
         NavigationStack(path: $pathStore.path) {
-            if isLoading {
-                VStack {}
-            } else {
-                TaskListView(
-                    isShowingICloudAlert: $isShowingAlert,
-                    selectedFilter: $selectedFilter,
-                    selectedSyncType: $selectedSyncType,
-                    isShowingCreateTaskView: $isShowingCreateTaskView
-                )
-            }
+            TaskListView(
+                isShowingICloudAlert: $isShowingAlert,
+                selectedFilter: $selectedFilter,
+                selectedSyncType: $selectedSyncType,
+                isShowingCreateTaskView: $isShowingCreateTaskView
+            )
         }
         .onOpenURL { url in
             handleDeepLink(url: url)
@@ -79,11 +83,11 @@ public struct ContentView: View {
             handleDeepLink(url: url)
         }
         .task {
-            isLoading = true
+            globalState.isSyncingTasks = true
             selectedSyncType = getSelectedSyncType()
             guard let selectedSyncType = selectedSyncType else {
                 isShowingSyncServiceModal = true
-                isLoading = false
+                globalState.isSyncingTasks = false
                 return
             }
             selectedFilter = getSelectedFilter()
@@ -93,10 +97,9 @@ public struct ContentView: View {
             }
             do {
                 try await setReplicaAndSync()
-                isLoading = false
             } catch {
                 isShowingAlert = true
-                isLoading = false
+                globalState.isSyncingTasks = false
             }
         }
         .fullScreenCover(isPresented: $isShowingSyncServiceModal) {
@@ -106,6 +109,7 @@ public struct ContentView: View {
             )
         }
         .environment(pathStore)
+        .environment(globalState)
         .alert(isPresented: $isShowingAlert) {
             Alert(
                 title: Text(TaskchampionService.shared.getSyncServiceFromType(selectedSyncType ?? .none).errorTitle),
