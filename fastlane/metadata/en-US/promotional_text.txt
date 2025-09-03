@@ -1,1 +1,1 @@
-Use Taskwarrior, a command line tool to manage tasks from your computer, and a native app to manage them from your phone. Link notes for your tasks with Obsidian integration.
+Use Taskwarrior, a command line tool to manage tasks from your pc, and a native app to manage them from your phone. Link notes for your tasks with Obsidian integration.
