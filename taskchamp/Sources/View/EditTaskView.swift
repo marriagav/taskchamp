@@ -5,6 +5,7 @@ public struct EditTaskView: View {
     @State var task: TCTask
 
     @Environment(\.dismiss) var dismiss
+    @Environment(GlobalState.self) var globalState: GlobalState
 
     @State var project = ""
     @State var description = ""

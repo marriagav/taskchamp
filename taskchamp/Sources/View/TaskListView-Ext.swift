@@ -21,18 +21,26 @@ extension TaskListView {
     }
 
     func updateTasks(_ uuids: Set<String>, withStatus newStatus: TCTask.Status) {
-        do {
-            try TaskchampionService.shared.updatePendingTasks(uuids, withStatus: newStatus)
-            NotificationService.shared.removeNotifications(for: Array(uuids))
-            updateTasks()
-        } catch {
-            print(error)
+        withAnimation {
+            do {
+                globalState.isSyncingTasks = true
+                try TaskchampionService.shared.updatePendingTasks(uuids, withStatus: newStatus) {
+                    globalState.isSyncingTasks = false
+                }
+                NotificationService.shared.removeNotifications(for: Array(uuids))
+                updateTasks()
+            } catch {
+                print(error)
+            }
         }
     }
 
     func updateTasksWithSync() async {
         do {
-            try await TaskchampionService.shared.sync()
+            globalState.isSyncingTasks = true
+            try await TaskchampionService.shared.sync {
+                globalState.isSyncingTasks = false
+            }
             let newTasks = try TaskchampionService.shared.getTasks(sortType: sortType, filter: selectedFilter)
             if newTasks == tasks {
                 return
@@ -56,6 +64,7 @@ extension TaskListView {
             }
             withAnimation {
                 tasks = newTasks
+                rebuildingCache = false
             }
         } catch {
             let syncService = TaskchampionService.shared.getSyncServiceFromType(selectedSyncType ?? .none)

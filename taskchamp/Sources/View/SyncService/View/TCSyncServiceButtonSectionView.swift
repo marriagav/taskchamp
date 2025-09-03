@@ -12,9 +12,12 @@ struct TCSyncServiceButtonSectionView: View {
             Button(action: {
                 action()
             }, label: {
-                Label(buttonTitle, systemImage: systemImage)
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                Label(
+                    isDisabled ? "Saving..." : buttonTitle,
+                    systemImage: systemImage
+                )
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             })
             .buttonStyle(.borderedProminent)
             .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))

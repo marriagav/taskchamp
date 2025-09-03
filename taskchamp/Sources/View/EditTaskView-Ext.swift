@@ -50,12 +50,15 @@ extension EditTaskView {
 
     func handleTaskActionTap() {
         do {
+            globalState.isSyncingTasks = true
             let newStatus: TCTask.Status = task.isCompleted ? .pending : task
                 .isDeleted ? .pending : .completed
             try TaskchampionService.shared.updatePendingTasks(
                 [task.uuid],
                 withStatus: newStatus
-            )
+            ) {
+                globalState.isSyncingTasks = false
+            }
             if (newStatus == .completed) || (newStatus == .deleted) {
                 NotificationService.shared.deleteReminderForTask(task: task)
             } else {
@@ -92,7 +95,10 @@ extension EditTaskView {
         )
 
         do {
-            try TaskchampionService.shared.updateTask(task)
+            globalState.isSyncingTasks = true
+            try TaskchampionService.shared.updateTask(task) {
+                globalState.isSyncingTasks = false
+            }
             NotificationService.shared.createReminderForTask(task: task)
             dismiss()
         } catch {
@@ -105,7 +111,10 @@ extension EditTaskView {
 
     func deleteTask() {
         do {
-            try TaskchampionService.shared.updatePendingTasks([task.uuid], withStatus: .deleted)
+            globalState.isSyncingTasks = true
+            try TaskchampionService.shared.updatePendingTasks([task.uuid], withStatus: .deleted) {
+                globalState.isSyncingTasks = false
+            }
             NotificationService.shared.deleteReminderForTask(task: task)
             dismiss()
         } catch {
