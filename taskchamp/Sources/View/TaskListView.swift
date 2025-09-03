@@ -130,7 +130,11 @@ public struct TaskListView: View {
             }
         )
         .refreshable {
-            await updateTasksWithSync()
+            do {
+                globalState.isSyncingTasks = true
+                try await Task.sleep(nanoseconds: UInt64(1.5 * Double(NSEC_PER_SEC)))
+                await updateTasksWithSync()
+            } catch {}
         }
         .if(!tasks.isEmpty) {
             $0.searchable(text: $searchText)
