@@ -13,12 +13,5 @@ struct TaskchampApp: App {
             ContentView()
         }
         .modelContainer(for: TCFilter.self)
-        .onChange(of: scenePhase) { _, phase in
-            if phase == .background {
-                Task {
-                    try await TaskchampionService.shared.sync()
-                }
-            }
-        }
     }
 }
