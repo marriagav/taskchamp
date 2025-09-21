@@ -97,10 +97,13 @@ public struct CreateTaskView: View {
                     }
                 }
                 Section {
-                    TextField("Task name", text: $description)
+                    TextEditor(text: $description)
                         .focused($isFocused)
+                        .bold()
                     TextField("Project", text: $project)
                         .focused($isFocused)
+                } header: {
+                    Text("Description")
                 }
                 Section {
                     FormDateToggleButton(
