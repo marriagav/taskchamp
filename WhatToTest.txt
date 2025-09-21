@@ -1,1 +1,1 @@
-Taskchampion sync server slowness improvements: please test the performance and reliability of the sync server after recent optimizations.
+Crash improvements: been getting reports of the app crashing on app close. Please test and provide feedback :)
