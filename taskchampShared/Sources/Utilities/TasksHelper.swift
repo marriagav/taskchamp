@@ -10,93 +10,97 @@ public enum TasksHelper {
     public static func sortTasksWithSortType(_ tasks: inout [TCTask], sortType: TCSortType) {
         switch sortType {
         case .date:
-            sortTasksByDate(&tasks)
+            tasks.sort(by: compareByDate)
         case .priority:
-            sortTasksByPriority(&tasks)
+            tasks.sort(by: compareByPriority)
         case .defaultSort:
-            sortTasksByDefault(&tasks)
+            tasks.sort(by: compareByDefault)
         }
     }
 
-    public static func sortTasksByDefault(_ tasks: inout [TCTask]) {
-        tasks.sort {
-            let status1 = $0.status
-            let status2 = $1.status
-            if status1 != status2 {
-                if status1 == .deleted {
-                    return false
-                }
-                if status1 == .completed {
-                    return status2 == .pending
-                }
-                return true
-            }
-            if let date = $0.due {
-                if let otherDate = $1.due {
-                    return date < otherDate
-                } else {
-                    return true
-                }
-            } else {
-                if let priority = $0.priority {
-                    if let otherPriority = $1.priority {
-                        return priority > otherPriority
-                    } else {
-                        return true
-                    }
-                } else {
-                    return false
-                }
-            }
+    // MARK: - Comparison helpers
+
+    /// Generic compare function that returns -1, 0, 1
+    private static func compare<T: Comparable>(_ lhs: T, _ rhs: T) -> Int {
+        if lhs < rhs { return -1 }
+        if lhs > rhs { return 1 }
+        return 0
+    }
+
+    private static func compareOptional<T: Comparable>(_ lhs: T?, _ rhs: T?, reversed: Bool = false) -> Int {
+        switch (lhs, rhs) {
+        case let (left?, right?):
+            let cmp = compare(left, right)
+            return reversed ? -cmp : cmp
+        case (_?, nil): return -1 // non-nil before nil
+        case (nil, _?): return 1
+        default: return 0
         }
     }
 
-    public static func sortTasksByDate(_ tasks: inout [TCTask]) {
-        tasks.sort {
-            let status1 = $0.status
-            let status2 = $1.status
-            if status1 != status2 {
-                if status1 == .deleted {
-                    return false
-                }
-                if status1 == .completed {
-                    return status2 == .pending
-                }
-                return true
-            }
-            if let date = $0.due {
-                if let otherDate = $1.due {
-                    return date < otherDate
-                } else {
-                    return true
-                }
-            }
-            return false
+    /// Chained comparator: returns true if lhs < rhs
+    private static func compareChain(_ lhs: TCTask, _ rhs: TCTask, _ rules: [(TCTask, TCTask) -> Int]) -> Bool {
+        for rule in rules {
+            let result = rule(lhs, rhs)
+            if result < 0 { return true }
+            if result > 0 { return false }
         }
+        return false
     }
 
-    public static func sortTasksByPriority(_ tasks: inout [TCTask]) {
-        tasks.sort {
-            let status1 = $0.status
-            let status2 = $1.status
-            if status1 != status2 {
-                if status1 == .deleted {
-                    return false
-                }
-                if status1 == .completed {
-                    return status2 == .pending
-                }
-                return true
-            }
-            if let priority = $0.priority {
-                if let otherPriority = $1.priority {
-                    return priority > otherPriority
-                } else {
-                    return true
-                }
-            } else {
-                return false
-            }
-        }
+    // MARK: - Comparators
+
+    private static func compareByDefault(_ lhs: TCTask, _ rhs: TCTask) -> Bool {
+        return compareChain(lhs, rhs, [
+            // 1. Status
+            { left, right in
+                if left.status == right.status { return 0 }
+                if left.status == .deleted { return 1 }
+                if right.status == .deleted { return -1 }
+                if left.status == .completed, right.status == .pending { return 1 }
+                if right.status == .completed, left.status == .pending { return -1 }
+                return 0
+            },
+            // 2. Due date (earlier first, nil last)
+            { left, right in compareOptional(left.due, right.due) },
+            // 3. Priority (higher first, nil last)
+            { left, right in compareOptional(left.priority, right.priority, reversed: true) },
+            // 4. Description
+            { left, right in compare(left.description, right.description) },
+            // 5. UUID (final deterministic fallback)
+            { left, right in compare(left.uuid, right.uuid) }
+        ])
+    }
+
+    private static func compareByDate(_ lhs: TCTask, _ rhs: TCTask) -> Bool {
+        return compareChain(lhs, rhs, [
+            { left, right in
+                if left.status == right.status { return 0 }
+                if left.status == .deleted { return 1 }
+                if right.status == .deleted { return -1 }
+                if left.status == .completed, right.status == .pending { return 1 }
+                if right.status == .completed, left.status == .pending { return -1 }
+                return 0
+            },
+            { left, right in compareOptional(left.due, right.due) },
+            { left, right in compare(left.description, right.description) },
+            { left, right in compare(left.uuid, right.uuid) }
+        ])
+    }
+
+    private static func compareByPriority(_ lhs: TCTask, _ rhs: TCTask) -> Bool {
+        return compareChain(lhs, rhs, [
+            { left, right in
+                if left.status == right.status { return 0 }
+                if left.status == .deleted { return 1 }
+                if right.status == .deleted { return -1 }
+                if left.status == .completed, right.status == .pending { return 1 }
+                if right.status == .completed, left.status == .pending { return -1 }
+                return 0
+            },
+            { left, right in compareOptional(left.priority, right.priority, reversed: true) },
+            { left, right in compare(left.description, right.description) },
+            { left, right in compare(left.uuid, right.uuid) }
+        ])
     }
 }
