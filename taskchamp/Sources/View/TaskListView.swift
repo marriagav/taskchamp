@@ -144,6 +144,25 @@ public struct TaskListView: View {
             setupNotifications()
         }
         .toolbar {
+            if #available(iOS 26.0, *) {
+                DefaultToolbarItem(kind: .search, placement: .bottomBar)
+                ToolbarSpacer(.fixed, placement: .bottomBar)
+                if !isEditModeActive {
+                    ToolbarItem(placement: .bottomBar) {
+                        Button {
+                            isShowingCreateTaskView.toggle()
+                        } label: {
+                            Label(
+                                "New Task",
+                                systemImage: SFSymbols.plus.rawValue
+                            )
+                        }
+                        .foregroundStyle(.tint)
+                    }
+                }
+            }
+        }
+        .toolbar {
             ToolbarItemGroup(placement: .bottomBar) {
                 if isEditModeActive {
                     Button("Complete") {
@@ -168,19 +187,7 @@ public struct TaskListView: View {
                     }
                     .disabled(selection.isEmpty)
                 } else {
-                    if #available(iOS 26.0, *) {
-                        DefaultToolbarItem(kind: .search, placement: .bottomBar)
-                        ToolbarSpacer(.fixed, placement: .bottomBar)
-                        Button {
-                            isShowingCreateTaskView.toggle()
-                        } label: {
-                            Label(
-                                "New Task",
-                                systemImage: SFSymbols.plus.rawValue
-                            )
-                        }
-                        .foregroundStyle(.tint)
-                    } else {
+                    if #unavailable(iOS 26.0) {
                         HStack {
                             Button {
                                 isShowingCreateTaskView.toggle()

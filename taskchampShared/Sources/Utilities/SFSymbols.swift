@@ -20,4 +20,6 @@ public enum SFSymbols: String {
     case cloud
     case cloudSlash = "icloud.slash"
     case folder
+    case chevronUp = "chevron.up"
+    case chevronDown = "chevron.down"
 }
