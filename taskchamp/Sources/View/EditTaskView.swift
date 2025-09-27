@@ -62,6 +62,7 @@ public struct EditTaskView: View {
                 TextEditor(text: $description)
                     .focused($isFocused)
                     .bold()
+                    .frame(minHeight: 40)
                 TextField("Project", text: $project)
                     .focused($isFocused)
             } header: {
@@ -122,9 +123,9 @@ public struct EditTaskView: View {
                 } label: {
                     Label(
                         task.hasNote ? "Open Obsidian note" : "Create Obsidian note",
-                        systemImage: SFSymbols.obsidian.rawValue
+                        systemImage: task.hasNote ? SFSymbols.obsidianOpen.rawValue : SFSymbols.obsidianCreate.rawValue
                     )
-                    .labelStyle(.titleAndIcon)
+                    .labelStyle(.automatic)
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(Color(asset: TaskchampAsset.Assets.accentColor))

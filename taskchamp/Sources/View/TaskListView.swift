@@ -146,48 +146,59 @@ public struct TaskListView: View {
         .toolbar {
             ToolbarItemGroup(placement: .bottomBar) {
                 if isEditModeActive {
-                    HStack {
-                        Button("Complete") {
-                            updateTasks(selection, withStatus: .completed)
-                            selection.removeAll()
-                        }
-                        .disabled(selection.isEmpty)
-                        Spacer()
-                        Menu {
-                            Button(role: .destructive) {
-                                updateTasks(selection, withStatus: .deleted)
-                                selection.removeAll()
-                            } label: {
-                                Label(
-                                    "Delete selected tasks",
-                                    systemImage: SFSymbols.trash.rawValue
-                                )
-                            }
-                            .disabled(selection.isEmpty)
-                        } label: {
-                            Label("Delete", systemImage: SFSymbols.trash.rawValue)
-                        }
-                        .disabled(selection.isEmpty)
+                    Button("Complete") {
+                        updateTasks(selection, withStatus: .completed)
+                        selection.removeAll()
                     }
-                    .animation(.default, value: editMode)
+                    .disabled(selection.isEmpty)
+                    Spacer()
+                    Menu {
+                        Button(role: .destructive) {
+                            updateTasks(selection, withStatus: .deleted)
+                            selection.removeAll()
+                        } label: {
+                            Label(
+                                "Delete selected tasks",
+                                systemImage: SFSymbols.trash.rawValue
+                            )
+                        }
+                        .disabled(selection.isEmpty)
+                    } label: {
+                        Label("Delete", systemImage: SFSymbols.trash.rawValue)
+                    }
+                    .disabled(selection.isEmpty)
                 } else {
-                    HStack {
+                    if #available(iOS 26.0, *) {
+                        DefaultToolbarItem(kind: .search, placement: .bottomBar)
+                        ToolbarSpacer(.fixed, placement: .bottomBar)
                         Button {
                             isShowingCreateTaskView.toggle()
                         } label: {
                             Label(
                                 "New Task",
-                                systemImage: SFSymbols.plusCircleFill.rawValue
+                                systemImage: SFSymbols.plus.rawValue
                             )
-                            .labelStyle(.titleAndIcon)
-                            .imageScale(.large)
-                            .bold()
                         }
-                        .buttonStyle(PlainButtonStyle())
                         .foregroundStyle(.tint)
-                        Spacer()
+                    } else {
+                        HStack {
+                            Button {
+                                isShowingCreateTaskView.toggle()
+                            } label: {
+                                Label(
+                                    "New Task",
+                                    systemImage: SFSymbols.plusCircleFill.rawValue
+                                )
+                                .labelStyle(.titleAndIcon)
+                                .imageScale(.large)
+                                .bold()
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                            .foregroundStyle(.tint)
+                            Spacer()
+                        }
+                        .animation(.default, value: editMode)
                     }
-                    .animation(.default, value: editMode)
                 }
             }
             ToolbarItemGroup(placement: .topBarTrailing) {
