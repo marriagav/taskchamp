@@ -1,7 +1,7 @@
 import SwiftUI
 import taskchampShared
 
-public struct EditTaskView: View {
+public struct EditTaskView: View, UseKeyboardToolbar {
     @State var task: TCTask
 
     @Environment(\.dismiss) var dismiss
@@ -25,7 +25,11 @@ public struct EditTaskView: View {
     @State var alertTitle = ""
     @State var alertMessage = ""
 
-    @FocusState var isFocused: Bool
+    @FocusState private var focusedField: FormField?
+    enum FormField {
+        case description
+        case project
+    }
 
     var didChange: Bool {
         task.project ?? "" != project ||
@@ -56,14 +60,41 @@ public struct EditTaskView: View {
         self.task = task
     }
 
+    func calculateNextField() {
+        switch focusedField {
+        case .description:
+            focusedField = .project
+        case .project:
+            focusedField = .project
+        default:
+            focusedField = nil
+        }
+    }
+
+    func calculatePreviousField() {
+        switch focusedField {
+        case .description:
+            focusedField = .description
+        case .project:
+            focusedField = .description
+        default:
+            focusedField = nil
+        }
+    }
+
+    func onDismissKeyboard() {
+        focusedField = nil
+    }
+
     public var body: some View {
         Form {
             Section {
                 TextEditor(text: $description)
-                    .focused($isFocused)
+                    .focused($focusedField, equals: .description)
                     .bold()
+                    .frame(minHeight: 40)
                 TextField("Project", text: $project)
-                    .focused($isFocused)
+                    .focused($focusedField, equals: .project)
             } header: {
                 Text("Description")
             }
@@ -122,9 +153,9 @@ public struct EditTaskView: View {
                 } label: {
                     Label(
                         task.hasNote ? "Open Obsidian note" : "Create Obsidian note",
-                        systemImage: SFSymbols.obsidian.rawValue
+                        systemImage: task.hasNote ? SFSymbols.obsidianOpen.rawValue : SFSymbols.obsidianCreate.rawValue
                     )
-                    .labelStyle(.titleAndIcon)
+                    .labelStyle(.automatic)
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(Color(asset: TaskchampAsset.Assets.accentColor))
@@ -143,12 +174,17 @@ public struct EditTaskView: View {
                 }
             }
             ToolbarItem(placement: .keyboard) {
-                HStack {
-                    Spacer()
-                    Button("Done") {
-                        isFocused = false
+                KeyboardToolbarView(
+                    onPrevious: {
+                        calculatePreviousField()
+                    },
+                    onNext: {
+                        calculateNextField()
+                    },
+                    onDismiss: {
+                        onDismissKeyboard()
                     }
-                }
+                )
             }
         }
         .onChange(

@@ -2,11 +2,43 @@ import Foundation
 import SwiftUI
 import taskchampShared
 
-struct ObsidianSettingsView: View {
+struct ObsidianSettingsView: View, UseKeyboardToolbar {
     @Environment(\.dismiss) var dismiss
     @State private var obsidianVaultName = UserDefaultsManager.standard.getValue(forKey: .obsidianVaultName) ?? ""
     @State private var tasksFolderPath = UserDefaultsManager.standard.getValue(forKey: .tasksFolderPath) ?? ""
     @State private var showObsidianInfoPopover = false
+
+    @FocusState private var focusedField: FormField?
+    enum FormField {
+        case vaultName
+        case folderPath
+    }
+
+    func calculateNextField() {
+        switch focusedField {
+        case .vaultName:
+            focusedField = .folderPath
+        case .folderPath:
+            focusedField = .folderPath
+        default:
+            focusedField = nil
+        }
+    }
+
+    func calculatePreviousField() {
+        switch focusedField {
+        case .vaultName:
+            focusedField = .vaultName
+        case .folderPath:
+            focusedField = .vaultName
+        default:
+            focusedField = nil
+        }
+    }
+
+    func onDismissKeyboard() {
+        focusedField = nil
+    }
 
     var body: some View {
         NavigationStack {
@@ -52,8 +84,11 @@ struct ObsidianSettingsView: View {
                 }
                 Section {
                     TextField("Obsidian Vault Name", text: $obsidianVaultName)
+                        .autocapitalization(.none)
+                        .focused($focusedField, equals: .vaultName)
                     TextField("Tasks Folder Relative Path (Optional)", text: $tasksFolderPath)
                         .autocapitalization(.none)
+                        .focused($focusedField, equals: .folderPath)
                 }
             }
             .toolbar {
@@ -71,6 +106,19 @@ struct ObsidianSettingsView: View {
                     Button("Cancel") {
                         dismiss()
                     }
+                }
+                ToolbarItem(placement: .keyboard) {
+                    KeyboardToolbarView(
+                        onPrevious: {
+                            calculatePreviousField()
+                        },
+                        onNext: {
+                            calculateNextField()
+                        },
+                        onDismiss: {
+                            onDismissKeyboard()
+                        }
+                    )
                 }
             }
             .navigationTitle("Obsidian Settings")

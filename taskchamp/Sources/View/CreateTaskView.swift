@@ -1,7 +1,7 @@
 import SwiftUI
 import taskchampShared
 
-public struct CreateTaskView: View {
+public struct CreateTaskView: View, UseKeyboardToolbar {
     @Environment(\.dismiss) var dismiss
     @Environment(GlobalState.self) var globalState: GlobalState
 
@@ -27,7 +27,42 @@ public struct CreateTaskView: View {
     @State private var alertMessage = ""
 
     @FocusState private var isFocused: Bool
-    @FocusState private var isFocusedNLP: Bool
+    @FocusState private var focusedField: FormField?
+    enum FormField {
+        case nlp
+        case description
+        case project
+    }
+
+    func calculateNextField() {
+        switch focusedField {
+        case .nlp:
+            focusedField = .description
+        case .description:
+            focusedField = .project
+        case .project:
+            focusedField = .project
+        default:
+            focusedField = nil
+        }
+    }
+
+    func calculatePreviousField() {
+        switch focusedField {
+        case .nlp:
+            focusedField = .nlp
+        case .description:
+            focusedField = .nlp
+        case .project:
+            focusedField = .description
+        default:
+            focusedField = nil
+        }
+    }
+
+    func onDismissKeyboard() {
+        focusedField = nil
+    }
 
     public var body: some View {
         NavigationStack {
@@ -37,7 +72,7 @@ public struct CreateTaskView: View {
                         .font(.system(.body, design: .monospaced))
                         .autocapitalization(.none)
                         .autocorrectionDisabled()
-                        .focused($isFocusedNLP)
+                        .focused($focusedField, equals: .nlp)
                         .onChange(of: nlpInput) { _, input in
                             let nlpTask = NLPService.shared.createTask(from: input)
                             self.description = nlpTask.description
@@ -62,7 +97,7 @@ public struct CreateTaskView: View {
                             }
                         }
                         .onAppear {
-                            isFocusedNLP = true
+                            focusedField = .nlp
                         }
                 } header: {
                     HStack {
@@ -98,10 +133,10 @@ public struct CreateTaskView: View {
                 }
                 Section {
                     TextEditor(text: $description)
-                        .focused($isFocused)
+                        .focused($focusedField, equals: .description)
                         .bold()
                     TextField("Project", text: $project)
-                        .focused($isFocused)
+                        .focused($focusedField, equals: .project)
                 } header: {
                     Text("Description")
                 }
@@ -177,13 +212,17 @@ public struct CreateTaskView: View {
                     }
                 }
                 ToolbarItem(placement: .keyboard) {
-                    HStack {
-                        Spacer()
-                        Button("Done") {
-                            isFocused = false
-                            isFocusedNLP = false
+                    KeyboardToolbarView(
+                        onPrevious: {
+                            calculatePreviousField()
+                        },
+                        onNext: {
+                            calculateNextField()
+                        },
+                        onDismiss: {
+                            onDismissKeyboard()
                         }
-                    }
+                    )
                 }
             }
             .onChange(

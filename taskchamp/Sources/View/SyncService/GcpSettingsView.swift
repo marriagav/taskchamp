@@ -67,13 +67,45 @@ class GcpSettingsViewModel: UseSyncServiceViewModel {
     }
 }
 
-struct GcpSettingsView: View {
+struct GcpSettingsView: View, UseKeyboardToolbar {
     @Binding var isShowingSyncServiceModal: Bool
     @Binding var selectedSyncType: TaskchampionService.SyncType?
     @Environment(PathStore.self) var pathStore: PathStore
 
     @State private var viewModel = GcpSettingsViewModel()
     @State private var isLoading = false
+
+    @FocusState var focusedField: FormField?
+    enum FormField {
+        case bucket
+        case encryptionSecret
+    }
+
+    func calculateNextField() {
+        switch focusedField {
+        case .bucket:
+            focusedField = .encryptionSecret
+        case .encryptionSecret:
+            focusedField = .encryptionSecret
+        default:
+            focusedField = nil
+        }
+    }
+
+    func calculatePreviousField() {
+        switch focusedField {
+        case .bucket:
+            focusedField = .bucket
+        case .encryptionSecret:
+            focusedField = .bucket
+        default:
+            focusedField = nil
+        }
+    }
+
+    func onDismissKeyboard() {
+        focusedField = nil
+    }
 
     func completeAction() {
         Task {
@@ -98,6 +130,7 @@ struct GcpSettingsView: View {
                 )
                 TextField("GCP Server bucket", text: $viewModel.gcpBucket)
                     .autocapitalization(.none)
+                    .focused($focusedField, equals: .bucket)
                 Text(
                     "**Path to a GCP credential file, in JSON format.**"
                 )
@@ -116,12 +149,22 @@ struct GcpSettingsView: View {
                 )
                 SecureField("Remote Encryption Secret", text: $viewModel.gcpServerEncryptionSecret)
                     .autocapitalization(.none)
+                    .focused($focusedField, equals: .encryptionSecret)
             }
             TCSyncServiceButtonSectionView(
                 buttonTitle: viewModel.buttonTitle(),
                 action: completeAction,
                 isDisabled: isLoading
             )
+        }
+        .toolbar {
+            ToolbarItem(placement: .keyboard) {
+                KeyboardToolbarView(
+                    onPrevious: calculatePreviousField,
+                    onNext: calculateNextField,
+                    onDismiss: onDismissKeyboard
+                )
+            }
         }
         .alert(isPresented: $viewModel.isShowingAlert) {
             Alert(
