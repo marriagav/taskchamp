@@ -1,1 +1,1 @@
-Crash improvements: been getting reports of the app crashing on app close. Please test and provide feedback :)
+Bug fixes and improvements!
