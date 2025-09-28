@@ -41,13 +41,50 @@ class RemoteSettingsViewModel: UseSyncServiceViewModel {
     }
 }
 
-struct RemoteSettingsView: View {
+struct RemoteSettingsView: View, UseKeyboardToolbar {
     @Binding var isShowingSyncServiceModal: Bool
     @Binding var selectedSyncType: TaskchampionService.SyncType?
     @Environment(PathStore.self) var pathStore: PathStore
 
     @State private var viewModel = RemoteSettingsViewModel()
     @State private var isLoading = false
+
+    @FocusState var focusedField: FormField?
+    enum FormField {
+        case serverUrl
+        case clientId
+        case encryptionSecret
+    }
+
+    func calculateNextField() {
+        switch focusedField {
+        case .serverUrl:
+            focusedField = .clientId
+        case .clientId:
+            focusedField = .encryptionSecret
+        case .encryptionSecret:
+            focusedField = .encryptionSecret
+        default:
+            focusedField = nil
+        }
+    }
+
+    func calculatePreviousField() {
+        switch focusedField {
+        case .serverUrl:
+            focusedField = .serverUrl
+        case .clientId:
+            focusedField = .serverUrl
+        case .encryptionSecret:
+            focusedField = .clientId
+        default:
+            focusedField = nil
+        }
+    }
+
+    func onDismissKeyboard() {
+        focusedField = nil
+    }
 
     func completeAction() {
         Task {
@@ -73,23 +110,35 @@ struct RemoteSettingsView: View {
                 TextField("Remote Server URL", text: $viewModel.remoteServerUrl)
                     .textContentType(.URL)
                     .autocapitalization(.none)
+                    .focused($focusedField, equals: .serverUrl)
                 Text(
                     "**Client ID to identify and authenticate this replica to the server**"
                 )
                 TextField("Remote Client ID", text: $viewModel.remoteClientId)
                     .autocapitalization(.none)
+                    .focused($focusedField, equals: .clientId)
                 Text(
                     // swiftlint:disable:next line_length
                     "**Private encryption secret used to encrypt all data sent to the server. This can be any suitably un-guessable string of bytes.**"
                 )
                 SecureField("Remote Encryption Secret", text: $viewModel.remoteEncryptionSecret)
                     .autocapitalization(.none)
+                    .focused($focusedField, equals: .encryptionSecret)
             }
             TCSyncServiceButtonSectionView(
                 buttonTitle: viewModel.buttonTitle(),
                 action: completeAction,
                 isDisabled: isLoading
             )
+        }
+        .toolbar {
+            ToolbarItem(placement: .keyboard) {
+                KeyboardToolbarView(
+                    onPrevious: calculatePreviousField,
+                    onNext: calculateNextField,
+                    onDismiss: onDismissKeyboard
+                )
+            }
         }
         .alert(isPresented: $viewModel.isShowingAlert) {
             Alert(

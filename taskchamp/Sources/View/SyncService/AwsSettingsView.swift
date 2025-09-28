@@ -6,11 +6,11 @@ class AwsSettingsViewModel: UseSyncServiceViewModel {
     var isShowingAlert = false
     var isImporting = false
 
-    var awsServerBucket: String = ""
-    var awsServerRegion: String = ""
-    var awsServerAccessKeyId: String = ""
-    var awsServerSecretAccessKey: String = ""
-    var awsServerEncryptionSecret: String = ""
+    var awsServerBucket = ""
+    var awsServerRegion = ""
+    var awsServerAccessKeyId = ""
+    var awsServerSecretAccessKey = ""
+    var awsServerEncryptionSecret = ""
 
     var syncType: TaskchampionService.SyncType {
         .aws
@@ -55,13 +55,59 @@ class AwsSettingsViewModel: UseSyncServiceViewModel {
     }
 }
 
-struct AwsSettingsView: View {
+struct AwsSettingsView: View, UseKeyboardToolbar {
     @Binding var isShowingSyncServiceModal: Bool
     @Binding var selectedSyncType: TaskchampionService.SyncType?
     @Environment(PathStore.self) var pathStore: PathStore
 
     @State private var viewModel = AwsSettingsViewModel()
     @State private var isLoading = false
+    @FocusState var focusedField: FormField?
+    enum FormField {
+        case bucket
+        case region
+        case accessKeyId
+        case secretAccessKey
+        case encryptionSecret
+    }
+
+    func calculateNextField() {
+        switch focusedField {
+        case .bucket:
+            focusedField = .region
+        case .region:
+            focusedField = .accessKeyId
+        case .accessKeyId:
+            focusedField = .secretAccessKey
+        case .secretAccessKey:
+            focusedField = .encryptionSecret
+        case .encryptionSecret:
+            focusedField = .encryptionSecret
+        default:
+            focusedField = nil
+        }
+    }
+
+    func calculatePreviousField() {
+        switch focusedField {
+        case .bucket:
+            focusedField = .bucket
+        case .region:
+            focusedField = .bucket
+        case .accessKeyId:
+            focusedField = .region
+        case .secretAccessKey:
+            focusedField = .accessKeyId
+        case .encryptionSecret:
+            focusedField = .secretAccessKey
+        default:
+            focusedField = nil
+        }
+    }
+
+    func onDismissKeyboard() {
+        focusedField = nil
+    }
 
     func completeAction() {
         Task {
@@ -86,30 +132,44 @@ struct AwsSettingsView: View {
                 )
                 TextField("AWS Region", text: $viewModel.awsServerRegion)
                     .autocapitalization(.none)
+                    .focused($focusedField, equals: .region)
                 Text(
                     "**Bucket in which to store the task data. This bucket must not be used for any other purpose.**"
                 )
                 TextField("AWS S3 bucket", text: $viewModel.awsServerBucket)
                     .autocapitalization(.none)
+                    .focused($focusedField, equals: .bucket)
                 Text(
                     "**A pair of access key ID and secret access key.**"
                 )
                 TextField("AWS Access Key ID", text: $viewModel.awsServerAccessKeyId)
                     .autocapitalization(.none)
+                    .focused($focusedField, equals: .accessKeyId)
                 SecureField("AWS Secret Access Key", text: $viewModel.awsServerSecretAccessKey)
                     .autocapitalization(.none)
+                    .focused($focusedField, equals: .secretAccessKey)
                 Text(
                     // swiftlint:disable:next line_length
                     "**Private encryption secret used to encrypt all data sent to the server. This can be any suitably un-guessable string of bytes.**"
                 )
                 SecureField("Remote Encryption Secret", text: $viewModel.awsServerEncryptionSecret)
                     .autocapitalization(.none)
+                    .focused($focusedField, equals: .encryptionSecret)
             }
             TCSyncServiceButtonSectionView(
                 buttonTitle: viewModel.buttonTitle(),
                 action: completeAction,
                 isDisabled: isLoading
             )
+        }
+        .toolbar {
+            ToolbarItem(placement: .keyboard) {
+                KeyboardToolbarView(
+                    onPrevious: calculatePreviousField,
+                    onNext: calculateNextField,
+                    onDismiss: onDismissKeyboard
+                )
+            }
         }
         .alert(isPresented: $viewModel.isShowingAlert) {
             Alert(

@@ -45,6 +45,13 @@ public struct SyncServiceView: View {
                     }
                 }
             }
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Close") {
+                        isShowingSyncServiceModal = false
+                    }
+                }
+            }
             .navigationTitle("Sync Service")
             .navigationBarTitleDisplayMode(.large)
             .navigationDestination(for: TaskchampionService.SyncType.self) { syncType in
