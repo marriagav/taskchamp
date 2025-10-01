@@ -3,6 +3,7 @@ import taskchampShared
 
 public struct CreateTaskView: View, UseKeyboardToolbar {
     @Environment(\.dismiss) var dismiss
+    @Environment(StoreKitManager.self) var storeKit: StoreKitManager
     @Environment(GlobalState.self) var globalState: GlobalState
 
     @State private var nlpInput = ""
@@ -22,6 +23,7 @@ public struct CreateTaskView: View, UseKeyboardToolbar {
     @State private var due: Date = .init()
     @State private var time: Date = .init()
 
+    @State private var showPaywall = false
     @State private var isShowingAlert = false
     @State private var alertTitle = ""
     @State private var alertMessage = ""
@@ -252,6 +254,9 @@ public struct CreateTaskView: View, UseKeyboardToolbar {
             .animation(.default, value: didSetTime)
             .alert(isPresented: $isShowingAlert) {
                 Alert(title: Text(alertTitle), message: Text(alertMessage), dismissButton: .default(Text("OK")))
+            }
+            .navigationDestination(isPresented: $showPaywall) {
+                TCPaywall()
             }
             .navigationTitle("New Task")
             .navigationBarTitleDisplayMode(.inline)

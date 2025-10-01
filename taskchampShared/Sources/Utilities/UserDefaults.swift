@@ -22,6 +22,9 @@ public enum TCUserDefaults: String {
     case awsServerAccessKeyId
     case awsServerSecretAccessKey
     case awsServerEncryptionSecret
+
+    case storeKitPremiumUnlocked
+    case storeKitCloudSubscriptionActive
 }
 
 public class UserDefaultsManager {

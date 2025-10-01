@@ -27,4 +27,5 @@ public enum SFSymbols: String {
     case terminal = "apple.terminal"
     case bolt
     case cloudCheck = "checkmark.icloud"
+    case tag
 }

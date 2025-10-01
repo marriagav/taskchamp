@@ -17,6 +17,10 @@ extension EditTaskView {
                 isShowingObsidianSettings = true
                 return
             }
+            if !storeKit.hasPremiumAccess() {
+                globalState.isShowingPaywall = true
+                return
+            }
             if task.hasNote {
                 let taskNoteWithPath = "\(tasksFolderPath)/\(task.obsidianNote ?? "")"
                 let urlString = "obsidian://open?vault=\(obsidianVaultName ?? "")&file=\(taskNoteWithPath)"

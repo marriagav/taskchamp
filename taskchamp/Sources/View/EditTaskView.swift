@@ -2,6 +2,7 @@ import SwiftUI
 import taskchampShared
 
 public struct EditTaskView: View, UseKeyboardToolbar {
+    @Environment(StoreKitManager.self) var storeKit: StoreKitManager
     @State var task: TCTask
 
     @Environment(\.dismiss) var dismiss

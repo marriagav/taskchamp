@@ -48,16 +48,18 @@ struct TCPaywall: View {
                     }
 
                     HStack {
-                        Label("Taskchampion sync server", systemImage: SFSymbols.cloud.rawValue)
+                        Label("Custom tags", systemImage: SFSymbols.tag.rawValue)
                         Spacer()
-                        Label("Command line filters", systemImage: SFSymbols.terminal.rawValue)
+                        Label("CLI filters", systemImage: SFSymbols.terminal.rawValue)
                     }
+                    .multilineTextAlignment(.center)
                     .listRowSeparator(.hidden)
                     HStack {
                         Label("Obsidian integration", systemImage: SFSymbols.obsidianNoFill.rawValue)
                         Spacer()
                         Label("And more...", systemImage: SFSymbols.bolt.rawValue)
                     }
+                    .multilineTextAlignment(.center)
 
                     ProductView(id: StoreKitManager.TCProducts.premium) {
                         Image(systemName: SFSymbols.crown.rawValue)
@@ -73,6 +75,7 @@ struct TCPaywall: View {
                     Task {
                         do {
                             try await storeKit.restorePurchases()
+                            dismiss()
                         } catch {
                             isShowingAlert = true
                         }
@@ -91,11 +94,10 @@ struct TCPaywall: View {
                     dismissButton: .default(Text("OK"))
                 )
             }
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Done") {
-                        dismiss()
-                    }
+            .onInAppPurchaseCompletion { product, result in
+                let result = await storeKit.onInAppPurchaseCompletion(product: product, result: result)
+                if result {
+                    dismiss()
                 }
             }
             .navigationTitle("Upgrade")

@@ -4,6 +4,8 @@ import SwiftUI
 import taskchampShared
 
 public struct AddFilterView: View {
+    @Environment(StoreKitManager.self) var storeKit: StoreKitManager
+
     @Environment(\.modelContext) var modelContext
     @Environment(\.dismiss) var dismiss
     @Binding var selectedFilter: TCFilter
@@ -13,6 +15,7 @@ public struct AddFilterView: View {
     @State private var showNlpInfoPopover = false
     @State private var nlpInput = ""
     @State private var nlpPlaceholder = "project:my-project prio:M status:pending"
+    @State private var showPaywall = false
 
     @State private var isShowingAlert = false
     @State private var alertTitle = ""
@@ -40,6 +43,10 @@ public struct AddFilterView: View {
                         }
                         .submitLabel(.go)
                         .onSubmit {
+                            if !storeKit.hasPremiumAccess() {
+                                showPaywall = true
+                                return
+                            }
                             withAnimation {
                                 if nlpInput.isEmpty {
                                     alertTitle = "Empty input"
@@ -101,6 +108,10 @@ public struct AddFilterView: View {
                     } else {
                         ForEach(filters) { filter in
                             Button {
+                                if !storeKit.hasPremiumAccess() {
+                                    showPaywall = true
+                                    return
+                                }
                                 if filter == selectedFilter {
                                     selectedFilter = TCFilter.defaultFilter
                                 } else {
@@ -139,6 +150,9 @@ public struct AddFilterView: View {
             }
             .alert(isPresented: $isShowingAlert) {
                 Alert(title: Text(alertTitle), message: Text(alertMessage), dismissButton: .default(Text("OK")))
+            }
+            .navigationDestination(isPresented: $showPaywall) {
+                TCPaywall()
             }
             .navigationTitle("Filter your tasks")
             .navigationBarTitleDisplayMode(.inline)
