@@ -109,5 +109,15 @@ let project = Project(
                 .external(name: "Taskchampion")
             ]
         )
+    ],
+    schemes: [
+        .scheme(
+            name: "taskchamp",
+            runAction: .runAction(
+                configuration: .release,
+                executable: .target("taskchamp"),
+                options: .options(storeKitConfigurationPath: .path("taskchamp/Resources/Products.storekit"))
+            )
+        )
     ]
 )

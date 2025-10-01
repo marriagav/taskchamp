@@ -1,0 +1,90 @@
+{
+  "appPolicies" : {
+    "eula" : "",
+    "policies" : [
+      {
+        "locale" : "en_US",
+        "policyText" : "",
+        "policyURL" : ""
+      }
+    ]
+  },
+  "identifier" : "F1196849",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+    {
+      "displayPrice" : "4.99",
+      "familyShareable" : false,
+      "internalID" : "07A9F6B6",
+      "localizations" : [
+        {
+          "description" : "Unlock premium features such as Taskchampion sync server, command line widgets and more!",
+          "displayName" : "Premium",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "premium.com.mav.taskchamp",
+      "referenceName" : "Premium",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+    "_askToBuyEnabled" : false,
+    "_billingGracePeriodEnabled" : false,
+    "_billingIssuesEnabled" : false,
+    "_disableDialogs" : false,
+    "_failTransactionsEnabled" : false,
+    "_locale" : "en_US",
+    "_renewalBillingIssuesEnabled" : false,
+    "_storefront" : "USA",
+    "_storeKitErrors" : [
+
+    ],
+    "_timeRate" : 0
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "5E2EC388",
+      "localizations" : [
+
+      ],
+      "name" : "Cloud Group",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "0.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "BB82CEA3",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "A Taskchampion hosted server for syncing your tasks",
+              "displayName" : "Taskchamp Cloud",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "cloud.com.mav.taskchamp",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Taskchamp Cloud",
+          "subscriptionGroupID" : "5E2EC388",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}
