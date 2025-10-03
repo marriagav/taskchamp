@@ -48,17 +48,19 @@ struct TCPaywall: View {
                     }
 
                     HStack {
-                        Label("Custom tags", systemImage: SFSymbols.tag.rawValue)
+                        VStack {
+                            Label("Custom tags", systemImage: SFSymbols.tag.rawValue)
+                            Spacer()
+                            Label("CLI filters", systemImage: SFSymbols.terminal.rawValue)
+                        }
                         Spacer()
-                        Label("CLI filters", systemImage: SFSymbols.terminal.rawValue)
+                        VStack {
+                            Label("Obsidian integration", systemImage: SFSymbols.obsidianNoFill.rawValue)
+                            Spacer()
+                            Label("And more...", systemImage: SFSymbols.bolt.rawValue)
+                        }
                     }
-                    .multilineTextAlignment(.center)
-                    .listRowSeparator(.hidden)
-                    HStack {
-                        Label("Obsidian integration", systemImage: SFSymbols.obsidianNoFill.rawValue)
-                        Spacer()
-                        Label("And more...", systemImage: SFSymbols.bolt.rawValue)
-                    }
+                    .labelStyle(VerticalLabelStyle())
                     .multilineTextAlignment(.center)
 
                     ProductView(id: StoreKitManager.TCProducts.premium) {
@@ -70,12 +72,20 @@ struct TCPaywall: View {
                 // TODO: add cloud card section
                 // cloudCardSection
             }
+            .onInAppPurchaseCompletion { product, result in
+                let result = await storeKit.onInAppPurchaseCompletion(product: product, result: result)
+                if result {
+                    dismiss()
+                }
+            }
             Section {
                 Button("Restore purchases") {
                     Task {
                         do {
                             try await storeKit.restorePurchases()
-                            dismiss()
+                            if storeKit.hasPremiumAccess() {
+                                dismiss()
+                            }
                         } catch {
                             isShowingAlert = true
                         }
@@ -93,12 +103,6 @@ struct TCPaywall: View {
                     ),
                     dismissButton: .default(Text("OK"))
                 )
-            }
-            .onInAppPurchaseCompletion { product, result in
-                let result = await storeKit.onInAppPurchaseCompletion(product: product, result: result)
-                if result {
-                    dismiss()
-                }
             }
             .navigationTitle("Upgrade")
             .navigationBarTitleDisplayMode(.inline)

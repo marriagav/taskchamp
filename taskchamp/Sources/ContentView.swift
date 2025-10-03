@@ -4,7 +4,7 @@ import taskchampShared
 @Observable
 class GlobalState {
     var isSyncingTasks = true
-    var isShowingPaywall = true
+    var isShowingPaywall = false
 }
 
 public struct ContentView: View {
@@ -86,6 +86,7 @@ public struct ContentView: View {
         }
         .task {
             globalState.isSyncingTasks = true
+            try? await storeKit.onAppInitialization()
             selectedSyncType = getSelectedSyncType()
             guard let selectedSyncType = selectedSyncType else {
                 isShowingSyncServiceModal = true
