@@ -16,7 +16,7 @@ public class NLPService {
 
     private init() {}
 
-    private var tagsCache: [TCTag] = []
+    public var tagsCache: [TCTag] = []
 
     private var autoCompleteSources: [Surface: [String]] = [
         .creation: [
@@ -88,7 +88,19 @@ public class NLPService {
 
     private func tagsWithoutSynthetic(_ tags: [TCTag]) -> [TCTag] {
         return tags.filter { tag in
-            !tag.isSynthetic()
+            if !tag.isValid() {
+                return false
+            }
+            return !tag.isSynthetic()
+        }
+    }
+
+    public func appendTagsToCache(_ tags: [TCTag]) {
+        for tag in tags where
+            !tagsCache.contains(where: { $0.name == tag.name })
+        // swiftlint:disable:next opening_brace
+        {
+            tagsCache.append(tag)
         }
     }
 
@@ -100,11 +112,12 @@ public class NLPService {
         case .status:
             return autoCompleteSources[.status] ?? []
         case .withTag, .withoutTag:
-            tagsCache = SwiftDataService.shared.fetchAllTags()
+            let newTags = SwiftDataService.shared.fetchAllTags()
+            appendTagsToCache(newTags)
             if originalSurface != .filter {
                 return tagsWithoutSynthetic(tagsCache).map { $0.name }
             }
-            return tagsCache.map { $0.name }
+            return tagsCache.filter { $0.isValid() }.map { $0.name }
         default:
             return []
         }

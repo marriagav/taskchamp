@@ -42,9 +42,12 @@ public class TCTag: Codable, Equatable {
     public static func tagFactory(name: String) -> TCTag {
         let existingTag = SwiftDataService.shared.fetchTag(name: name)
         if let existingTag {
+            NLPService.shared.appendTagsToCache([existingTag])
             return existingTag
         }
-        return TCTag(name: name)
+        let tag = TCTag(name: name)
+        NLPService.shared.appendTagsToCache([tag])
+        return tag
     }
 
     public init(name: String) {
