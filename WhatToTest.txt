@@ -1,3 +1,3 @@
 Tags: add tags to tasks and filter by tags
-Comand line improvements: get suggestions and autocomplete when adding tasks
+CLI improvements: get suggestions and autocomplete when adding tasks
 Paywall: adding a one time payment for premium features and making the app free grandfathering all users who paid for the app, let me know if you see the paywall when you shouldn't
