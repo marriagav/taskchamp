@@ -11,8 +11,8 @@ extension EditTaskView {
 
     func handleObsidianTap() {
         do {
-            let obsidianVaultName: String? = UserDefaultsManager.standard.getValue(forKey: .obsidianVaultName)
-            let tasksFolderPath: String = UserDefaultsManager.standard.getValue(forKey: .tasksFolderPath) ?? ""
+            let obsidianVaultName: String? = UserDefaultsManager.shared.getValue(forKey: .obsidianVaultName)
+            let tasksFolderPath: String = UserDefaultsManager.shared.getValue(forKey: .tasksFolderPath) ?? ""
             if obsidianVaultName == nil || obsidianVaultName?.isEmpty ?? true {
                 isShowingObsidianSettings = true
                 return
@@ -21,6 +21,7 @@ extension EditTaskView {
                 globalState.isShowingPaywall = true
                 return
             }
+            // TODO: Fix obsidian note creation
             if task.hasNote {
                 let taskNoteWithPath = "\(tasksFolderPath)/\(task.obsidianNote ?? "")"
                 let urlString = "obsidian://open?vault=\(obsidianVaultName ?? "")&file=\(taskNoteWithPath)"

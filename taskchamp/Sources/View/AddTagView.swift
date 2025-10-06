@@ -126,7 +126,7 @@ public struct AddTagView: View, UseKeyboardToolbar {
                             }
                         }
                         .textCase(nil)
-                        .frame(minHeight: 150)
+                        .frame(minHeight: 300)
                         .padding()
                         .presentationCompactAdaptation(.popover)
                     }

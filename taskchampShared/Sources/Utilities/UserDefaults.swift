@@ -4,6 +4,7 @@ public enum TCUserDefaults: String {
     case selectedFilter
     case sortType
 
+    case taskNotesFolderPath
     case obsidianVaultName
     case tasksFolderPath
 
