@@ -22,7 +22,7 @@ struct TaskchampApp: App {
         WindowGroup {
             ContentView()
         }
-        // swiftlint:disable:next force_try
+        // swiftlint:disable:next force_unwrapping
         .modelContainer(swiftDataService.container!)
     }
 }
