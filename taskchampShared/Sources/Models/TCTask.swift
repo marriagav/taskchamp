@@ -1,6 +1,7 @@
 import Foundation
 import Taskchampion
 
+// swiftlint:disable:next type_body_length
 public struct TCTask: Codable, Hashable {
     public enum Status: String, Codable, CaseIterable {
         case pending
@@ -31,6 +32,7 @@ public struct TCTask: Codable, Hashable {
         case status
         case priority
         case due
+        case tags
     }
 
     // Helper to handle dynamic keys
@@ -69,6 +71,18 @@ public struct TCTask: Codable, Hashable {
             }
         }
 
+        if filter.didSetTags {
+            let tagsToInclude = filter.tagsToInclude
+            let tagsToExclude = filter.tagsToExclude
+            let rustTags = rustTask.get_tags().map { $0.get_value().toString }
+            for tag in tagsToInclude ?? [] where !rustTags.contains(where: { $0() == tag.name }) {
+                return nil
+            }
+            for tag in tagsToExclude ?? [] where rustTags.contains(where: { $0() == tag.name }) {
+                return nil
+            }
+        }
+
         return TCTask(from: rustTask)
     }
 
@@ -80,6 +94,7 @@ public struct TCTask: Codable, Hashable {
         let due = rustTask.get_due()?.toString()
         let project = rustTask.get_project()?.toString()
         let annotations = rustTask.get_annotations().map { $0.get_description().toString() }
+        let tags = rustTask.get_tags().map { TCTag(name: $0.get_value().toString()) }
 
         // Initialize
         self.uuid = uuid
@@ -100,6 +115,8 @@ public struct TCTask: Codable, Hashable {
             break
         }
         obsidianNote = obsidianNoteValue
+
+        self.tags = tags.isEmpty ? nil : tags
     }
 
     public init(from decoder: Decoder) throws {
@@ -115,6 +132,7 @@ public struct TCTask: Codable, Hashable {
         } else {
             due = nil
         }
+        tags = try container.decodeIfPresent([TCTag].self, forKey: .tags)
         // Decode dynamic keys for annotations
         let dynamicContainer = try decoder.container(keyedBy: DynamicCodingKey.self)
         var obsidianNoteValue: String?
@@ -138,6 +156,7 @@ public struct TCTask: Codable, Hashable {
         try container.encode(description, forKey: .description)
         try container.encode(status, forKey: .status)
         try container.encodeIfPresent(priority, forKey: .priority)
+        try container.encode(tags, forKey: .tags)
         if let due = due {
             let timeInterval = due.timeIntervalSince1970.rounded()
             try container.encode(String(timeInterval), forKey: .due)
@@ -171,7 +190,8 @@ public struct TCTask: Codable, Hashable {
         priority: Priority? = nil,
         due: Date? = nil,
         obsidianNote: String? = nil,
-        noteAnnotationKey: String? = nil
+        noteAnnotationKey: String? = nil,
+        tags: [TCTag]? = nil
     ) {
         self.uuid = uuid
         self.project = project
@@ -181,6 +201,7 @@ public struct TCTask: Codable, Hashable {
         self.due = due
         self.obsidianNote = obsidianNote
         self.noteAnnotationKey = noteAnnotationKey
+        self.tags = tags
     }
 
     public let uuid: String
@@ -191,6 +212,7 @@ public struct TCTask: Codable, Hashable {
     public var due: Date?
     public var obsidianNote: String?
     public var noteAnnotationKey: String?
+    public var tags: [TCTag]?
 
     public var obsidianNoteAnnotation: String? {
         guard let note = obsidianNote else {
@@ -209,6 +231,35 @@ public struct TCTask: Codable, Hashable {
             String(Int(Date().timeIntervalSince1970.rounded()))
         )
         return annotation
+    }
+
+    public var rustTags: [Tag?]? {
+        guard let tags, !tags.isEmpty else {
+            return nil
+        }
+        return tags.compactMap { tag in
+            if tag.isSynthetic() {
+                return nil
+            }
+            let rustTag = tag.rustTag
+            if rustTag?.is_synthetic() ?? false {
+                return nil
+            }
+            return rustTag
+        }
+    }
+
+    public var rustVecOfTags: RustVec<Tag>? {
+        guard let rustTags else {
+            return nil
+        }
+        let rustVec = RustVec<Tag>()
+        for tag in rustTags {
+            if let tag = tag {
+                rustVec.push(value: tag)
+            }
+        }
+        return rustVec
     }
 
     public var isCompleted: Bool {

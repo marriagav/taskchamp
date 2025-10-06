@@ -3,10 +3,13 @@ import SwiftUI
 import taskchampShared
 
 struct ObsidianSettingsView: View, UseKeyboardToolbar {
+    @Environment(StoreKitManager.self) var storeKit: StoreKitManager
     @Environment(\.dismiss) var dismiss
+
     @State private var obsidianVaultName = UserDefaultsManager.standard.getValue(forKey: .obsidianVaultName) ?? ""
     @State private var tasksFolderPath = UserDefaultsManager.standard.getValue(forKey: .tasksFolderPath) ?? ""
     @State private var showObsidianInfoPopover = false
+    @State private var showPaywall = false
 
     @FocusState private var focusedField: FormField?
     enum FormField {
@@ -94,6 +97,10 @@ struct ObsidianSettingsView: View, UseKeyboardToolbar {
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
+                        if !storeKit.hasPremiumAccess() {
+                            showPaywall = true
+                            return
+                        }
                         UserDefaultsManager.standard.set(value: obsidianVaultName, forKey: .obsidianVaultName)
                         if tasksFolderPath.last == "/" {
                             tasksFolderPath = String(tasksFolderPath.dropLast(1))
@@ -103,7 +110,7 @@ struct ObsidianSettingsView: View, UseKeyboardToolbar {
                     }
                 }
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button("Back") {
                         dismiss()
                     }
                 }
@@ -120,6 +127,9 @@ struct ObsidianSettingsView: View, UseKeyboardToolbar {
                         }
                     )
                 }
+            }
+            .navigationDestination(isPresented: $showPaywall) {
+                TCPaywall()
             }
             .navigationTitle("Obsidian Settings")
         }

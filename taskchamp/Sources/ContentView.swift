@@ -2,13 +2,15 @@ import SwiftUI
 import taskchampShared
 
 @Observable
-class GlobalState: ObservableObject {
+class GlobalState {
     var isSyncingTasks = true
+    var isShowingPaywall = false
 }
 
 public struct ContentView: View {
     @State private var pathStore = PathStore()
     @State private var globalState = GlobalState()
+    @State private var storeKit = StoreKitManager()
 
     @State private var isShowingAlert = false
     @State private var selectedFilter: TCFilter = .defaultFilter
@@ -84,6 +86,7 @@ public struct ContentView: View {
         }
         .task {
             globalState.isSyncingTasks = true
+            try? await storeKit.onAppInitialization()
             selectedSyncType = getSelectedSyncType()
             guard let selectedSyncType = selectedSyncType else {
                 isShowingSyncServiceModal = true
@@ -119,6 +122,11 @@ public struct ContentView: View {
                 dismissButton: .default(Text("OK"))
             )
         }
+        .sheet(isPresented: $globalState.isShowingPaywall) {
+            TCPaywall()
+                .environment(storeKit)
+        }
+        .environment(storeKit)
     }
 }
 

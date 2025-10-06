@@ -1,10 +1,175 @@
 import Foundation
 import SoulverCore
+import SwiftData
 
 public class NLPService {
+    public enum Surface: String {
+        case creation
+        case filter
+        case prio = "prio:"
+        case status = "status:"
+        case withTag = "+"
+        case withoutTag = "-"
+    }
+
     public static let shared = NLPService()
 
     private init() {}
+
+    private var tagsCache: [String] = []
+
+    public var container: ModelContainer?
+
+    private var autoCompleteSources: [Surface: [String]] = [
+        .creation: [
+            "prio:",
+            "project:",
+            "due:",
+            "+"
+        ],
+        .filter: [
+            "prio:",
+            "project:",
+            "status:",
+            "+",
+            "-"
+        ],
+        .prio: [
+            "H",
+            "M",
+            "L"
+        ],
+        .status: [
+            "pending",
+            "completed",
+            "deleted"
+        ]
+    ]
+
+    public func getAutoCompletedString(for text: String, suggestion: String) -> String {
+        let endsWithSpace = text.hasSuffix(" ")
+        if endsWithSpace {
+            return text + suggestion
+        }
+        let lastWord = text.split(separator: " ").last ?? ""
+
+        if let surface = Surface(rawValue: String(lastWord)) {
+            _ = surface
+            return text + suggestion
+        }
+
+        if containsTag(text) && !isTag(suggestion) {
+            let firstChar = lastWord.first.map { String($0) } ?? ""
+            if firstChar == "+" || firstChar == "-" {
+                let prefix = text.dropLast(lastWord.count)
+                let first = prefix + firstChar + suggestion
+                return first + " "
+            }
+        }
+
+        let prefix = text.dropLast(lastWord.count)
+        return prefix + suggestion
+    }
+
+    private func isTag(_ source: String) -> Bool {
+        return source == "+" || source == "-"
+    }
+
+    private func containsTag(_ input: String) -> Bool {
+        return input.contains("+") || input.contains("-")
+    }
+
+    private func autoCompleteSourcesNotAlreadyInInput(_ input: String, surface: Surface) -> [String] {
+        return (autoCompleteSources[surface] ?? []).filter {
+            if isTag($0) {
+                return true
+            }
+            return !input.contains($0)
+        }
+    }
+
+    private func tagsWithoutSynthetic(_ tags: [String]) -> [String] {
+        return tags.filter { tagName in
+            let tag = TCTag(name: tagName)
+            return !tag.isSynthetic()
+        }
+    }
+
+    @MainActor
+    private func autoCompleteForKeywords(lastWord: Surface, originalSurface: Surface) -> [String] {
+        switch lastWord {
+        case .prio:
+            return autoCompleteSources[.prio] ?? []
+        case .status:
+            return autoCompleteSources[.status] ?? []
+        case .withTag, .withoutTag:
+            if tagsCache.isEmpty {
+                tagsCache = fetchTags()
+            }
+            if originalSurface != .filter {
+                return tagsWithoutSynthetic(tagsCache)
+            }
+            return tagsCache
+        default:
+            return []
+        }
+    }
+
+    @MainActor
+    private func fetchTags() -> [String] {
+        do {
+            guard let container else { return [] }
+            let context = container.mainContext
+            let descriptor = FetchDescriptor<TCTag>()
+            let tags = try context.fetch(descriptor)
+            return tags.map { $0.name }
+        } catch {
+            return []
+        }
+    }
+
+    @MainActor
+    public func autoCompleteSuggestions(for input: String, surface: Surface) -> [String] {
+        if input.isEmpty, surface != .creation {
+            return autoCompleteSources[surface] ?? []
+        }
+        let endsWithSpace = input.hasSuffix(" ")
+
+        if endsWithSpace {
+            return autoCompleteSourcesNotAlreadyInInput(input, surface: surface)
+        }
+
+        let lastWord = input.split(separator: " ").last ?? ""
+
+        if let newSurface = Surface(rawValue: String(lastWord)) {
+            return autoCompleteForKeywords(lastWord: newSurface, originalSurface: surface)
+        }
+
+        if containsTag(input) {
+            var tagToFilter = tagsCache
+            if surface != .filter {
+                tagToFilter = tagsWithoutSynthetic(tagsCache)
+            }
+            let tagNames = tagToFilter.filter {
+                let lastWordWithoutSymbol = lastWord.dropFirst()
+                return $0.contains(lastWordWithoutSymbol)
+            }
+            return tagNames
+        }
+
+        let trimmedInput = lastWord.trimmingCharacters(in: .whitespaces)
+        guard !trimmedInput.isEmpty else { return [] }
+
+        var suggestions: [String] = []
+
+        for source in autoCompleteSourcesNotAlreadyInInput(input, surface: surface) {
+            if source.hasPrefix(trimmedInput), source != trimmedInput {
+                suggestions.append(source)
+            }
+        }
+
+        return suggestions
+    }
 
     public func createTask(from input: String) -> TCTask {
         var task = TCTask(
@@ -31,6 +196,20 @@ public class NLPService {
         // Check for and extract due
         if remainingString.range(of: "due:") != nil {
             task.due = extractValue(after: "due:", from: &remainingString)?.dateValue
+        }
+
+        // Check for and extract tags
+        while remainingString.range(of: "+") != nil {
+            let tagValue = extractValue(after: "+", from: &remainingString)
+            if let tagValue, !tagValue.isEmpty {
+                if task.tags == nil {
+                    task.tags = []
+                }
+                if task.tags?.contains(where: { $0.name == tagValue }) ?? false {
+                    continue
+                }
+                task.tags?.append(TCTag(name: tagValue))
+            }
         }
 
         // The remaining string is the description
@@ -67,11 +246,27 @@ public class NLPService {
             filter.setStatus(TCTask.Status(rawValue: status ?? "pending"))
         }
 
+        // Check for and extract tags
+        while remainingString.range(of: "+") != nil {
+            let tagValue = extractValue(after: "+", from: &remainingString)
+            if let tagValue, !tagValue.isEmpty {
+                filter.setTag(tagValue, forInclusion: true)
+            }
+        }
+
+        // Check for and extract negative tags
+        while remainingString.range(of: "-") != nil {
+            let tagValue = extractValue(after: "-", from: &remainingString)
+            if let tagValue, !tagValue.isEmpty {
+                filter.setTag(tagValue, forInclusion: false)
+            }
+        }
+
         return filter
     }
 
     func extractValue(after tag: String, from input: inout String, isFilter: Bool = false) -> String? {
-        let regex = isFilter ? "\\s+(prio:|project:|due:|status:)" : "\\s+(prio:|project:|due:)"
+        let regex = isFilter ? "\\s+(prio:|project:|due:|status:)" : "\\s+(prio:|project:|due:|\\+)"
         if let range = input.range(of: tag) {
             let substring = input[range.upperBound...]
             if let nextTagRange = substring.range(

@@ -2,12 +2,14 @@ import SwiftUI
 import taskchampShared
 
 public struct EditTaskView: View, UseKeyboardToolbar {
+    @Environment(StoreKitManager.self) var storeKit: StoreKitManager
     @State var task: TCTask
 
     @Environment(\.dismiss) var dismiss
     @Environment(GlobalState.self) var globalState: GlobalState
 
     @State var project = ""
+    @State var tags: [TCTag] = []
     @State var description = ""
     @State var status: TCTask.Status = .pending
     @State var priority: TCTask.Priority = .none
@@ -20,6 +22,7 @@ public struct EditTaskView: View, UseKeyboardToolbar {
     @State var due: Date = .init()
     @State var time: Date = .init()
 
+    @State private var showTagPopover = false
     @State var isShowingAlert = false
     @State var isShowingObsidianSettings = false
     @State var alertTitle = ""
@@ -39,7 +42,8 @@ public struct EditTaskView: View, UseKeyboardToolbar {
             task.due != Calendar.current.mergeDateWithTime(
                 date: didSetDate ? due : nil,
                 time: didSetTime ? time : nil
-            )
+            ) ||
+            task.tags ?? [] != tags
     }
 
     init(task: TCTask) {
@@ -47,6 +51,7 @@ public struct EditTaskView: View, UseKeyboardToolbar {
         project = task.project ?? ""
         status = task.status
         priority = task.priority ?? .none
+        tags = task.tags ?? []
         if let due = task.due {
             didSetDate = true
             didSetTime = true
@@ -122,6 +127,9 @@ public struct EditTaskView: View, UseKeyboardToolbar {
                             Text(priority.rawValue.capitalized)
                         }
                     }
+                }
+                AddTagButton(tags: $tags) {
+                    showTagPopover = true
                 }
             }
             Section {
@@ -217,6 +225,11 @@ public struct EditTaskView: View, UseKeyboardToolbar {
         }
         .sheet(isPresented: $isShowingObsidianSettings) {
             ObsidianSettingsView()
+        }
+        .sheet(isPresented: $showTagPopover) {
+            NavigationStack {
+                AddTagView(selectedTags: $tags)
+            }
         }
         .navigationTitle(description)
     }
