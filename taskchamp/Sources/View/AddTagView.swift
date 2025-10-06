@@ -93,7 +93,7 @@ public struct AddTagView: View, UseKeyboardToolbar {
                                 isShowingAlert = true
                                 return
                             }
-                            let newTag = TCTag(name: input)
+                            let newTag = TCTag.tagFactory(name: input)
                             if !onTapTagShared(tag: newTag) {
                                 return
                             }

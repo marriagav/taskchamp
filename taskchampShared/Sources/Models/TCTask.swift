@@ -49,6 +49,7 @@ public struct TCTask: Codable, Hashable {
         }
     }
 
+    @MainActor
     public static func taskFactory(from rustTask: TaskRef, withFilter filter: TCFilter) -> TCTask? {
         let prio = rustTask.get_priority().toString()
         if filter.didSetPrio {
@@ -86,6 +87,7 @@ public struct TCTask: Codable, Hashable {
         return TCTask(from: rustTask)
     }
 
+    @MainActor
     public init(from rustTask: TaskRef) {
         let uuid = rustTask.get_uuid().to_string().toString()
         let description = rustTask.get_description().toString()
@@ -94,7 +96,7 @@ public struct TCTask: Codable, Hashable {
         let due = rustTask.get_due()?.toString()
         let project = rustTask.get_project()?.toString()
         let annotations = rustTask.get_annotations().map { $0.get_description().toString() }
-        let tags = rustTask.get_tags().map { TCTag(name: $0.get_value().toString()) }
+        let tags = rustTask.get_tags().map { TCTag.tagFactory(name: $0.get_value().toString()) }
 
         // Initialize
         self.uuid = uuid

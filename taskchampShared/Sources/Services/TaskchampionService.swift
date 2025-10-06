@@ -116,6 +116,7 @@ public class TaskchampionService {
         try await currentTask?.value
     }
 
+    @MainActor
     public func getTasks(
         sortType: TasksHelper.TCSortType = .defaultSort,
         filter: TCFilter = TCFilter.defaultFilter
@@ -146,6 +147,7 @@ public class TaskchampionService {
         return taskObjects
     }
 
+    @MainActor
     public func getPendingTasks() throws -> [TCTask] {
         guard let replica else {
             throw TCError.genericError("Database not set")
@@ -158,6 +160,7 @@ public class TaskchampionService {
         return tasks.map { TCTask(from: $0) }
     }
 
+    @MainActor
     public func getTask(uuid: String) throws -> TCTask {
         guard let replica else {
             throw TCError.genericError("Database not set")
@@ -169,6 +172,7 @@ public class TaskchampionService {
         return TCTask(from: task)
     }
 
+    @MainActor
     public func togglePendingTasksStatus(uuids: Set<String>, onSync: @escaping () -> Void = {}) throws {
         for uuid in uuids {
             let task = try getTask(uuid: uuid)
@@ -189,6 +193,7 @@ public class TaskchampionService {
         }
     }
 
+    @MainActor
     public func updatePendingTasks(
         _ uuids: Set<String>,
         withStatus newStatus: TCTask.Status,

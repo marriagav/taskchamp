@@ -16,9 +16,7 @@ public class NLPService {
 
     private init() {}
 
-    private var tagsCache: [String] = []
-
-    public var container: ModelContainer?
+    private var tagsCache: [TCTag] = []
 
     private var autoCompleteSources: [Surface: [String]] = [
         .creation: [
@@ -88,10 +86,9 @@ public class NLPService {
         }
     }
 
-    private func tagsWithoutSynthetic(_ tags: [String]) -> [String] {
-        return tags.filter { tagName in
-            let tag = TCTag(name: tagName)
-            return !tag.isSynthetic()
+    private func tagsWithoutSynthetic(_ tags: [TCTag]) -> [TCTag] {
+        return tags.filter { tag in
+            !tag.isSynthetic()
         }
     }
 
@@ -103,27 +100,12 @@ public class NLPService {
         case .status:
             return autoCompleteSources[.status] ?? []
         case .withTag, .withoutTag:
-            if tagsCache.isEmpty {
-                tagsCache = fetchTags()
-            }
+            tagsCache = SwiftDataService.shared.fetchAllTags()
             if originalSurface != .filter {
-                return tagsWithoutSynthetic(tagsCache)
+                return tagsWithoutSynthetic(tagsCache).map { $0.name }
             }
-            return tagsCache
+            return tagsCache.map { $0.name }
         default:
-            return []
-        }
-    }
-
-    @MainActor
-    private func fetchTags() -> [String] {
-        do {
-            guard let container else { return [] }
-            let context = container.mainContext
-            let descriptor = FetchDescriptor<TCTag>()
-            let tags = try context.fetch(descriptor)
-            return tags.map { $0.name }
-        } catch {
             return []
         }
     }
@@ -152,8 +134,9 @@ public class NLPService {
             }
             let tagNames = tagToFilter.filter {
                 let lastWordWithoutSymbol = lastWord.dropFirst()
-                return $0.contains(lastWordWithoutSymbol)
+                return $0.name.contains(lastWordWithoutSymbol)
             }
+            .map { $0.name }
             return tagNames
         }
 
@@ -171,6 +154,7 @@ public class NLPService {
         return suggestions
     }
 
+    @MainActor
     public func createTask(from input: String) -> TCTask {
         var task = TCTask(
             uuid: UUID().uuidString,
@@ -208,7 +192,7 @@ public class NLPService {
                 if task.tags?.contains(where: { $0.name == tagValue }) ?? false {
                     continue
                 }
-                task.tags?.append(TCTag(name: tagValue))
+                task.tags?.append(TCTag.tagFactory(name: tagValue))
             }
         }
 
@@ -218,6 +202,7 @@ public class NLPService {
         return task
     }
 
+    @MainActor
     public func createFilter(from input: String) -> TCFilter {
         let filter = TCFilter(
             fullDescription: input
@@ -266,7 +251,7 @@ public class NLPService {
     }
 
     func extractValue(after tag: String, from input: inout String, isFilter: Bool = false) -> String? {
-        let regex = isFilter ? "\\s+(prio:|project:|due:|status:)" : "\\s+(prio:|project:|due:|\\+)"
+        let regex = isFilter ? "\\s+(prio:|project:|due:|status:|\\+|\\-)" : "\\s+(prio:|project:|due:|\\+|\\-)"
         if let range = input.range(of: tag) {
             let substring = input[range.upperBound...]
             if let nextTagRange = substring.range(

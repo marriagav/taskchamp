@@ -14,6 +14,7 @@ struct CompleteTaskIntent: AppIntent {
 
     init() {}
 
+    @MainActor
     func perform() async throws -> some IntentResult {
         let destinationPath = try FileService.shared.getDestinationPathForLocalReplica()
         try TaskchampionService.shared.setDbUrl(path: destinationPath)

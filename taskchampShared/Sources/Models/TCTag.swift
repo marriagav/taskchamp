@@ -38,6 +38,15 @@ public class TCTag: Codable, Equatable {
 
     public var excludedFromFilters: [TCFilter]?
 
+    @MainActor
+    public static func tagFactory(name: String) -> TCTag {
+        let existingTag = SwiftDataService.shared.fetchTag(name: name)
+        if let existingTag {
+            return existingTag
+        }
+        return TCTag(name: name)
+    }
+
     public init(name: String) {
         self.name = name
         includedInFilters = []

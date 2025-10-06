@@ -77,6 +77,7 @@ public class TCFilter: Codable {
         }
     }
 
+    @MainActor
     public func setTag(_ tagName: String, forInclusion: Bool = true) {
         var dataset = forInclusion ? tagsToInclude : tagsToExclude
         if dataset == nil {
@@ -91,7 +92,7 @@ public class TCFilter: Codable {
         if dataset.contains(where: { $0.name == tagName }) {
             return
         }
-        let tag = TCTag(name: tagName)
+        let tag = TCTag.tagFactory(name: tagName)
         dataset.append(tag)
         if forInclusion {
             tagsToInclude = dataset
