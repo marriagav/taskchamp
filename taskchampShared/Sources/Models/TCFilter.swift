@@ -30,17 +30,22 @@ public class TCFilter: Codable {
     public var priority = TCTask.Priority.none
     public var due = Date(timeIntervalSince1970: 0)
 
+    @Relationship(deleteRule: .noAction, inverse: \TCTag.includedInFilters) public var tagsToInclude: [TCTag]?
+
+    @Relationship(deleteRule: .noAction, inverse: \TCTag.excludedFromFilters) public var tagsToExclude: [TCTag]?
+
     public var didSetPrio: Bool = false
     public var didSetProject: Bool = false
     public var didSetDue: Bool = false
     public var didSetStatus: Bool = false
+    public var didSetTags: Bool = false
 
     public var realDue: Date? {
         return didSetDue ? due : nil
     }
 
     public var isValidFilter: Bool {
-        return didSetPrio || didSetProject || didSetDue || didSetStatus
+        return didSetPrio || didSetProject || didSetDue || didSetStatus || didSetTags
     }
 
     public func setPrio(_ prio: TCTask.Priority?) {
@@ -72,6 +77,30 @@ public class TCFilter: Codable {
         }
     }
 
+    public func setTag(_ tagName: String, forInclusion: Bool = true) {
+        var dataset = forInclusion ? tagsToInclude : tagsToExclude
+        if dataset == nil {
+            dataset = []
+        }
+        guard var dataset = dataset else {
+            return
+        }
+        if dataset.isEmpty {
+            dataset = []
+        }
+        if dataset.contains(where: { $0.name == tagName }) {
+            return
+        }
+        let tag = TCTag(name: tagName)
+        dataset.append(tag)
+        if forInclusion {
+            tagsToInclude = dataset
+        } else {
+            tagsToExclude = dataset
+        }
+        didSetTags = true
+    }
+
     init(
         fullDescription: String = "",
         project: String = "",
@@ -97,6 +126,9 @@ public class TCFilter: Codable {
         case didSetProject
         case didSetDue
         case didSetStatus
+        case didSetTags
+        case tagsToInclude
+        case tagsToExclude
     }
 
     public required init(from decoder: Decoder) throws {
@@ -111,6 +143,13 @@ public class TCFilter: Codable {
         didSetProject = try container.decode(Bool.self, forKey: .didSetProject)
         didSetDue = try container.decode(Bool.self, forKey: .didSetDue)
         didSetStatus = try container.decode(Bool.self, forKey: .didSetStatus)
+        didSetTags = try container.decode(Bool.self, forKey: .didSetTags)
+        tagsToInclude = try container.decode(
+            [TCTag].self,
+            forKey: .
+                tagsToInclude
+        )
+        tagsToExclude = try container.decode([TCTag].self, forKey: .tagsToExclude)
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -125,5 +164,8 @@ public class TCFilter: Codable {
         try container.encode(didSetProject, forKey: .didSetProject)
         try container.encode(didSetDue, forKey: .didSetDue)
         try container.encode(didSetStatus, forKey: .didSetStatus)
+        try container.encode(didSetTags, forKey: .didSetTags)
+        try container.encode(tagsToInclude, forKey: .tagsToInclude)
+        try container.encode(tagsToExclude, forKey: .tagsToExclude)
     }
 }

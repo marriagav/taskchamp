@@ -47,7 +47,7 @@ public struct SyncServiceView: View {
             }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Close") {
+                    Button("Back") {
                         isShowingSyncServiceModal = false
                     }
                 }

@@ -88,6 +88,7 @@ extension EditTaskView {
         let date: Date? = didSetDate ? due : nil
         let time: Date? = didSetTime ? time : nil
         let finalDate = Calendar.current.mergeDateWithTime(date: date, time: time)
+        let tags = tags.isEmpty ? nil : tags
 
         let task = TCTask(
             uuid: task.uuid,
@@ -95,7 +96,8 @@ extension EditTaskView {
             description: description,
             status: status,
             priority: priority == .none ? nil : priority,
-            due: finalDate
+            due: finalDate,
+            tags: tags,
         )
 
         do {

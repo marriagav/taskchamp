@@ -1,16 +1,19 @@
 import SwiftUI
 import taskchampShared
 
+// swiftlint:disable:next type_body_length
 public struct CreateTaskView: View, UseKeyboardToolbar {
     @Environment(\.dismiss) var dismiss
     @Environment(StoreKitManager.self) var storeKit: StoreKitManager
     @Environment(GlobalState.self) var globalState: GlobalState
 
     @State private var nlpInput = ""
-    @State private var nlpPlaceholder = "New Task due:tomorrow at 1pm project:my-project prio:M"
+    @State private var nlpPlaceholder =
+        "New Task due:tomorrow at 1pm project:my-project prio:M +my-tag"
     @State private var showNlpInfoPopover = false
 
     @State private var project = ""
+    @State private var tags: [TCTag] = []
     @State private var description = ""
     @State private var status: TCTask.Status = .pending
     @State private var priority: TCTask.Priority = .none
@@ -24,6 +27,7 @@ public struct CreateTaskView: View, UseKeyboardToolbar {
     @State private var time: Date = .init()
 
     @State private var showPaywall = false
+    @State private var showTagPopover = false
     @State private var isShowingAlert = false
     @State private var alertTitle = ""
     @State private var alertMessage = ""
@@ -80,6 +84,7 @@ public struct CreateTaskView: View, UseKeyboardToolbar {
                             self.description = nlpTask.description
                             self.project = nlpTask.project ?? ""
                             self.priority = nlpTask.priority ?? .none
+                            self.tags = nlpTask.tags ?? []
                             if let due = nlpTask.due {
                                 didSetDate = true
                                 didSetTime = true
@@ -98,7 +103,7 @@ public struct CreateTaskView: View, UseKeyboardToolbar {
                                 time = .init()
                             }
                         }
-                        .onAppear {
+                        .onFirstAppear {
                             focusedField = .nlp
                         }
                 } header: {
@@ -167,6 +172,9 @@ public struct CreateTaskView: View, UseKeyboardToolbar {
                             }
                         }
                     }
+                    AddTagButton(tags: $tags) {
+                        showTagPopover = true
+                    }
                 }
             }.toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -175,6 +183,11 @@ public struct CreateTaskView: View, UseKeyboardToolbar {
                             isShowingAlert = true
                             alertTitle = "Missing field"
                             alertMessage = "Please enter a task name"
+                            return
+                        }
+
+                        if !storeKit.hasPremiumAccess() && !tags.isEmpty {
+                            showPaywall = true
                             return
                         }
 
@@ -188,7 +201,8 @@ public struct CreateTaskView: View, UseKeyboardToolbar {
                             description: description,
                             status: status,
                             priority: priority == .none ? nil : priority,
-                            due: finalDate
+                            due: finalDate,
+                            tags: tags.isEmpty ? nil : tags
                         )
 
                         do {
@@ -223,8 +237,17 @@ public struct CreateTaskView: View, UseKeyboardToolbar {
                         },
                         onDismiss: {
                             onDismissKeyboard()
+                        },
+                        skipNextAndPrevious: { return focusedField == .nlp }
+                        // swiftlint:disable:next multiple_closures_with_trailing_closure
+                    ) {
+                        if focusedField == .nlp {
+                            AutocompleteBarView(
+                                text: $nlpInput,
+                                surface: .creation
+                            )
                         }
-                    )
+                    }
                 }
             }
             .onChange(
@@ -257,6 +280,9 @@ public struct CreateTaskView: View, UseKeyboardToolbar {
             }
             .navigationDestination(isPresented: $showPaywall) {
                 TCPaywall()
+            }
+            .navigationDestination(isPresented: $showTagPopover) {
+                AddTagView(selectedTags: $tags)
             }
             .navigationTitle("New Task")
             .navigationBarTitleDisplayMode(.inline)

@@ -45,43 +45,7 @@
     "_timeRate" : 0
   },
   "subscriptionGroups" : [
-    {
-      "id" : "5E2EC388",
-      "localizations" : [
 
-      ],
-      "name" : "Cloud Group",
-      "subscriptions" : [
-        {
-          "adHocOffers" : [
-
-          ],
-          "codeOffers" : [
-
-          ],
-          "displayPrice" : "0.99",
-          "familyShareable" : false,
-          "groupNumber" : 1,
-          "internalID" : "BB82CEA3",
-          "introductoryOffer" : null,
-          "localizations" : [
-            {
-              "description" : "A Taskchampion hosted server for syncing your tasks",
-              "displayName" : "Taskchamp Cloud",
-              "locale" : "en_US"
-            }
-          ],
-          "productID" : "cloud.com.mav.taskchamp",
-          "recurringSubscriptionPeriod" : "P1M",
-          "referenceName" : "Taskchamp Cloud",
-          "subscriptionGroupID" : "5E2EC388",
-          "type" : "RecurringSubscription",
-          "winbackOffers" : [
-
-          ]
-        }
-      ]
-    }
   ],
   "version" : {
     "major" : 4,

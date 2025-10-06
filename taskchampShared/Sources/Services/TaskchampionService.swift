@@ -227,13 +227,14 @@ public class TaskchampionService {
             task.priority?.rawValue.intoRustString(),
             task.project?.intoRustString(),
             task.status.rawValue.intoRustString(),
-            annotations
+            annotations,
+            task.rustVecOfTags
         )
         if task == nil {
             throw TCError.genericError("Failed to update task")
         }
 
-        replica.sync_no_server() // rebuild the working set
+        _ = replica.sync_no_server() // rebuild the working set
 
         if skipSync {
             return
@@ -255,18 +256,20 @@ public class TaskchampionService {
             .intoRustString()
         let due = task.due?.timeIntervalSince1970.rounded()
         let dueString = due != nil ? String(Int(due ?? 0)) : nil
+
         let task = replica.create_task(
             task.uuid.intoRustString(),
             task.description.intoRustString(),
             dueString?.intoRustString(),
             priority,
-            task.project?.intoRustString()
+            task.project?.intoRustString(),
+            task.rustVecOfTags,
         )
         if task == nil {
             throw TCError.genericError("Failed to create task")
         }
 
-        replica.sync_no_server() // rebuild the working set
+        _ = replica.sync_no_server() // rebuild the working set
 
         _Concurrency.Task.detached {
             try? await self.sync {

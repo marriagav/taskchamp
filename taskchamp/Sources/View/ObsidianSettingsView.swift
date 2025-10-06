@@ -110,7 +110,7 @@ struct ObsidianSettingsView: View, UseKeyboardToolbar {
                     }
                 }
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button("Back") {
                         dismiss()
                     }
                 }
