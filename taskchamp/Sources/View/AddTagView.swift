@@ -76,7 +76,7 @@ public struct AddTagView: View, UseKeyboardToolbar {
     public var body: some View {
         Form {
             Section {
-                TextField("my-new-tag", text: $input)
+                TextField("newtag", text: $input)
                     .font(.system(.body, design: .monospaced))
                     .autocapitalization(.none)
                     .autocorrectionDisabled()
