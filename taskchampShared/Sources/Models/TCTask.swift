@@ -204,6 +204,9 @@ public struct TCTask: Codable, Hashable {
         self.obsidianNote = obsidianNote
         self.noteAnnotationKey = noteAnnotationKey
         self.tags = tags
+        if let tags {
+            NLPService.shared.appendTagsToCache(tags)
+        }
     }
 
     public let uuid: String

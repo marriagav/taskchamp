@@ -205,7 +205,7 @@ public class NLPService {
                 if task.tags?.contains(where: { $0.name == tagValue }) ?? false {
                     continue
                 }
-                task.tags?.append(TCTag.tagFactory(name: tagValue))
+                task.tags?.append(TCTag.tagFactory(name: tagValue, addToCache: false))
             }
         }
 

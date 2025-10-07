@@ -194,6 +194,5 @@ public class FileService {
             UserDefaultsManager.shared.set(value: vault, forKey: .obsidianVaultName)
             UserDefaultsManager.shared.set(value: subpath, forKey: .tasksFolderPath)
         }
-
     }
 }

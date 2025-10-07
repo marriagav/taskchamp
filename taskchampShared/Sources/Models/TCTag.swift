@@ -39,14 +39,16 @@ public class TCTag: Codable, Equatable {
     public var excludedFromFilters: [TCFilter]?
 
     @MainActor
-    public static func tagFactory(name: String) -> TCTag {
+    public static func tagFactory(name: String, addToCache: Bool = true) -> TCTag {
         let existingTag = SwiftDataService.shared.fetchTag(name: name)
         if let existingTag {
             NLPService.shared.appendTagsToCache([existingTag])
             return existingTag
         }
         let tag = TCTag(name: name)
-        NLPService.shared.appendTagsToCache([tag])
+        if addToCache {
+            NLPService.shared.appendTagsToCache([tag])
+        }
         return tag
     }
 
