@@ -3,18 +3,21 @@ import taskchampShared
 import WidgetKit
 
 struct Provider: TimelineProvider {
+    @MainActor
     func placeholder(in _: Context) -> TaskEntry {
         let tasks = getTasks()
         let entry = TaskEntry(date: Date(), tasks: tasks)
         return entry
     }
 
+    @MainActor
     func getSnapshot(in _: Context, completion: @escaping (TaskEntry) -> Void) {
         let tasks = getTasks()
         let entry = TaskEntry(date: Date(), tasks: tasks)
         completion(entry)
     }
 
+    @MainActor
     func getTimeline(in _: Context, completion: @escaping (Timeline<TaskEntry>) -> Void) {
         let tasks = getTasks()
         let entry = TaskEntry(date: Date(), tasks: tasks)
@@ -22,6 +25,7 @@ struct Provider: TimelineProvider {
         completion(timeline)
     }
 
+    @MainActor
     func getTasks() -> [TCTask] {
         do {
             let localReplicaPath = try FileService.shared.getDestinationPathForLocalReplica()

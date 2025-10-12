@@ -171,4 +171,28 @@ public class FileService {
         let url = URL(fileURLWithPath: path)
         return url.lastPathComponent
     }
+
+    public func saveObsidianSettings(url: URL?) throws {
+        guard let url else {
+            UserDefaultsManager.shared.set(value: "", forKey: .taskNotesFolderPath)
+            UserDefaultsManager.shared.set(value: "", forKey: .obsidianVaultName)
+            UserDefaultsManager.shared.set(value: "", forKey: .tasksFolderPath)
+            return
+        }
+
+        UserDefaultsManager.shared.set(value: url.path, forKey: .taskNotesFolderPath)
+
+        let components = url.pathComponents
+
+        let hasObsidian = components.contains { $0.localizedCaseInsensitiveContains("obsidian") }
+
+        if hasObsidian, let documentsIndex = components.firstIndex(of: "Documents") {
+            let vault = components[documentsIndex + 1]
+            let remaining = components.suffix(from: documentsIndex + 2)
+            let subpath = remaining.joined(separator: "/")
+
+            UserDefaultsManager.shared.set(value: vault, forKey: .obsidianVaultName)
+            UserDefaultsManager.shared.set(value: subpath, forKey: .tasksFolderPath)
+        }
+    }
 }

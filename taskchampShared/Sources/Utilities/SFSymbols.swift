@@ -15,6 +15,7 @@ public enum SFSymbols: String {
     case questionmarkCircle = "questionmark.circle"
     case backArrow = "arrow.counterclockwise"
     case obsidian = "suit.diamond.fill"
+    case obsidianNoFill = "suit.diamond"
     case obsidianCreate = "plus.diamond.fill"
     case obsidianOpen = "diamond.fill"
     case cloud
@@ -22,4 +23,9 @@ public enum SFSymbols: String {
     case folder
     case chevronUp = "chevron.up"
     case chevronDown = "chevron.down"
+    case crown
+    case terminal = "apple.terminal"
+    case bolt
+    case cloudCheck = "checkmark.icloud"
+    case tag
 }

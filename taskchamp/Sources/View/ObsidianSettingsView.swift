@@ -2,11 +2,41 @@ import Foundation
 import SwiftUI
 import taskchampShared
 
-struct ObsidianSettingsView: View, UseKeyboardToolbar {
+struct ObsidianSettingsView: View {
+    @Environment(StoreKitManager.self) var storeKit: StoreKitManager
     @Environment(\.dismiss) var dismiss
-    @State private var obsidianVaultName = UserDefaultsManager.standard.getValue(forKey: .obsidianVaultName) ?? ""
-    @State private var tasksFolderPath = UserDefaultsManager.standard.getValue(forKey: .tasksFolderPath) ?? ""
+
     @State private var showObsidianInfoPopover = false
+    @State var isImportingFile = false
+
+    @State private var url: URL?
+
+    @State private var didUpdate = false
+
+    @State private var isShowingAlert = false
+
+    var placeHolder: String {
+        if let url {
+            return url.path
+        }
+        if let taskNotesFolderPath: String = UserDefaultsManager.shared.getValue(forKey: .taskNotesFolderPath) {
+            return taskNotesFolderPath
+        }
+        return "Select Notes Folder"
+    }
+
+    func onFileImportWithResult(_ result: Result<[URL], Error>) {
+        switch result {
+        case let .success(urls):
+            guard let url = urls.first else {
+                return
+            }
+            self.url = url
+            didUpdate = true
+        case .failure:
+            isShowingAlert = true
+        }
+    }
 
     @FocusState private var focusedField: FormField?
     enum FormField {
@@ -46,7 +76,7 @@ struct ObsidianSettingsView: View, UseKeyboardToolbar {
                 Section {
                     Text(
                         "Taskchamp can create task notes in Obsidian." +
-                            "\n\nEnter the following case-sensitive details to enable this feature."
+                            "\n\nSelect the folder where you want to store your markdown notes to enable this feature."
                     )
                     .bold()
                     .foregroundStyle(.secondary)
@@ -61,49 +91,48 @@ struct ObsidianSettingsView: View, UseKeyboardToolbar {
                             VStack(alignment: .leading, spacing: 10) {
                                 Text(
                                     // swiftlint:disable:next line_length
-                                    "If you don't have an Obsidian vault, you can create one by downloading the Obsidian app."
+                                    "It is recommended to select an Obsidian directory, inside of a vault. But it is possible to select any folder on your device."
                                 )
-                                .padding(.top)
-                                Text("Vault name:")
-                                    .bold()
-                                Text("The name of your Obsidian vault")
-                                    .padding(.bottom)
-                                Text("Tasks Folder Relative Path:")
-                                    .bold()
-                                Text(
-                                    // swiftlint:disable:next line_length
-                                    "The relative path where you want to store your task notes in your Obsidian vault, this must be an existing folder, leave empty to store them in the root of the vault."
-                                )
+                                .frame(minHeight: 100)
                             }
                         }
                         .textCase(nil)
-                        .frame(minHeight: 300)
                         .padding()
                         .presentationCompactAdaptation(.popover)
                     }
                 }
                 Section {
-                    TextField("Obsidian Vault Name", text: $obsidianVaultName)
-                        .autocapitalization(.none)
-                        .focused($focusedField, equals: .vaultName)
-                    TextField("Tasks Folder Relative Path (Optional)", text: $tasksFolderPath)
-                        .autocapitalization(.none)
-                        .focused($focusedField, equals: .folderPath)
+                    Button(action: {
+                        isImportingFile = true
+                    }, label: {
+                        Label(
+                            placeHolder,
+                            systemImage: SFSymbols.folder.rawValue
+                        )
+                    })
                 }
+            }
+            .fileImporter(
+                isPresented: $isImportingFile,
+                allowedContentTypes: [.folder],
+                allowsMultipleSelection: false
+            ) { result in
+                onFileImportWithResult(result)
             }
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
-                        UserDefaultsManager.standard.set(value: obsidianVaultName, forKey: .obsidianVaultName)
-                        if tasksFolderPath.last == "/" {
-                            tasksFolderPath = String(tasksFolderPath.dropLast(1))
+                        do {
+                            try FileService.shared.saveObsidianSettings(url: url)
+                        } catch {
+                            isShowingAlert = true
+                            return
                         }
-                        UserDefaultsManager.standard.set(value: tasksFolderPath, forKey: .tasksFolderPath)
                         dismiss()
-                    }
+                    }.disabled(!didUpdate)
                 }
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button("Back") {
                         dismiss()
                     }
                 }
@@ -120,6 +149,13 @@ struct ObsidianSettingsView: View, UseKeyboardToolbar {
                         }
                     )
                 }
+            }
+            .alert(isPresented: $isShowingAlert) {
+                Alert(
+                    title: Text("There was an error"),
+                    message: Text("Make sure that you select a valid folder"),
+                    dismissButton: .default(Text("OK"))
+                )
             }
             .navigationTitle("Obsidian Settings")
         }

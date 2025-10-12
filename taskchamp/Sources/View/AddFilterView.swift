@@ -3,7 +3,9 @@ import SwiftData
 import SwiftUI
 import taskchampShared
 
-public struct AddFilterView: View {
+public struct AddFilterView: View, UseKeyboardToolbar {
+    @Environment(StoreKitManager.self) var storeKit: StoreKitManager
+
     @Environment(\.modelContext) var modelContext
     @Environment(\.dismiss) var dismiss
     @Binding var selectedFilter: TCFilter
@@ -12,13 +14,30 @@ public struct AddFilterView: View {
 
     @State private var showNlpInfoPopover = false
     @State private var nlpInput = ""
-    @State private var nlpPlaceholder = "project:my-project prio:M status:pending"
+    @State private var nlpPlaceholder = "project:my-project prio:M status:pending +filter-to-include -filter-to-exclude"
+    @State private var showPaywall = false
 
     @State private var isShowingAlert = false
     @State private var alertTitle = ""
     @State private var alertMessage = ""
 
     @FocusState private var isFocusedNLP: Bool
+
+    func skipNextAndPrevious() -> Bool {
+        return true
+    }
+
+    func calculateNextField() {
+        // No next field
+    }
+
+    func calculatePreviousField() {
+        // No previous field
+    }
+
+    func onDismissKeyboard() {
+        isFocusedNLP = false
+    }
 
     private func setSelectedFilterUserDefault(selectedFilter: TCFilter) {
         do {
@@ -40,6 +59,10 @@ public struct AddFilterView: View {
                         }
                         .submitLabel(.go)
                         .onSubmit {
+                            if !storeKit.hasPremiumAccess() {
+                                showPaywall = true
+                                return
+                            }
                             withAnimation {
                                 if nlpInput.isEmpty {
                                     alertTitle = "Empty input"
@@ -101,6 +124,10 @@ public struct AddFilterView: View {
                     } else {
                         ForEach(filters) { filter in
                             Button {
+                                if !storeKit.hasPremiumAccess() {
+                                    showPaywall = true
+                                    return
+                                }
                                 if filter == selectedFilter {
                                     selectedFilter = TCFilter.defaultFilter
                                 } else {
@@ -137,8 +164,40 @@ public struct AddFilterView: View {
                     }
                 }
             }
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Back") {
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .keyboard) {
+                    KeyboardToolbarView(
+                        onPrevious: {
+                            calculatePreviousField()
+                        },
+                        onNext: {
+                            calculateNextField()
+                        },
+                        onDismiss: {
+                            onDismissKeyboard()
+                        },
+                        skipNextAndPrevious: {
+                            skipNextAndPrevious()
+                        }
+                        // swiftlint:disable:next multiple_closures_with_trailing_closure
+                    ) {
+                        AutocompleteBarView(
+                            text: $nlpInput,
+                            surface: .filter
+                        )
+                    }
+                }
+            }
             .alert(isPresented: $isShowingAlert) {
                 Alert(title: Text(alertTitle), message: Text(alertMessage), dismissButton: .default(Text("OK")))
+            }
+            .navigationDestination(isPresented: $showPaywall) {
+                TCPaywall()
             }
             .navigationTitle("Filter your tasks")
             .navigationBarTitleDisplayMode(.inline)

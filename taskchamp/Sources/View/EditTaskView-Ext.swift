@@ -11,12 +11,17 @@ extension EditTaskView {
 
     func handleObsidianTap() {
         do {
-            let obsidianVaultName: String? = UserDefaultsManager.standard.getValue(forKey: .obsidianVaultName)
-            let tasksFolderPath: String = UserDefaultsManager.standard.getValue(forKey: .tasksFolderPath) ?? ""
+            let obsidianVaultName: String? = UserDefaultsManager.shared.getValue(forKey: .obsidianVaultName)
+            let tasksFolderPath: String = UserDefaultsManager.shared.getValue(forKey: .tasksFolderPath) ?? ""
             if obsidianVaultName == nil || obsidianVaultName?.isEmpty ?? true {
                 isShowingObsidianSettings = true
                 return
             }
+            if !storeKit.hasPremiumAccess() {
+                globalState.isShowingPaywall = true
+                return
+            }
+            // TODO: Fix obsidian note creation
             if task.hasNote {
                 let taskNoteWithPath = "\(tasksFolderPath)/\(task.obsidianNote ?? "")"
                 let urlString = "obsidian://open?vault=\(obsidianVaultName ?? "")&file=\(taskNoteWithPath)"
@@ -84,6 +89,7 @@ extension EditTaskView {
         let date: Date? = didSetDate ? due : nil
         let time: Date? = didSetTime ? time : nil
         let finalDate = Calendar.current.mergeDateWithTime(date: date, time: time)
+        let tags = tags.isEmpty ? nil : tags
 
         let task = TCTask(
             uuid: task.uuid,
@@ -91,7 +97,8 @@ extension EditTaskView {
             description: description,
             status: status,
             priority: priority == .none ? nil : priority,
-            due: finalDate
+            due: finalDate,
+            tags: tags,
         )
 
         do {
