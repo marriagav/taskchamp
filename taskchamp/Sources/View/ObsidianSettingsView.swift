@@ -38,38 +38,6 @@ struct ObsidianSettingsView: View {
         }
     }
 
-    @FocusState private var focusedField: FormField?
-    enum FormField {
-        case vaultName
-        case folderPath
-    }
-
-    func calculateNextField() {
-        switch focusedField {
-        case .vaultName:
-            focusedField = .folderPath
-        case .folderPath:
-            focusedField = .folderPath
-        default:
-            focusedField = nil
-        }
-    }
-
-    func calculatePreviousField() {
-        switch focusedField {
-        case .vaultName:
-            focusedField = .vaultName
-        case .folderPath:
-            focusedField = .vaultName
-        default:
-            focusedField = nil
-        }
-    }
-
-    func onDismissKeyboard() {
-        focusedField = nil
-    }
-
     var body: some View {
         NavigationStack {
             Form {
@@ -135,19 +103,6 @@ struct ObsidianSettingsView: View {
                     Button("Back") {
                         dismiss()
                     }
-                }
-                ToolbarItem(placement: .keyboard) {
-                    KeyboardToolbarView(
-                        onPrevious: {
-                            calculatePreviousField()
-                        },
-                        onNext: {
-                            calculateNextField()
-                        },
-                        onDismiss: {
-                            onDismissKeyboard()
-                        }
-                    )
                 }
             }
             .alert(isPresented: $isShowingAlert) {
