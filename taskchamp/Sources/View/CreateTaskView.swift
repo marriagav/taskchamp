@@ -247,7 +247,7 @@ public struct CreateTaskView: View, UseKeyboardToolbar {
                                 surface: .creation
                             )
                         }
-                    )
+                    }
                 }
             }
             .onChange(
