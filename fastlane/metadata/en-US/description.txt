@@ -16,4 +16,6 @@ Obsidian integration: Use Taskchamp to create and bind Obsidian notes to your ta
 
 Costum filters: Create custom filters using command line syntax to view your tasks in the way you want.
 
+Tags: Add tags to your tasks and filter by tags.
+
 And much more!

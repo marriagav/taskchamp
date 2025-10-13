@@ -116,6 +116,7 @@ public class TaskchampionService {
         try await currentTask?.value
     }
 
+    @MainActor
     public func getTasks(
         sortType: TasksHelper.TCSortType = .defaultSort,
         filter: TCFilter = TCFilter.defaultFilter
@@ -146,6 +147,7 @@ public class TaskchampionService {
         return taskObjects
     }
 
+    @MainActor
     public func getPendingTasks() throws -> [TCTask] {
         guard let replica else {
             throw TCError.genericError("Database not set")
@@ -158,6 +160,7 @@ public class TaskchampionService {
         return tasks.map { TCTask(from: $0) }
     }
 
+    @MainActor
     public func getTask(uuid: String) throws -> TCTask {
         guard let replica else {
             throw TCError.genericError("Database not set")
@@ -169,6 +172,7 @@ public class TaskchampionService {
         return TCTask(from: task)
     }
 
+    @MainActor
     public func togglePendingTasksStatus(uuids: Set<String>, onSync: @escaping () -> Void = {}) throws {
         for uuid in uuids {
             let task = try getTask(uuid: uuid)
@@ -189,6 +193,7 @@ public class TaskchampionService {
         }
     }
 
+    @MainActor
     public func updatePendingTasks(
         _ uuids: Set<String>,
         withStatus newStatus: TCTask.Status,
@@ -227,13 +232,14 @@ public class TaskchampionService {
             task.priority?.rawValue.intoRustString(),
             task.project?.intoRustString(),
             task.status.rawValue.intoRustString(),
-            annotations
+            annotations,
+            task.rustVecOfTags
         )
         if task == nil {
             throw TCError.genericError("Failed to update task")
         }
 
-        replica.sync_no_server() // rebuild the working set
+        _ = replica.sync_no_server() // rebuild the working set
 
         if skipSync {
             return
@@ -255,18 +261,20 @@ public class TaskchampionService {
             .intoRustString()
         let due = task.due?.timeIntervalSince1970.rounded()
         let dueString = due != nil ? String(Int(due ?? 0)) : nil
+
         let task = replica.create_task(
             task.uuid.intoRustString(),
             task.description.intoRustString(),
             dueString?.intoRustString(),
             priority,
-            task.project?.intoRustString()
+            task.project?.intoRustString(),
+            task.rustVecOfTags,
         )
         if task == nil {
             throw TCError.genericError("Failed to create task")
         }
 
-        replica.sync_no_server() // rebuild the working set
+        _ = replica.sync_no_server() // rebuild the working set
 
         _Concurrency.Task.detached {
             try? await self.sync {

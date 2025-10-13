@@ -29,7 +29,7 @@ let project = Project(
                                 "NSUbiquitousContainerSupportedFolderLevels": "Any"
                             ]
                     ],
-                    "CFBundleShortVersionString": "1.6"
+                    "CFBundleShortVersionString": "2"
                 ]
             ),
             sources: ["taskchamp/Sources/**"],
@@ -81,7 +81,7 @@ let project = Project(
                             "NSUbiquitousContainerSupportedFolderLevels": "Any"
                         ]
                 ],
-                "CFBundleShortVersionString": "1.6"
+                "CFBundleShortVersionString": "2"
             ]),
             sources: "taskchampWidget/Sources/**",
             entitlements: .dictionary(
@@ -108,6 +108,16 @@ let project = Project(
                 .external(name: "SoulverCore"),
                 .external(name: "Taskchampion")
             ]
+        )
+    ],
+    schemes: [
+        .scheme(
+            name: "taskchamp",
+            runAction: .runAction(
+                configuration: .release,
+                executable: .target("taskchamp"),
+                options: .options(storeKitConfigurationPath: .path("taskchamp/Resources/Products.storekit"))
+            )
         )
     ]
 )

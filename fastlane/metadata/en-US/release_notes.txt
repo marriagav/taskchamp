@@ -1,1 +1,1 @@
-Sync your tasks with taskchampion sync server!
+Bug fixes and improvements!

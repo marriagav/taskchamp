@@ -4,6 +4,7 @@ public enum TCUserDefaults: String {
     case selectedFilter
     case sortType
 
+    case taskNotesFolderPath
     case obsidianVaultName
     case tasksFolderPath
 
@@ -22,6 +23,9 @@ public enum TCUserDefaults: String {
     case awsServerAccessKeyId
     case awsServerSecretAccessKey
     case awsServerEncryptionSecret
+
+    case storeKitPremiumUnlocked
+    case storeKitCloudSubscriptionActive
 }
 
 public class UserDefaultsManager {
