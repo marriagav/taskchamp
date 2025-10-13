@@ -58,8 +58,7 @@ struct ObsidianSettingsView: View {
                         ScrollView {
                             VStack(alignment: .leading, spacing: 10) {
                                 Text(
-                                    // swiftlint:disable:next line_length
-                                    "It is recommended to select an Obsidian directory, inside of a vault. But it is possible to select any folder on your device."
+                                    "You must select an Obsidian directory, inside of a vault."
                                 )
                                 .frame(minHeight: 100)
                             }
