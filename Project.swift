@@ -47,6 +47,7 @@ let project = Project(
                 .pre(script: "./scripts/pre_build_script.sh", name: "Prebuild", basedOnDependencyAnalysis: false)
             ],
             dependencies: [
+                .external(name: "MarkdownUI"),
                 .target(name: "taskchampShared"),
                 .target(name: "taskchampWidget")
             ],

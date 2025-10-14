@@ -9,7 +9,7 @@
       }
     ]
   },
-  "identifier" : "F1196849",
+  "identifier" : "8947EF4E",
   "nonRenewingSubscriptions" : [
 
   ],
@@ -17,10 +17,10 @@
     {
       "displayPrice" : "4.99",
       "familyShareable" : false,
-      "internalID" : "07A9F6B6",
+      "internalID" : "6753956060",
       "localizations" : [
         {
-          "description" : "Unlock premium features such as Taskchampion sync server, command line widgets and more!",
+          "description" : "Unlock Tags, Custom Filters, Obsidian integration!",
           "displayName" : "Premium",
           "locale" : "en_US"
         }
@@ -31,11 +31,14 @@
     }
   ],
   "settings" : {
+    "_applicationInternalID" : "6633442700",
     "_askToBuyEnabled" : false,
     "_billingGracePeriodEnabled" : false,
     "_billingIssuesEnabled" : false,
+    "_developerTeamID" : "JS2VW2G96S",
     "_disableDialogs" : false,
     "_failTransactionsEnabled" : false,
+    "_lastSynchronizedDate" : 782092168.00409806,
     "_locale" : "en_US",
     "_renewalBillingIssuesEnabled" : false,
     "_storefront" : "USA",

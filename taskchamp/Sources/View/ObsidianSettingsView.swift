@@ -38,38 +38,6 @@ struct ObsidianSettingsView: View {
         }
     }
 
-    @FocusState private var focusedField: FormField?
-    enum FormField {
-        case vaultName
-        case folderPath
-    }
-
-    func calculateNextField() {
-        switch focusedField {
-        case .vaultName:
-            focusedField = .folderPath
-        case .folderPath:
-            focusedField = .folderPath
-        default:
-            focusedField = nil
-        }
-    }
-
-    func calculatePreviousField() {
-        switch focusedField {
-        case .vaultName:
-            focusedField = .vaultName
-        case .folderPath:
-            focusedField = .vaultName
-        default:
-            focusedField = nil
-        }
-    }
-
-    func onDismissKeyboard() {
-        focusedField = nil
-    }
-
     var body: some View {
         NavigationStack {
             Form {
@@ -91,7 +59,7 @@ struct ObsidianSettingsView: View {
                             VStack(alignment: .leading, spacing: 10) {
                                 Text(
                                     // swiftlint:disable:next line_length
-                                    "It is recommended to select an Obsidian directory, inside of a vault. But it is possible to select any folder on your device."
+                                    "It is recommended to use a folder inside an Obsidian vault. However, this could be any folder on your device."
                                 )
                                 .frame(minHeight: 100)
                             }
@@ -135,19 +103,6 @@ struct ObsidianSettingsView: View {
                     Button("Back") {
                         dismiss()
                     }
-                }
-                ToolbarItem(placement: .keyboard) {
-                    KeyboardToolbarView(
-                        onPrevious: {
-                            calculatePreviousField()
-                        },
-                        onNext: {
-                            calculateNextField()
-                        },
-                        onDismiss: {
-                            onDismissKeyboard()
-                        }
-                    )
                 }
             }
             .alert(isPresented: $isShowingAlert) {
