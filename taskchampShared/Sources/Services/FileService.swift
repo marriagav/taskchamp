@@ -1,5 +1,6 @@
 import Foundation
 
+// swiftlint:disable:next type_body_length
 public class FileService {
     public static let shared = FileService()
 
@@ -308,6 +309,41 @@ public class FileService {
 
         url.stopAccessingSecurityScopedResource()
         return nil
+    }
+
+    public func saveContentsToObsidianNote(for taskNote: String, content: String) throws {
+        let bookmarkData: Data? = UserDefaultsManager.shared.getValue(forKey: .taskNoteFolderBookmark)
+        guard let bookmarkData else {
+            throw TCError.genericError("No bookmark data")
+        }
+
+        var isStale = false
+
+        let url = try URL(
+            resolvingBookmarkData: bookmarkData,
+            options: [],
+            relativeTo: nil,
+            bookmarkDataIsStale: &isStale
+        )
+
+        guard url.startAccessingSecurityScopedResource() else {
+            throw TCError.genericError("Failed to access security scoped resource")
+        }
+
+        let noteURL = url.appendingPathComponent(taskNote + ".md")
+        let exists = FileManager.default.fileExists(atPath: noteURL.path)
+        if !exists {
+            createFileIfNeeded(url: noteURL)
+        }
+
+        do {
+            try content.write(to: noteURL, atomically: true, encoding: .utf8)
+        } catch {
+            url.stopAccessingSecurityScopedResource()
+            throw TCError.genericError("Failed to write to file: \(error.localizedDescription)")
+        }
+
+        url.stopAccessingSecurityScopedResource()
     }
 
     public func obsidianNoteAfter(component: String, url: URL) -> String? {
