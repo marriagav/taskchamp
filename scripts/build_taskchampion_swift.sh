@@ -45,10 +45,10 @@ for BIN in "${BINARIES[@]}"; do
   fi
 done
 
-# if [ "$all_binaries_exist" = true ]; then
-#     echo "All Taskchampion Swift libraries exist! Skipping build."
-#     exit 0
-# fi
+if [ "$all_binaries_exist" = true ]; then
+    echo "All Taskchampion Swift libraries exist! Skipping build."
+    exit 0
+fi
 
 # Clone or update the repository
 clone_or_update_repo() {
