@@ -53,6 +53,14 @@ public struct ObsidianNoteView: View {
         return urlString
     }
 
+    func saveNote() {
+        do {
+            try FileService.shared.saveContentsToObsidianNote(for: taskNote, content: noteContent)
+        } catch {
+            print("Error saving note: \(error)")
+        }
+    }
+
     public var body: some View {
         VStack {
             if isPreviewMode {
@@ -73,13 +81,6 @@ public struct ObsidianNoteView: View {
                 )
                 .scrollDisabled(true)
             }
-
-            // .onChange(of: noteContent) { newValue in
-            //     do {
-            //         try FileService.shared.saveSecureFileContents(url: noteUrl, contents: newValue)
-            //     } catch {
-            //         print("Error saving note: \(error)")
-            //     }
         }
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
@@ -127,5 +128,8 @@ public struct ObsidianNoteView: View {
         .animation(.default, value: isPreviewMode)
         .navigationTitle(taskNote + ".md")
         .navigationBarTitleDisplayMode(.inline)
+        .onDisappear {
+            saveNote()
+        }
     }
 }

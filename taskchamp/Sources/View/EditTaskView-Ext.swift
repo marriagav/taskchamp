@@ -3,11 +3,9 @@ import taskchampShared
 import UIKit
 
 extension EditTaskView {
-    // swiftlint:disable:next function_body_length
     func handleObsidianTap() {
         do {
             let obsidianVaultName: String? = UserDefaultsManager.shared.getValue(forKey: .obsidianVaultName)
-            let tasksFolderPath: String = UserDefaultsManager.shared.getValue(forKey: .tasksFolderPath) ?? ""
             if obsidianVaultName == nil || obsidianVaultName?.isEmpty ?? true {
                 isShowingObsidianSettings = true
                 return
