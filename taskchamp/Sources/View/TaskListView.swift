@@ -245,7 +245,7 @@ public struct TaskListView: View {
                         "Options",
                         systemImage: SFSymbols.ellipsisCircle.rawValue
                     )
-                    .labelStyle(.titleAndIcon)
+                    .labelStyle(.iconOnly)
                     .imageScale(.large)
                     .bold()
                 }

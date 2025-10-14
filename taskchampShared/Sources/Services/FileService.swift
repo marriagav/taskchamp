@@ -1,5 +1,6 @@
 import Foundation
 
+// swiftlint:disable:next type_body_length
 public class FileService {
     public static let shared = FileService()
 
@@ -20,6 +21,12 @@ public class FileService {
             } catch {
                 print("Error creating directory: \(error)")
             }
+        }
+    }
+
+    func createFileIfNeeded(url: URL) {
+        if !FileManager.default.fileExists(atPath: url.path) {
+            FileManager.default.createFile(atPath: url.path, contents: nil, attributes: nil)
         }
     }
 
@@ -180,6 +187,17 @@ public class FileService {
             return
         }
 
+        guard url.startAccessingSecurityScopedResource() else {
+            throw TCError.genericError("Failed to access security scoped resource")
+        }
+
+        let data = createSecurityScopedBookmark(for: url)
+        guard let data else {
+            url.stopAccessingSecurityScopedResource()
+            throw TCError.genericError("Failed to create bookmark")
+        }
+
+        UserDefaultsManager.shared.set(value: data, forKey: .taskNoteFolderBookmark)
         UserDefaultsManager.shared.set(value: url.path, forKey: .taskNotesFolderPath)
 
         let components = url.pathComponents
@@ -194,5 +212,152 @@ public class FileService {
             UserDefaultsManager.shared.set(value: vault, forKey: .obsidianVaultName)
             UserDefaultsManager.shared.set(value: subpath, forKey: .tasksFolderPath)
         }
+        url.stopAccessingSecurityScopedResource()
+    }
+
+    func createSecurityScopedBookmark(for url: URL) -> Data? {
+        do {
+            let bookmarkData = try url.bookmarkData(
+                options: .minimalBookmark,
+                includingResourceValuesForKeys: nil,
+                relativeTo: nil
+            )
+            return bookmarkData
+        } catch {
+            return nil
+        }
+    }
+
+    public func createObsidianNote(
+        for taskNote: String,
+        taskStatus: TCTask.Status = .pending
+    ) throws -> URL {
+        let bookmarkData: Data? = UserDefaultsManager.shared.getValue(forKey: .taskNoteFolderBookmark)
+        guard let bookmarkData else {
+            throw TCError.genericError("No bookmark data")
+        }
+
+        var isStale = false
+
+        let url = try URL(
+            resolvingBookmarkData: bookmarkData,
+            options: [],
+            relativeTo: nil,
+            bookmarkDataIsStale: &isStale
+        )
+
+        guard url.startAccessingSecurityScopedResource() else {
+            throw TCError.genericError("Failed to access security scoped resource")
+        }
+
+        let noteURL = url.appendingPathComponent(taskNote + ".md")
+        let exists = FileManager.default.fileExists(atPath: noteURL.path)
+        if exists {
+            url.stopAccessingSecurityScopedResource()
+            return noteURL
+        }
+
+        if taskStatus == .completed {
+            let doneNoteURL = url.appendingPathComponent("done/" + taskNote + ".md")
+            let exists = FileManager.default.fileExists(atPath: doneNoteURL.path)
+            if exists {
+                url.stopAccessingSecurityScopedResource()
+                return doneNoteURL
+            }
+        }
+
+        createFileIfNeeded(url: noteURL)
+        url.stopAccessingSecurityScopedResource()
+
+        return noteURL
+    }
+
+    public func getContentsOfObsidianNote(for taskNote: String) throws -> (String?, URL)? {
+        let bookmarkData: Data? = UserDefaultsManager.shared.getValue(forKey: .taskNoteFolderBookmark)
+        guard let bookmarkData else {
+            throw TCError.genericError("No bookmark data")
+        }
+
+        var isStale = false
+
+        let url = try URL(
+            resolvingBookmarkData: bookmarkData,
+            options: [],
+            relativeTo: nil,
+            bookmarkDataIsStale: &isStale
+        )
+
+        guard url.startAccessingSecurityScopedResource() else {
+            throw TCError.genericError("Failed to access security scoped resource")
+        }
+
+        let noteURL = url.appendingPathComponent(taskNote + ".md")
+        let exists = FileManager.default.fileExists(atPath: noteURL.path)
+        if exists {
+            let fileContents = getFileContents(url: noteURL)
+            url.stopAccessingSecurityScopedResource()
+            return (fileContents, noteURL)
+        }
+
+        let doneNoteURL = url.appendingPathComponent("done/" + taskNote + ".md")
+        let doneExists = FileManager.default.fileExists(atPath: doneNoteURL.path)
+        if doneExists {
+            let fileContents = getFileContents(url: doneNoteURL)
+            url.stopAccessingSecurityScopedResource()
+            return (fileContents, doneNoteURL)
+        }
+
+        url.stopAccessingSecurityScopedResource()
+        return nil
+    }
+
+    public func saveContentsToObsidianNote(for taskNote: String, content: String) throws {
+        let bookmarkData: Data? = UserDefaultsManager.shared.getValue(forKey: .taskNoteFolderBookmark)
+        guard let bookmarkData else {
+            throw TCError.genericError("No bookmark data")
+        }
+
+        var isStale = false
+
+        let url = try URL(
+            resolvingBookmarkData: bookmarkData,
+            options: [],
+            relativeTo: nil,
+            bookmarkDataIsStale: &isStale
+        )
+
+        guard url.startAccessingSecurityScopedResource() else {
+            throw TCError.genericError("Failed to access security scoped resource")
+        }
+
+        let noteURL = url.appendingPathComponent(taskNote + ".md")
+        let exists = FileManager.default.fileExists(atPath: noteURL.path)
+        if !exists {
+            createFileIfNeeded(url: noteURL)
+        }
+
+        do {
+            try content.write(to: noteURL, atomically: true, encoding: .utf8)
+        } catch {
+            url.stopAccessingSecurityScopedResource()
+            throw TCError.genericError("Failed to write to file: \(error.localizedDescription)")
+        }
+
+        url.stopAccessingSecurityScopedResource()
+    }
+
+    public func obsidianNoteAfter(component: String, url: URL) -> String? {
+        let components = url.pathComponents
+
+        if let index = components.firstIndex(of: component) {
+            let remaining = components.suffix(from: index + 1)
+            return remaining.joined(separator: "/").replacingOccurrences(of: ".md", with: "")
+        }
+        return nil
+    }
+
+    public func getFileContents(url: URL) -> String? {
+        let contents = try? String(contentsOf: url, encoding: .utf8)
+        return contents
     }
 }

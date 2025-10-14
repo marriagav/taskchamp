@@ -3,16 +3,9 @@ import taskchampShared
 import UIKit
 
 extension EditTaskView {
-    func openExternalURL(_ urlString: String) {
-        if let url = URL(string: urlString) {
-            UIApplication.shared.open(url, options: [:], completionHandler: nil)
-        }
-    }
-
     func handleObsidianTap() {
         do {
             let obsidianVaultName: String? = UserDefaultsManager.shared.getValue(forKey: .obsidianVaultName)
-            let tasksFolderPath: String = UserDefaultsManager.shared.getValue(forKey: .tasksFolderPath) ?? ""
             if obsidianVaultName == nil || obsidianVaultName?.isEmpty ?? true {
                 isShowingObsidianSettings = true
                 return
@@ -21,11 +14,21 @@ extension EditTaskView {
                 globalState.isShowingPaywall = true
                 return
             }
-            // TODO: Fix obsidian note creation
             if task.hasNote {
-                let taskNoteWithPath = "\(tasksFolderPath)/\(task.obsidianNote ?? "")"
-                let urlString = "obsidian://open?vault=\(obsidianVaultName ?? "")&file=\(taskNoteWithPath)"
-                openExternalURL(urlString)
+                let noteUrl = try? FileService.shared.createObsidianNote(
+                    for: task.obsidianNote ?? "",
+                    taskStatus: task.status
+                )
+                guard let noteUrl else {
+                    isShowingAlert = true
+                    alertTitle = "There was an error"
+                    alertMessage =
+                        "Failed to create task note. Please check your Obsidian vault and path settings and try again."
+                    return
+                }
+                _ = noteUrl
+
+                showNoteView = true
                 return
             }
             let taskNote = task.description.replacing(" ", with: "-")
@@ -38,18 +41,28 @@ extension EditTaskView {
                 due: task.due,
                 obsidianNote: taskNote
             )
+            let noteUrl = try? FileService.shared.createObsidianNote(for: taskNote, taskStatus: task.status)
+
+            guard let noteUrl else {
+                isShowingAlert = true
+                alertTitle = "There was an error"
+                alertMessage =
+                    "Failed to create task note. Please check your Obsidian vault and path settings and try again."
+                return
+            }
+
+            _ = noteUrl
+
             try TaskchampionService.shared.updateTask(newTask)
             task = newTask
-            let taskNoteWithPath = "\(tasksFolderPath)/\(task.obsidianNote ?? "")"
-            let urlString = "obsidian://new?vault=\(obsidianVaultName ?? "")&file=\(taskNoteWithPath)"
-            openExternalURL(urlString)
+
+            showNoteView = true
             return
         } catch {
             isShowingAlert = true
             alertTitle = "There was an error"
             alertMessage =
                 "Failed to create task note. Please check your Obsidian vault and path settings and try again."
-            print(error)
         }
     }
 
@@ -74,7 +87,6 @@ extension EditTaskView {
             isShowingAlert = true
             alertTitle = "There was an error"
             alertMessage = "Task failed to update. Please try again."
-            print(error)
         }
     }
 
@@ -112,7 +124,6 @@ extension EditTaskView {
             isShowingAlert = true
             alertTitle = "There was an error"
             alertMessage = "Task failed to update. Please try again."
-            print(error)
         }
     }
 
@@ -128,7 +139,6 @@ extension EditTaskView {
             isShowingAlert = true
             alertTitle = "There was an error"
             alertMessage = "Task failed to update. Please try again."
-            print(error)
         }
     }
 }
