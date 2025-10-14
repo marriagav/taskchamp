@@ -27,6 +27,7 @@ public struct EditTaskView: View, UseKeyboardToolbar {
     @State var isShowingObsidianSettings = false
     @State var alertTitle = ""
     @State var alertMessage = ""
+    @State var showNoteView = false
 
     @FocusState private var focusedField: FormField?
     enum FormField {
@@ -229,6 +230,11 @@ public struct EditTaskView: View, UseKeyboardToolbar {
         .sheet(isPresented: $showTagPopover) {
             NavigationStack {
                 AddTagView(selectedTags: $tags)
+            }
+        }
+        .sheet(isPresented: $showNoteView) {
+            NavigationStack {
+                ObsidianNoteView(taskNote: task.obsidianNote ?? "")
             }
         }
         .navigationTitle(description)

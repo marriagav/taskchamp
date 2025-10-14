@@ -3,12 +3,6 @@ import taskchampShared
 import UIKit
 
 extension EditTaskView {
-    func openExternalURL(_ urlString: String) {
-        if let url = URL(string: urlString) {
-            UIApplication.shared.open(url, options: [:], completionHandler: nil)
-        }
-    }
-
     // swiftlint:disable:next function_body_length
     func handleObsidianTap() {
         do {
@@ -34,13 +28,9 @@ extension EditTaskView {
                         "Failed to create task note. Please check your Obsidian vault and path settings and try again."
                     return
                 }
+                _ = noteUrl
 
-                let taskNoteWithPath = FileService.shared
-                    .obsidianNoteAfter(component: tasksFolderPath, url: noteUrl) ??
-                    "\(tasksFolderPath)/\(task.obsidianNote ?? "")"
-
-                let urlString = "obsidian://open?vault=\(obsidianVaultName ?? "")&file=\(taskNoteWithPath)"
-                openExternalURL(urlString)
+                showNoteView = true
                 return
             }
             let taskNote = task.description.replacing(" ", with: "-")
@@ -63,15 +53,12 @@ extension EditTaskView {
                 return
             }
 
+            _ = noteUrl
+
             try TaskchampionService.shared.updateTask(newTask)
             task = newTask
 
-            let taskNoteWithPath = FileService.shared
-                .obsidianNoteAfter(component: tasksFolderPath, url: noteUrl) ??
-                "\(tasksFolderPath)/\(task.obsidianNote ?? "")"
-
-            let urlString = "obsidian://open?vault=\(obsidianVaultName ?? "")&file=\(taskNoteWithPath)"
-            openExternalURL(urlString)
+            showNoteView = true
             return
         } catch {
             isShowingAlert = true
