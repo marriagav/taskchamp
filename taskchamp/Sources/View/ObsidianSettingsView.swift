@@ -112,13 +112,6 @@ struct ObsidianSettingsView: View {
                     dismissButton: .default(Text("OK"))
                 )
             }
-            .alert(isPresented: $isShowingAlert) {
-                Alert(
-                    title: Text("There was an error"),
-                    message: Text("Make sure that you select a valid folder"),
-                    dismissButton: .default(Text("OK"))
-                )
-            }
             .navigationTitle("Obsidian Settings")
         }
     }
