@@ -89,27 +89,34 @@ class StoreKitManager {
         let shared = try await AppTransaction.shared
         if case let .verified(appTransaction) = shared {
             // Hard-code the major version number in which the app's business model changed.
-            var newBusinessModelMajorVersion = "138"
             #if os(macOS)
             // In macos the originalAppVersion is the version:
             // https://freemiumkit.app/documentation/freemiumkit/migratefrompaid/
-            newBusinessModelMajorVersion = "2.0"
-            #else
-            // In other platforms the originalAppVersion is the build number
-            newBusinessModelMajorVersion = "138"
-            #endif
-
-            // Get the major version number of the version the customer originally purchased.
+            // CFBundleShortVersionString
+            let newBusinessModelMajorVersion = "2.0"
             let versionComponents = appTransaction.originalAppVersion.split(separator: ".")
             let originalMajorVersion = versionComponents[0]
 
             if originalMajorVersion < newBusinessModelMajorVersion {
                 // This customer purchased the app before the business model changed.
-                // Deliver content that they're entitled to based on their app purchase.
                 setUserClassForProduct(id: TCProducts.premium)
             } else {
                 // This customer purchased the app after the business model changed.
             }
+            #else
+            // In other platforms the originalAppVersion is the build number
+            // CFBundleVersion
+            let newBusinessModelVersion = "158"
+
+            // Compare this number with the version number the person originally purchased.
+            if appTransaction.originalAppVersion < newBusinessModelVersion {
+                setUserClassForProduct(id: TCProducts.premium)
+            } else {
+                // This person purchased the app after the business model changed.
+            }
+            #endif
+
+            // Get the major version number of the version the customer originally purchased.
         }
     }
 
