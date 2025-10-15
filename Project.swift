@@ -29,7 +29,7 @@ let project = Project(
                                 "NSUbiquitousContainerSupportedFolderLevels": "Any"
                             ]
                     ],
-                    "CFBundleShortVersionString": "2"
+                    "CFBundleShortVersionString": "3"
                 ]
             ),
             sources: ["taskchamp/Sources/**"],
@@ -82,7 +82,7 @@ let project = Project(
                             "NSUbiquitousContainerSupportedFolderLevels": "Any"
                         ]
                 ],
-                "CFBundleShortVersionString": "2"
+                "CFBundleShortVersionString": "3"
             ]),
             sources: "taskchampWidget/Sources/**",
             entitlements: .dictionary(
