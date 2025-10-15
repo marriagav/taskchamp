@@ -63,7 +63,7 @@ class StoreKitManager {
     }
 
     func onAppInitialization() async throws {
-        try await updateCustomerProductStatus()
+        try? await updateCustomerProductStatus()
         try await grandfatherExistingUsers()
     }
 
