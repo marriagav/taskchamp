@@ -185,9 +185,17 @@ public class LocationService: NSObject {
 
                 let triggerType = isEntering ? "Arrived at" : "Left"
                 content.body = "\(triggerType) \(locationReminder.locationName)"
-                content.sound = .default
-                content.interruptionLevel = .timeSensitive
                 content.userInfo = ["deepLink": task.url.description]
+
+                // Configure sound and interruption level based on critical alert settings
+                if task.hasCriticalAlert && NotificationService.shared.canUseCriticalAlerts {
+                    let volume = task.criticalAlert?.effectiveVolume ?? 1.0
+                    content.sound = UNNotificationSound.defaultCriticalSound(withAudioVolume: volume)
+                    content.interruptionLevel = .critical
+                } else {
+                    content.sound = .default
+                    content.interruptionLevel = .timeSensitive
+                }
 
                 let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
 

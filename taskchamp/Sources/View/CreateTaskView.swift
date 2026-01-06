@@ -30,6 +30,7 @@ public struct CreateTaskView: View, UseKeyboardToolbar {
     @State private var showTagPopover = false
     @State private var showLocationPicker = false
     @State private var locationReminder: TCLocationReminder?
+    @State private var criticalAlert: TCCriticalAlert?
     @State private var isShowingAlert = false
     @State private var alertTitle = ""
     @State private var alertMessage = ""
@@ -178,6 +179,10 @@ public struct CreateTaskView: View, UseKeyboardToolbar {
                         showTagPopover = true
                     }
                 }
+                CriticalAlertSettingsView(
+                    criticalAlert: $criticalAlert,
+                    hasDueDate: $didSetDate
+                )
                 Section {
                     LocationReminderButton(locationReminder: $locationReminder) {
                         showLocationPicker = true
@@ -212,7 +217,8 @@ public struct CreateTaskView: View, UseKeyboardToolbar {
                             priority: priority == .none ? nil : priority,
                             due: finalDate,
                             tags: tags.isEmpty ? nil : tags,
-                            locationReminder: locationReminder
+                            locationReminder: locationReminder,
+                            criticalAlert: criticalAlert
                         )
 
                         do {

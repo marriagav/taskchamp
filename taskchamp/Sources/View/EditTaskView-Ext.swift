@@ -115,7 +115,8 @@ extension EditTaskView {
             priority: priority == .none ? nil : priority,
             due: finalDate,
             tags: tags,
-            locationReminder: locationReminder
+            locationReminder: locationReminder,
+            criticalAlert: criticalAlert
         )
 
         do {

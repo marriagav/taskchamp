@@ -25,6 +25,7 @@ public struct EditTaskView: View, UseKeyboardToolbar {
     @State private var showTagPopover = false
     @State private var showLocationPicker = false
     @State var locationReminder: TCLocationReminder?
+    @State var criticalAlert: TCCriticalAlert?
     @State var isShowingAlert = false
     @State var isShowingObsidianSettings = false
     @State var alertTitle = ""
@@ -47,7 +48,8 @@ public struct EditTaskView: View, UseKeyboardToolbar {
                 time: didSetTime ? time : nil
             ) ||
             task.tags ?? [] != tags ||
-            task.locationReminder != locationReminder
+            task.locationReminder != locationReminder ||
+            task.criticalAlert != criticalAlert
     }
 
     init(task: TCTask) {
@@ -57,6 +59,7 @@ public struct EditTaskView: View, UseKeyboardToolbar {
         priority = task.priority ?? .none
         tags = task.tags ?? []
         locationReminder = task.locationReminder
+        criticalAlert = task.criticalAlert
         if let due = task.due {
             didSetDate = true
             didSetTime = true
@@ -137,6 +140,10 @@ public struct EditTaskView: View, UseKeyboardToolbar {
                     showTagPopover = true
                 }
             }
+            CriticalAlertSettingsView(
+                criticalAlert: $criticalAlert,
+                hasDueDate: $didSetDate
+            )
             Section {
                 LocationReminderButton(locationReminder: $locationReminder) {
                     showLocationPicker = true

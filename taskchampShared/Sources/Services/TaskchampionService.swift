@@ -228,6 +228,10 @@ public class TaskchampionService {
             annotations = annotations ?? RustVec<Annotation>()
             annotations?.push(value: annotation)
         }
+        if let annotation = task.rustAnnotationFromCriticalAlert {
+            annotations = annotations ?? RustVec<Annotation>()
+            annotations?.push(value: annotation)
+        }
 
         let task = replica.update_task(
             task.uuid.intoRustString(),
@@ -278,13 +282,17 @@ public class TaskchampionService {
             throw TCError.genericError("Failed to create task")
         }
 
-        // Add annotations if present (location reminder or obsidian note)
+        // Add annotations if present (location reminder, obsidian note, or critical alert)
         var annotations: RustVec<Annotation>?
         if let annotation = task.rustAnnotationFromObsidianNote {
             annotations = annotations ?? RustVec<Annotation>()
             annotations?.push(value: annotation)
         }
         if let annotation = task.rustAnnotationFromLocationReminder {
+            annotations = annotations ?? RustVec<Annotation>()
+            annotations?.push(value: annotation)
+        }
+        if let annotation = task.rustAnnotationFromCriticalAlert {
             annotations = annotations ?? RustVec<Annotation>()
             annotations?.push(value: annotation)
         }

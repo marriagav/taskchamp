@@ -22,6 +22,7 @@ public struct TaskListView: View {
     @State var isShowingFilterView = false
     @State var isShowingObsidianSettings = false
     @State var isShowingSyncSettings = false
+    @State var isShowingCriticalAlertSettings = false
     @State var sortType: TasksHelper.TCSortType = .init(
         rawValue: UserDefaultsManager.standard
             .getValue(forKey: .sortType) ?? TasksHelper.TCSortType.defaultSort.rawValue
@@ -222,6 +223,9 @@ public struct TaskListView: View {
                     Button("Obsidian Settings") {
                         isShowingObsidianSettings.toggle()
                     }
+                    Button("Critical Alerts") {
+                        isShowingCriticalAlertSettings.toggle()
+                    }
                     Menu("Sort by") {
                         sortButton(sortType: .defaultSort)
                         sortButton(sortType: .date)
@@ -289,6 +293,9 @@ public struct TaskListView: View {
                 isShowingSyncServiceModal: $isShowingSyncSettings,
                 selectedSyncType: $selectedSyncType
             )
+        }
+        .sheet(isPresented: $isShowingCriticalAlertSettings) {
+            CriticalAlertGlobalSettingsView()
         }
         .navigationDestination(for: TCTask.self) { task in
             EditTaskView(task: task)

@@ -20,9 +20,20 @@ public struct TaskCellView: View {
             .padding(.vertical, 3)
             HStack {
                 if task.due != nil {
-                    Text(task.localDate)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                    HStack(spacing: 4) {
+                        Text(task.localDate)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                        if task.hasCriticalAlert {
+                            Image(systemName: "bell.badge.fill")
+                                .font(.caption)
+                                .foregroundStyle(.red)
+                        }
+                    }
+                } else if task.hasCriticalAlert {
+                    Image(systemName: "bell.badge.fill")
+                        .font(.caption)
+                        .foregroundStyle(.red)
                 }
                 Spacer()
                 if let priority = task.priority {

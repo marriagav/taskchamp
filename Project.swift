@@ -46,6 +46,7 @@ let project = Project(
                     "com.apple.developer.icloud-services": ["CloudDocuments", "CloudKit"],
                     "com.apple.developer.ubiquity-container-identifiers": ["iCloud.com.mav.taskchamp"],
                     "com.apple.developer.usernotifications.time-sensitive": true,
+                    "com.apple.developer.usernotifications.critical-alerts": true,
                     "com.apple.security.application-groups": ["group.com.mav.taskchamp"]
                 ]
             ),

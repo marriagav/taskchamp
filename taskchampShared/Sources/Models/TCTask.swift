@@ -35,6 +35,7 @@ public struct TCTask: Codable, Hashable {
         case due
         case tags
         case locationReminder
+        case criticalAlert
     }
 
     // Helper to handle dynamic keys
@@ -133,6 +134,18 @@ public struct TCTask: Codable, Hashable {
             }
         }
         locationReminder = locationReminderValue
+
+        // Critical alert data stored in annotations
+        var criticalAlertValue: TCCriticalAlert?
+        for annotation in annotations where annotation.starts(with: "critical-alert:") {
+            let jsonString = annotation.replacingOccurrences(of: "critical-alert: ", with: "")
+            if let data = jsonString.data(using: .utf8),
+                let alert = try? JSONDecoder().decode(TCCriticalAlert.self, from: data) {
+                criticalAlertValue = alert
+                break
+            }
+        }
+        criticalAlert = criticalAlertValue
     }
 
     public init(from decoder: Decoder) throws {
@@ -165,6 +178,7 @@ public struct TCTask: Codable, Hashable {
         obsidianNote = obsidianNoteValue
         self.noteAnnotationKey = noteAnnotationKey
         locationReminder = try container.decodeIfPresent(TCLocationReminder.self, forKey: .locationReminder)
+        criticalAlert = try container.decodeIfPresent(TCCriticalAlert.self, forKey: .criticalAlert)
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -175,6 +189,7 @@ public struct TCTask: Codable, Hashable {
         try container.encodeIfPresent(priority, forKey: .priority)
         try container.encode(tags, forKey: .tags)
         try container.encodeIfPresent(locationReminder, forKey: .locationReminder)
+        try container.encodeIfPresent(criticalAlert, forKey: .criticalAlert)
         if let due = due {
             let timeInterval = due.timeIntervalSince1970.rounded()
             try container.encode(String(timeInterval), forKey: .due)
@@ -210,7 +225,8 @@ public struct TCTask: Codable, Hashable {
         obsidianNote: String? = nil,
         noteAnnotationKey: String? = nil,
         tags: [TCTag]? = nil,
-        locationReminder: TCLocationReminder? = nil
+        locationReminder: TCLocationReminder? = nil,
+        criticalAlert: TCCriticalAlert? = nil
     ) {
         self.uuid = uuid
         self.project = project
@@ -222,6 +238,7 @@ public struct TCTask: Codable, Hashable {
         self.noteAnnotationKey = noteAnnotationKey
         self.tags = tags
         self.locationReminder = locationReminder
+        self.criticalAlert = criticalAlert
         if let tags {
             NLPService.shared.appendTagsToCache(tags)
         }
@@ -237,6 +254,7 @@ public struct TCTask: Codable, Hashable {
     public var noteAnnotationKey: String?
     public var tags: [TCTag]?
     public var locationReminder: TCLocationReminder?
+    public var criticalAlert: TCCriticalAlert?
 
     public var obsidianNoteAnnotation: String? {
         guard let note = obsidianNote else {
@@ -270,6 +288,29 @@ public struct TCTask: Codable, Hashable {
 
     public var rustAnnotationFromLocationReminder: Annotation? {
         guard let annotationString = locationReminderAnnotation else {
+            return nil
+        }
+
+        let annotation = Taskchampion.create_annotation(
+            annotationString,
+            String(Int(Date().timeIntervalSince1970.rounded()))
+        )
+        return annotation
+    }
+
+    public var criticalAlertAnnotation: String? {
+        guard let alert = criticalAlert, alert.isEnabled else {
+            return nil
+        }
+        guard let jsonData = try? JSONEncoder().encode(alert),
+            let jsonString = String(data: jsonData, encoding: .utf8) else {
+            return nil
+        }
+        return "critical-alert: \(jsonString)"
+    }
+
+    public var rustAnnotationFromCriticalAlert: Annotation? {
+        guard let annotationString = criticalAlertAnnotation else {
             return nil
         }
 
@@ -323,6 +364,10 @@ public struct TCTask: Codable, Hashable {
 
     public var hasLocationReminder: Bool {
         locationReminder != nil
+    }
+
+    public var hasCriticalAlert: Bool {
+        criticalAlert?.isEnabled ?? false
     }
 
     public var localDate: String {
