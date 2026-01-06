@@ -29,7 +29,13 @@ let project = Project(
                                 "NSUbiquitousContainerSupportedFolderLevels": "Any"
                             ]
                     ],
-                    "CFBundleShortVersionString": "3"
+                    "CFBundleShortVersionString": "3",
+                    "NSLocationWhenInUseUsageDescription":
+                        "Taskchamp uses your location to show nearby places when setting location-based reminders.",
+                    "NSLocationAlwaysAndWhenInUseUsageDescription":
+                        // swiftlint:disable:next line_length
+                        "Taskchamp needs background location access to notify you when you arrive at or leave a location for your task reminders.",
+                    "UIBackgroundModes": ["location"]
                 ]
             ),
             sources: ["taskchamp/Sources/**"],

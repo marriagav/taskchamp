@@ -23,6 +23,8 @@ public struct EditTaskView: View, UseKeyboardToolbar {
     @State var time: Date = .init()
 
     @State private var showTagPopover = false
+    @State private var showLocationPicker = false
+    @State var locationReminder: TCLocationReminder?
     @State var isShowingAlert = false
     @State var isShowingObsidianSettings = false
     @State var alertTitle = ""
@@ -44,7 +46,8 @@ public struct EditTaskView: View, UseKeyboardToolbar {
                 date: didSetDate ? due : nil,
                 time: didSetTime ? time : nil
             ) ||
-            task.tags ?? [] != tags
+            task.tags ?? [] != tags ||
+            task.locationReminder != locationReminder
     }
 
     init(task: TCTask) {
@@ -53,6 +56,7 @@ public struct EditTaskView: View, UseKeyboardToolbar {
         status = task.status
         priority = task.priority ?? .none
         tags = task.tags ?? []
+        locationReminder = task.locationReminder
         if let due = task.due {
             didSetDate = true
             didSetTime = true
@@ -132,6 +136,13 @@ public struct EditTaskView: View, UseKeyboardToolbar {
                 AddTagButton(tags: $tags) {
                     showTagPopover = true
                 }
+            }
+            Section {
+                LocationReminderButton(locationReminder: $locationReminder) {
+                    showLocationPicker = true
+                }
+            } header: {
+                Text("Location Reminder")
             }
             Section {
                 Button(action: {
@@ -236,6 +247,9 @@ public struct EditTaskView: View, UseKeyboardToolbar {
             NavigationStack {
                 ObsidianNoteView(taskNote: task.obsidianNote ?? "")
             }
+        }
+        .sheet(isPresented: $showLocationPicker) {
+            LocationPickerView(locationReminder: $locationReminder)
         }
         .navigationTitle(description)
     }
