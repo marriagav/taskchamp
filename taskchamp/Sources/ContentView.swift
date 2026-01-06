@@ -5,6 +5,7 @@ import taskchampShared
 class GlobalState {
     var isSyncingTasks = true
     var isShowingPaywall = false
+    var lastRemindersImportCount: Int = 0
 }
 
 public struct ContentView: View {
@@ -17,6 +18,7 @@ public struct ContentView: View {
     @State private var selectedSyncType: TaskchampionService.SyncType?
     @State private var isShowingSyncServiceModal = false
     @State var isShowingCreateTaskView = false
+    @Environment(\.scenePhase) private var scenePhase
 
     public init() {
         UINavigationBar.appearance().largeTitleTextAttributes = [.foregroundColor: UIColor.tintColor]
@@ -39,6 +41,20 @@ public struct ContentView: View {
         try TaskchampionService.shared.setDbUrl(path: localReplicaPath)
         try await TaskchampionService.shared.sync {
             globalState.isSyncingTasks = false
+        }
+    }
+
+    /// Imports reminders from Apple Reminders if capture is enabled
+    func importRemindersIfEnabled() async {
+        let service = RemindersCaptureService.shared
+        guard service.isConfigured else {
+            return
+        }
+        do {
+            let result = try await service.importReminders()
+            globalState.lastRemindersImportCount = result.importedCount
+        } catch {
+            print("Failed to import reminders: \(error)")
         }
     }
 
@@ -100,9 +116,19 @@ public struct ContentView: View {
             }
             do {
                 try await setReplicaAndSync()
+                // Import reminders after initial sync
+                await importRemindersIfEnabled()
             } catch {
                 isShowingAlert = true
                 globalState.isSyncingTasks = false
+            }
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active {
+                // Import reminders when app becomes active
+                Task {
+                    await importRemindersIfEnabled()
+                }
             }
         }
         .fullScreenCover(isPresented: $isShowingSyncServiceModal) {
