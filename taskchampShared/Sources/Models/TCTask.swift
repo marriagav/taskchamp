@@ -1,3 +1,4 @@
+import CoreLocation
 import Foundation
 import Taskchampion
 
@@ -33,6 +34,7 @@ public struct TCTask: Codable, Hashable {
         case priority
         case due
         case tags
+        case locationReminder
     }
 
     // Helper to handle dynamic keys
@@ -119,6 +121,18 @@ public struct TCTask: Codable, Hashable {
         obsidianNote = obsidianNoteValue
 
         self.tags = tags.isEmpty ? nil : tags
+
+        // Location reminder data stored in annotations
+        var locationReminderValue: TCLocationReminder?
+        for annotation in annotations where annotation.starts(with: "location-reminder:") {
+            let jsonString = annotation.replacingOccurrences(of: "location-reminder: ", with: "")
+            if let data = jsonString.data(using: .utf8),
+                let reminder = try? JSONDecoder().decode(TCLocationReminder.self, from: data) {
+                locationReminderValue = reminder
+                break
+            }
+        }
+        locationReminder = locationReminderValue
     }
 
     public init(from decoder: Decoder) throws {
@@ -150,6 +164,7 @@ public struct TCTask: Codable, Hashable {
         }
         obsidianNote = obsidianNoteValue
         self.noteAnnotationKey = noteAnnotationKey
+        locationReminder = try container.decodeIfPresent(TCLocationReminder.self, forKey: .locationReminder)
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -159,6 +174,7 @@ public struct TCTask: Codable, Hashable {
         try container.encode(status, forKey: .status)
         try container.encodeIfPresent(priority, forKey: .priority)
         try container.encode(tags, forKey: .tags)
+        try container.encodeIfPresent(locationReminder, forKey: .locationReminder)
         if let due = due {
             let timeInterval = due.timeIntervalSince1970.rounded()
             try container.encode(String(timeInterval), forKey: .due)
@@ -193,7 +209,8 @@ public struct TCTask: Codable, Hashable {
         due: Date? = nil,
         obsidianNote: String? = nil,
         noteAnnotationKey: String? = nil,
-        tags: [TCTag]? = nil
+        tags: [TCTag]? = nil,
+        locationReminder: TCLocationReminder? = nil
     ) {
         self.uuid = uuid
         self.project = project
@@ -204,6 +221,7 @@ public struct TCTask: Codable, Hashable {
         self.obsidianNote = obsidianNote
         self.noteAnnotationKey = noteAnnotationKey
         self.tags = tags
+        self.locationReminder = locationReminder
         if let tags {
             NLPService.shared.appendTagsToCache(tags)
         }
@@ -218,6 +236,7 @@ public struct TCTask: Codable, Hashable {
     public var obsidianNote: String?
     public var noteAnnotationKey: String?
     public var tags: [TCTag]?
+    public var locationReminder: TCLocationReminder?
 
     public var obsidianNoteAnnotation: String? {
         guard let note = obsidianNote else {
@@ -233,6 +252,29 @@ public struct TCTask: Codable, Hashable {
 
         let annotation = Taskchampion.create_annotation(
             note,
+            String(Int(Date().timeIntervalSince1970.rounded()))
+        )
+        return annotation
+    }
+
+    public var locationReminderAnnotation: String? {
+        guard let reminder = locationReminder else {
+            return nil
+        }
+        guard let jsonData = try? JSONEncoder().encode(reminder),
+            let jsonString = String(data: jsonData, encoding: .utf8) else {
+            return nil
+        }
+        return "location-reminder: \(jsonString)"
+    }
+
+    public var rustAnnotationFromLocationReminder: Annotation? {
+        guard let annotationString = locationReminderAnnotation else {
+            return nil
+        }
+
+        let annotation = Taskchampion.create_annotation(
+            annotationString,
             String(Int(Date().timeIntervalSince1970.rounded()))
         )
         return annotation
@@ -277,6 +319,10 @@ public struct TCTask: Codable, Hashable {
 
     public var hasNote: Bool {
         obsidianNote != nil
+    }
+
+    public var hasLocationReminder: Bool {
+        locationReminder != nil
     }
 
     public var localDate: String {

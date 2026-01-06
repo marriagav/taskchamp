@@ -28,6 +28,8 @@ public struct CreateTaskView: View, UseKeyboardToolbar {
 
     @State private var showPaywall = false
     @State private var showTagPopover = false
+    @State private var showLocationPicker = false
+    @State private var locationReminder: TCLocationReminder?
     @State private var isShowingAlert = false
     @State private var alertTitle = ""
     @State private var alertMessage = ""
@@ -176,6 +178,13 @@ public struct CreateTaskView: View, UseKeyboardToolbar {
                         showTagPopover = true
                     }
                 }
+                Section {
+                    LocationReminderButton(locationReminder: $locationReminder) {
+                        showLocationPicker = true
+                    }
+                } header: {
+                    Text("Location Reminder")
+                }
             }.toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") {
@@ -202,7 +211,8 @@ public struct CreateTaskView: View, UseKeyboardToolbar {
                             status: status,
                             priority: priority == .none ? nil : priority,
                             due: finalDate,
-                            tags: tags.isEmpty ? nil : tags
+                            tags: tags.isEmpty ? nil : tags,
+                            locationReminder: locationReminder
                         )
 
                         do {
@@ -212,6 +222,9 @@ public struct CreateTaskView: View, UseKeyboardToolbar {
                             }
                             NotificationService.shared.requestAuthorization()
                             NotificationService.shared.createReminderForTask(task: task)
+                            if task.hasLocationReminder {
+                                LocationService.shared.startMonitoringRegion(for: task)
+                            }
                             dismiss()
                         } catch {
                             isShowingAlert = true
@@ -283,6 +296,9 @@ public struct CreateTaskView: View, UseKeyboardToolbar {
             }
             .navigationDestination(isPresented: $showTagPopover) {
                 AddTagView(selectedTags: $tags)
+            }
+            .sheet(isPresented: $showLocationPicker) {
+                LocationPickerView(locationReminder: $locationReminder)
             }
             .navigationTitle("New Task")
             .navigationBarTitleDisplayMode(.inline)

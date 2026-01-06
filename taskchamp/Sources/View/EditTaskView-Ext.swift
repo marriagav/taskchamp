@@ -79,8 +79,12 @@ extension EditTaskView {
             }
             if (newStatus == .completed) || (newStatus == .deleted) {
                 NotificationService.shared.deleteReminderForTask(task: task)
+                LocationService.shared.stopMonitoringRegion(for: task.uuid)
             } else {
                 NotificationService.shared.createReminderForTask(task: task)
+                if task.hasLocationReminder {
+                    LocationService.shared.startMonitoringRegion(for: task)
+                }
             }
             dismiss()
         } catch {
@@ -103,7 +107,7 @@ extension EditTaskView {
         let finalDate = Calendar.current.mergeDateWithTime(date: date, time: time)
         let tags = tags.isEmpty ? nil : tags
 
-        let task = TCTask(
+        let updatedTask = TCTask(
             uuid: task.uuid,
             project: project.isEmpty ? nil : project,
             description: description,
@@ -111,14 +115,22 @@ extension EditTaskView {
             priority: priority == .none ? nil : priority,
             due: finalDate,
             tags: tags,
+            locationReminder: locationReminder
         )
 
         do {
             globalState.isSyncingTasks = true
-            try TaskchampionService.shared.updateTask(task) {
+            try TaskchampionService.shared.updateTask(updatedTask) {
                 globalState.isSyncingTasks = false
             }
-            NotificationService.shared.createReminderForTask(task: task)
+            NotificationService.shared.createReminderForTask(task: updatedTask)
+
+            // Handle location reminder monitoring
+            LocationService.shared.stopMonitoringRegion(for: task.uuid)
+            if updatedTask.hasLocationReminder {
+                LocationService.shared.startMonitoringRegion(for: updatedTask)
+            }
+
             dismiss()
         } catch {
             isShowingAlert = true
@@ -134,6 +146,7 @@ extension EditTaskView {
                 globalState.isSyncingTasks = false
             }
             NotificationService.shared.deleteReminderForTask(task: task)
+            LocationService.shared.stopMonitoringRegion(for: task.uuid)
             dismiss()
         } catch {
             isShowingAlert = true

@@ -24,6 +24,10 @@
 	<true/>
 	<key>NSAccentColorName</key>
 	<string>AccentColor</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Taskchamp needs background location access to notify you when you arrive at or leave a location for your task reminders.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Taskchamp uses your location to show nearby places when setting location-based reminders.</string>
 	<key>NSUbiquitousContainers</key>
 	<dict>
 		<key>iCloud.com.mav.taskchamp</key>
@@ -43,6 +47,10 @@
 		<key>UISceneConfigurations</key>
 		<dict/>
 	</dict>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+	</array>
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>UIColorName</key>

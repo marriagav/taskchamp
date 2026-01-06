@@ -221,7 +221,11 @@ public class TaskchampionService {
 
         var annotations: RustVec<Annotation>?
         if let annotation = task.rustAnnotationFromObsidianNote {
-            annotations = RustVec<Annotation>()
+            annotations = annotations ?? RustVec<Annotation>()
+            annotations?.push(value: annotation)
+        }
+        if let annotation = task.rustAnnotationFromLocationReminder {
+            annotations = annotations ?? RustVec<Annotation>()
             annotations?.push(value: annotation)
         }
 
@@ -262,7 +266,7 @@ public class TaskchampionService {
         let due = task.due?.timeIntervalSince1970.rounded()
         let dueString = due != nil ? String(Int(due ?? 0)) : nil
 
-        let task = replica.create_task(
+        let createdTask = replica.create_task(
             task.uuid.intoRustString(),
             task.description.intoRustString(),
             dueString?.intoRustString(),
@@ -270,8 +274,32 @@ public class TaskchampionService {
             task.project?.intoRustString(),
             task.rustVecOfTags,
         )
-        if task == nil {
+        if createdTask == nil {
             throw TCError.genericError("Failed to create task")
+        }
+
+        // Add annotations if present (location reminder or obsidian note)
+        var annotations: RustVec<Annotation>?
+        if let annotation = task.rustAnnotationFromObsidianNote {
+            annotations = annotations ?? RustVec<Annotation>()
+            annotations?.push(value: annotation)
+        }
+        if let annotation = task.rustAnnotationFromLocationReminder {
+            annotations = annotations ?? RustVec<Annotation>()
+            annotations?.push(value: annotation)
+        }
+
+        if annotations != nil {
+            _ = replica.update_task(
+                task.uuid.intoRustString(),
+                task.description.intoRustString(),
+                dueString?.intoRustString(),
+                task.priority?.rawValue.intoRustString(),
+                task.project?.intoRustString(),
+                task.status.rawValue.intoRustString(),
+                annotations,
+                task.rustVecOfTags
+            )
         }
 
         _ = replica.sync_no_server() // rebuild the working set
