@@ -39,7 +39,7 @@ Taskchamp can work as a standalone iOS app, but it's recommended to use it with 
 
 ## Setup with Taskwarrior
 
-There are currently thrww ways to setup Taskchamp to work with Taskwarrior: using a Taskchampion Sync Server, using AWS, using GCP, or using iCloud Drive.
+There are currently four ways to setup Taskchamp to work with Taskwarrior: using a Taskchampion Sync Server, using AWS, using GCP, or using iCloud Drive.
 
 > [!NOTE]
 > You only need to setup one of these methods, not all of them.
@@ -160,7 +160,7 @@ To setup iCloud Drive Sync, follow these steps:
 
 > Sometimes it may take some time for the folder to appear on the finder and files app, but you can access it via terminal.
 
-3. After the folder is created, navigate to it from your computer, and copy your `taskchampion.sqlite3` file into `~/Library/Mobile Documents/iCloud~com~mav~taskchamp/Documents/taskchamp/`. Replace the existing file if there is one.
+3. After the folder is created, navigate to it from your computer, and copy your `taskchampion.sqlite3` file into `~/Library/Mobile Documents/iCloud~com~mav~taskchamp/Documents/taskchamp/`. Replace the existing file if there is one. Once the initial database load is complete, delete the taskchampion.sqlite3 file from this folder. After removing the file, the iOS app will  perform a correct sync.
 
 > [!NOTE]
 > You do not need to move the file, just a copy will do. This is just to make sure that the files have a shared starting point.
