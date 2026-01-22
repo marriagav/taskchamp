@@ -90,15 +90,17 @@ The documentation for how sync works in Taskwarrior can be found [here](https://
 
 > [!NOTE]
 > If you are having issues syncing, your replicas might be out of sync. In order to fix this you can follow the following steps:
-1. Delete Taskchamp.
-2. Make sure to have your tasks database locally saved on your pc.
-3. Delete all of the contents of the bucket.
-   - Note: Don't delete the bucket itself, just the contents within it.
-4. Make sure to have your sync service configured on your pc's `.taskrc`
-5. Trigger a sync from your pc via `task sync`
-6. Add a new task on your pc via `task add`
-7. Trigger another sync from your pc via `task sync`
-8. Re-install Taskchamp and setup sync.
+1. Select the desired sync service in Taskchamp. 
+2. Close Taskchamp.
+3. Make sure to have your tasks database locally saved on your pc.
+4. Delete all of the contents of the bucket.
+	- Note: Don't delete the bucket itself, just the contents within it.
+5. Make sure to have your sync service configured on your pc's `.taskrc`
+6. Trigger a sync from your pc via `task sync`
+7. Add a new task on your pc via `task add`
+8. Trigger another sync from your pc via `task sync`
+9. Reopen Taskchamp and refresh.
+> If the problem persists try to delete Taskchamp instead of steps 1. and 2. and reinstall after step 9
 
 <!-- TOC --><a name="setup-with-gcp"></a>
 
@@ -122,15 +124,17 @@ The documentation for how sync works in Taskwarrior can be found [here](https://
 
 > [!NOTE]
 > If you are having issues syncing, your replicas might be out of sync. In order to fix this you can follow the following steps:
-1. Delete Taskchamp.
-2. Make sure to have your tasks database locally saved on your pc.
-3. Delete all of the contents of the bucket.
-   - Note: Don't delete the bucket itself, just the contents within it.
-4. Make sure to have your sync service configured on your pc's `.taskrc`
-5. Trigger a sync from your pc via `task sync`
-6. Add a new task on your pc via `task add`
-7. Trigger another sync from your pc via `task sync`
-8. Re-install Taskchamp and setup sync.
+1. Select the desired sync service in Taskchamp. 
+2. Close Taskchamp.
+3. Make sure to have your tasks database locally saved on your pc.
+4. Delete all of the contents of the bucket.
+	- Note: Don't delete the bucket itself, just the contents within it.
+5. Make sure to have your sync service configured on your pc's `.taskrc`
+6. Trigger a sync from your pc via `task sync`
+7. Add a new task on your pc via `task add`
+8. Trigger another sync from your pc via `task sync`
+9. Reopen Taskchamp and refresh.
+> If the problem persists try to delete Taskchamp instead of steps 1. and 2. and reinstall after step 9
 
 <!-- TOC --><a name="setup-with-icloud-drive"></a>
 

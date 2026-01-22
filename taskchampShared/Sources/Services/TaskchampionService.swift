@@ -2,6 +2,7 @@ import Foundation
 import Taskchampion
 import WidgetKit
 
+// swiftlint:disable:next type_body_length
 public class TaskchampionService {
     public static let shared = TaskchampionService()
     private var replica: Replica?
@@ -272,7 +273,7 @@ public class TaskchampionService {
             dueString?.intoRustString(),
             priority,
             task.project?.intoRustString(),
-            task.rustVecOfTags,
+            task.rustVecOfTags
         )
         if task == nil {
             throw TCError.genericError("Failed to create task")
