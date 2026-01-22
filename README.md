@@ -94,7 +94,7 @@ The documentation for how sync works in Taskwarrior can be found [here](https://
 2. Close Taskchamp.
 3. Make sure to have your tasks database locally saved on your pc.
 4. Delete all of the contents of the bucket.
- - Note: Don't delete the bucket itself, just the contents within it.
+   - Note: Don't delete the bucket itself, just the contents within it.
 5. Make sure to have your sync service configured on your pc's `.taskrc`
 6. Trigger a sync from your pc via `task sync`
 7. Add a new task on your pc via `task add`
@@ -127,7 +127,7 @@ The documentation for how sync works in Taskwarrior can be found [here](https://
 2. Close Taskchamp.
 3. Make sure to have your tasks database locally saved on your pc.
 4. Delete all of the contents of the bucket.
- - Note: Don't delete the bucket itself, just the contents within it.
+   - Note: Don't delete the bucket itself, just the contents within it.
 5. Make sure to have your sync service configured on your pc's `.taskrc`
 6. Trigger a sync from your pc via `task sync`
 7. Add a new task on your pc via `task add`
