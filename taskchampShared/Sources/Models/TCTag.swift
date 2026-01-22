@@ -58,13 +58,8 @@ public class TCTag: Codable, Equatable {
         excludedFromFilters = []
     }
 
-    @Transient private var cachedRustTag: Tag?
-
     public var rustTag: Tag? {
-        if cachedRustTag == nil {
-            cachedRustTag = Taskchampion.create_tag(name)
-        }
-        return cachedRustTag
+        return Taskchampion.create_tag(name)
     }
 
     public func isSynthetic() -> Bool {
