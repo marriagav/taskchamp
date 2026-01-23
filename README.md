@@ -39,10 +39,7 @@ Taskchamp can work as a standalone iOS app, but it's recommended to use it with 
 
 ## Setup with Taskwarrior
 
-There are currently thrww ways to setup Taskchamp to work with Taskwarrior: using a Taskchampion Sync Server, using AWS, using GCP, or using iCloud Drive.
-
-> [!IMPORTANT]
-> Currently AWS and GCP are not working, this is being tracked in https://github.com/marriagav/taskchamp/issues/49 and https://github.com/GothenburgBitFactory/taskchampion/issues/608.
+There are currently four ways to setup Taskchamp to work with Taskwarrior: using a Taskchampion Sync Server, using AWS, using GCP, or using iCloud Drive.
 
 > [!NOTE]
 > You only need to setup one of these methods, not all of them.
@@ -91,6 +88,20 @@ The documentation for how sync works in Taskwarrior can be found [here](https://
 
 6. Your tasks should now be synced between your computer and your phone. You can add tasks from the command line using Taskwarrior, `task sync`, and they will appear on Taskchamp.
 
+> [!NOTE]
+> If you are having issues syncing, your replicas might be out of sync. In order to fix this you can follow the following steps:
+1. Select the desired sync service in Taskchamp. 
+2. Close Taskchamp.
+3. Make sure to have your tasks database locally saved on your pc.
+4. Delete all of the contents of the bucket.
+	- Note: Don't delete the bucket itself, just the contents within it.
+5. Make sure to have your sync service configured on your pc's `.taskrc`
+6. Trigger a sync from your pc via `task sync`
+7. Add a new task on your pc via `task add`
+8. Trigger another sync from your pc via `task sync`
+9. Reopen Taskchamp and refresh.
+> If the problem persists try to delete Taskchamp instead of steps 1. and 2. and reinstall after step 9
+
 <!-- TOC --><a name="setup-with-gcp"></a>
 
 ### Setup with GCP
@@ -110,6 +121,20 @@ The documentation for how sync works in Taskwarrior can be found [here](https://
 5. Run this command whenever you want to sync your tasks. You can also create a cron job to run run it every few minutes.
 
 6. Your tasks should now be synced between your computer and your phone. You can add tasks from the command line using Taskwarrior, `task sync`, and they will appear on Taskchamp.
+
+> [!NOTE]
+> If you are having issues syncing, your replicas might be out of sync. In order to fix this you can follow the following steps:
+1. Select the desired sync service in Taskchamp. 
+2. Close Taskchamp.
+3. Make sure to have your tasks database locally saved on your pc.
+4. Delete all of the contents of the bucket.
+	- Note: Don't delete the bucket itself, just the contents within it.
+5. Make sure to have your sync service configured on your pc's `.taskrc`
+6. Trigger a sync from your pc via `task sync`
+7. Add a new task on your pc via `task add`
+8. Trigger another sync from your pc via `task sync`
+9. Reopen Taskchamp and refresh.
+> If the problem persists try to delete Taskchamp instead of steps 1. and 2. and reinstall after step 9
 
 <!-- TOC --><a name="setup-with-icloud-drive"></a>
 
@@ -137,7 +162,7 @@ To setup iCloud Drive Sync, follow these steps:
 
 > Sometimes it may take some time for the folder to appear on the finder and files app, but you can access it via terminal.
 
-3. After the folder is created, navigate to it from your computer, and copy your `taskchampion.sqlite3` file into `~/Library/Mobile Documents/iCloud~com~mav~taskchamp/Documents/taskchamp/`. Replace the existing file if there is one.
+3. After the folder is created, navigate to it from your computer, and copy your `taskchampion.sqlite3` file into `~/Library/Mobile Documents/iCloud~com~mav~taskchamp/Documents/taskchamp/`. Replace the existing file if there is one. Once the initial database load is complete, delete the taskchampion.sqlite3 file from this folder. After removing the file, the iOS app will  perform a correct sync.
 
 > [!NOTE]
 > You do not need to move the file, just a copy will do. This is just to make sure that the files have a shared starting point.

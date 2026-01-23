@@ -2,6 +2,7 @@ import Foundation
 import Taskchampion
 import WidgetKit
 
+// swiftlint:disable:next type_body_length
 public class TaskchampionService {
     public static let shared = TaskchampionService()
     private var replica: Replica?
@@ -216,6 +217,10 @@ public class TaskchampionService {
         guard let replica else {
             throw TCError.genericError("Database not set")
         }
+        let priority = (task.priority == TCTask.Priority.none || task.priority == nil) ? ""
+            .intoRustString() : task
+            .priority?.rawValue
+            .intoRustString()
         let due = task.due?.timeIntervalSince1970.rounded()
         let dueString = due != nil ? String(Int(due ?? 0)) : nil
 
@@ -229,7 +234,7 @@ public class TaskchampionService {
             task.uuid.intoRustString(),
             task.description.intoRustString(),
             dueString?.intoRustString(),
-            task.priority?.rawValue.intoRustString(),
+            priority,
             task.project?.intoRustString(),
             task.status.rawValue.intoRustString(),
             annotations,
@@ -268,7 +273,7 @@ public class TaskchampionService {
             dueString?.intoRustString(),
             priority,
             task.project?.intoRustString(),
-            task.rustVecOfTags,
+            task.rustVecOfTags
         )
         if task == nil {
             throw TCError.genericError("Failed to create task")
