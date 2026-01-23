@@ -27,6 +27,13 @@ public enum TCUserDefaults: String {
 
     case storeKitPremiumUnlocked
     case storeKitCloudSubscriptionActive
+
+    // Reminders Capture
+    case remindersCaptureEnabled
+    case remindersCaptureListId
+    case remindersCaptureListName
+    case remindersCapturePostImportAction
+    case remindersLastImportedIds
 }
 
 public class UserDefaultsManager {

@@ -29,7 +29,9 @@ let project = Project(
                                 "NSUbiquitousContainerSupportedFolderLevels": "Any"
                             ]
                     ],
-                    "CFBundleShortVersionString": "3.1"
+                    "CFBundleShortVersionString": "3.1",
+                    "NSRemindersUsageDescription":
+                        "Taskchamp can import tasks from your Apple Reminders app, allowing you to capture reminders created via Siri."
                 ]
             ),
             sources: ["taskchamp/Sources/**"],

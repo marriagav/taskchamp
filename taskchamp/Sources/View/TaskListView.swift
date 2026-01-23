@@ -22,6 +22,7 @@ public struct TaskListView: View {
     @State var isShowingFilterView = false
     @State var isShowingObsidianSettings = false
     @State var isShowingSyncSettings = false
+    @State var isShowingRemindersCaptureSettings = false
     @State var sortType: TasksHelper.TCSortType = .init(
         rawValue: UserDefaultsManager.standard
             .getValue(forKey: .sortType) ?? TasksHelper.TCSortType.defaultSort.rawValue
@@ -222,6 +223,9 @@ public struct TaskListView: View {
                     Button("Obsidian Settings") {
                         isShowingObsidianSettings.toggle()
                     }
+                    Button("Reminders Capture") {
+                        isShowingRemindersCaptureSettings.toggle()
+                    }
                     Menu("Sort by") {
                         sortButton(sortType: .defaultSort)
                         sortButton(sortType: .date)
@@ -290,6 +294,11 @@ public struct TaskListView: View {
                 selectedSyncType: $selectedSyncType
             )
         }
+        .sheet(isPresented: $isShowingRemindersCaptureSettings, onDismiss: {
+            updateTasks()
+        }) {
+            RemindersCaptureSettingsView()
+        }
         .navigationDestination(for: TCTask.self) { task in
             EditTaskView(task: task)
                 .onDisappear {
@@ -307,7 +316,11 @@ public struct TaskListView: View {
         .onChange(of: scenePhase) { _, newScenePhase in
             if newScenePhase == .active {
                 setupNotifications()
+                updateTasks()
             }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .TCRemindersImportCompleted)) { _ in
+            updateTasks()
         }
     }
 }
