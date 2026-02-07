@@ -54,7 +54,11 @@ fi
 clone_or_update_repo() {
     if [ ! -d "$SCRIPT_DIR/../task-champion-swift" ]; then
         echo "Directory not present, cloning task-champion-swift..."
-        "$SCRIPT_DIR/clone_taskchampion_swift.sh"
+        if [ "$SKIP_SIM" = true ]; then
+            "$SCRIPT_DIR/clone_taskchampion_swift.sh" --ci
+        else
+            "$SCRIPT_DIR/clone_taskchampion_swift.sh"
+        fi
     else
         echo "Directory already present, pulling latest changes..."
         (cd "$TASKCHAMPION_SWIFT_DIR" && git pull)
