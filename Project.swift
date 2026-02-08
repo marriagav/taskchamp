@@ -29,7 +29,7 @@ let project = Project(
                                 "NSUbiquitousContainerSupportedFolderLevels": "Any"
                             ]
                     ],
-                    "CFBundleShortVersionString": "3.1"
+                    "CFBundleShortVersionString": "3.2"
                 ]
             ),
             sources: ["taskchamp/Sources/**"],
@@ -50,7 +50,7 @@ let project = Project(
                 .external(name: "MarkdownUI"),
                 .target(name: "taskchampShared"),
                 .target(name: "taskchampWidget")
-            ],
+            ]
         ),
         .target(
             name: "taskchampTests",
@@ -82,7 +82,7 @@ let project = Project(
                             "NSUbiquitousContainerSupportedFolderLevels": "Any"
                         ]
                 ],
-                "CFBundleShortVersionString": "3.1"
+                "CFBundleShortVersionString": "3.2"
             ]),
             sources: "taskchampWidget/Sources/**",
             entitlements: .dictionary(
