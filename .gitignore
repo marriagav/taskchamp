@@ -39,3 +39,5 @@ amplifytools.xcconfig
 
 ### Cargo
 task-champion-swift/
+
+tmp/
