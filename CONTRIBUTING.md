@@ -7,7 +7,7 @@ Assign yourself to any issue that you would like to work on, or create a new one
 ### Getting the code
 
 > [!IMPORTANT]
-> Taskchamp depends on the [taskchampion-swift](https://github.com/marriagav/task-champion-swift) rust library for interacting with the taskchampion backend and syncing services. Contribute there if you want to make changes to the sync/database part of the app.
+> Taskchamp depends on the [taskchampion](https://github.com/GothenburgBitFactory/taskchampion) rust library.
 
 1. Clone the repo: Clone the repo to your local machine and checkout the `dev` branch.
 
