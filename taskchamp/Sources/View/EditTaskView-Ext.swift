@@ -5,8 +5,8 @@ import UIKit
 extension EditTaskView {
     func handleObsidianTap() {
         do {
-            let obsidianVaultName: String? = UserDefaultsManager.shared.getValue(forKey: .obsidianVaultName)
-            if obsidianVaultName == nil || obsidianVaultName?.isEmpty ?? true {
+            let taskNoteFolderBookmark: Data? = UserDefaultsManager.shared.getValue(forKey: .taskNoteFolderBookmark)
+            if taskNoteFolderBookmark == nil {
                 isShowingObsidianSettings = true
                 return
             }
