@@ -54,6 +54,7 @@ public struct TCTask: Codable, Hashable {
     }
 
     @MainActor
+    // swiftlint:disable:next cyclomatic_complexity
     public static func taskFactory(from rustTask: TaskRef, withFilter filter: TCFilter) -> TCTask? {
         // Exclude recurring template tasks unless explicitly filtering for them
         let statusValue = rustTask.get_status().get_value().toString().lowercased()

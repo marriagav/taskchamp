@@ -60,8 +60,10 @@ public struct ObsidianNoteView: View {
 
     func reloadNote() {
         do {
-            if let contentAndUrl = try FileService.shared.getContentsOfObsidianNote(for: taskNote),
-               let content = contentAndUrl.0
+            if let contentAndUrl =
+                try FileService.shared.getContentsOfObsidianNote(for: taskNote),
+                let content = contentAndUrl.0
+            // swiftlint:disable:next opening_brace
             {
                 noteContent = content
             }
