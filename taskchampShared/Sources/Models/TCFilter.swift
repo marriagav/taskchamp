@@ -39,13 +39,14 @@ public class TCFilter: Codable {
     public var didSetDue: Bool = false
     public var didSetStatus: Bool = false
     public var didSetTags: Bool = false
+    public var didSetRecur: Bool = false
 
     public var realDue: Date? {
         return didSetDue ? due : nil
     }
 
     public var isValidFilter: Bool {
-        return didSetPrio || didSetProject || didSetDue || didSetStatus || didSetTags
+        return didSetPrio || didSetProject || didSetDue || didSetStatus || didSetTags || didSetRecur
     }
 
     public func setPrio(_ prio: TCTask.Priority?) {
@@ -75,6 +76,10 @@ public class TCFilter: Codable {
             self.status = status
             didSetStatus = true
         }
+    }
+
+    public func setRecur() {
+        didSetRecur = true
     }
 
     @MainActor
@@ -128,6 +133,7 @@ public class TCFilter: Codable {
         case didSetDue
         case didSetStatus
         case didSetTags
+        case didSetRecur
         case tagsToInclude
         case tagsToExclude
     }
@@ -145,6 +151,7 @@ public class TCFilter: Codable {
         didSetDue = try container.decode(Bool.self, forKey: .didSetDue)
         didSetStatus = try container.decode(Bool.self, forKey: .didSetStatus)
         didSetTags = try container.decode(Bool.self, forKey: .didSetTags)
+        didSetRecur = try container.decodeIfPresent(Bool.self, forKey: .didSetRecur) ?? false
         tagsToInclude = try container.decode(
             [TCTag].self,
             forKey: .
@@ -166,6 +173,7 @@ public class TCFilter: Codable {
         try container.encode(didSetDue, forKey: .didSetDue)
         try container.encode(didSetStatus, forKey: .didSetStatus)
         try container.encode(didSetTags, forKey: .didSetTags)
+        try container.encode(didSetRecur, forKey: .didSetRecur)
         try container.encode(tagsToInclude, forKey: .tagsToInclude)
         try container.encode(tagsToExclude, forKey: .tagsToExclude)
     }

@@ -4,6 +4,7 @@ import taskchampShared
 
 public struct ObsidianNoteView: View {
     @Environment(\.dismiss) var dismiss
+    @Environment(\.scenePhase) var scenePhase
 
     @State private var isFocused: Bool = false
     @State private var noteContent: String
@@ -32,11 +33,9 @@ public struct ObsidianNoteView: View {
             return nil
         }
 
-        let taskNoteWithPath = FileService.shared
+        return FileService.shared
             .obsidianNoteAfter(component: tasksFolderPath, url: noteUrl) ??
             "\(tasksFolderPath)/\(taskNote)"
-
-        return taskNoteWithPath
     }
 
     func getUrlString() -> String? {
@@ -48,9 +47,7 @@ public struct ObsidianNoteView: View {
 
         guard let taskNoteWithPath = getTaskNoteWithPath() else { return nil
         }
-        let urlString = "obsidian://open?vault=\(obsidianVaultName ?? "")&file=\(taskNoteWithPath)"
-
-        return urlString
+        return "obsidian://open?vault=\(obsidianVaultName ?? "")&file=\(taskNoteWithPath)"
     }
 
     func saveNote() {
@@ -58,6 +55,20 @@ public struct ObsidianNoteView: View {
             try FileService.shared.saveContentsToObsidianNote(for: taskNote, content: noteContent)
         } catch {
             print("Error saving note: \(error)")
+        }
+    }
+
+    func reloadNote() {
+        do {
+            if let contentAndUrl =
+                try FileService.shared.getContentsOfObsidianNote(for: taskNote),
+                let content = contentAndUrl.0
+            // swiftlint:disable:next opening_brace
+            {
+                noteContent = content
+            }
+        } catch {
+            print("Error reloading note: \(error)")
         }
     }
 
@@ -128,6 +139,11 @@ public struct ObsidianNoteView: View {
         .animation(.default, value: isPreviewMode)
         .navigationTitle(taskNote + ".md")
         .navigationBarTitleDisplayMode(.inline)
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active {
+                reloadNote()
+            }
+        }
         .onDisappear {
             saveNote()
         }

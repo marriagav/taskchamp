@@ -68,7 +68,7 @@ struct NoSyncServiceView: View {
                 buttonTitle: viewModel.buttonTitle(for: selectedSyncType),
                 action: completeAction,
                 isDisabled: viewModel.isDisabled(for: selectedSyncType),
-                systemImage: SFSymbols.cloudSlash.rawValue,
+                systemImage: SFSymbols.cloudSlash.rawValue
             )
         }
         .alert(isPresented: $viewModel.isShowingAlert) {

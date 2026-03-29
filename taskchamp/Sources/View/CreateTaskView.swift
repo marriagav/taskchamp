@@ -31,6 +31,7 @@ public struct CreateTaskView: View, UseKeyboardToolbar {
     @State private var isShowingAlert = false
     @State private var alertTitle = ""
     @State private var alertMessage = ""
+    @State private var showDismissConfirmation = false
 
     @FocusState private var isFocused: Bool
     @FocusState private var focusedField: FormField?
@@ -68,6 +69,10 @@ public struct CreateTaskView: View, UseKeyboardToolbar {
 
     func onDismissKeyboard() {
         focusedField = nil
+    }
+
+    private var hasUnsavedContent: Bool {
+        !nlpInput.isEmpty || !description.isEmpty
     }
 
     public var body: some View {
@@ -224,7 +229,11 @@ public struct CreateTaskView: View, UseKeyboardToolbar {
                 }
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Back") {
-                        dismiss()
+                        if hasUnsavedContent {
+                            showDismissConfirmation = true
+                        } else {
+                            dismiss()
+                        }
                     }
                 }
                 ToolbarItem(placement: .keyboard) {
@@ -278,12 +287,23 @@ public struct CreateTaskView: View, UseKeyboardToolbar {
             .alert(isPresented: $isShowingAlert) {
                 Alert(title: Text(alertTitle), message: Text(alertMessage), dismissButton: .default(Text("OK")))
             }
+            .confirmationDialog(
+                "Are you sure? This will dismiss without creating the task",
+                isPresented: $showDismissConfirmation,
+                titleVisibility: .visible
+            ) {
+                Button("Dismiss task", role: .destructive) {
+                    dismiss()
+                }
+                Button("Cancel", role: .cancel) {}
+            }
             .navigationDestination(isPresented: $showPaywall) {
                 TCPaywall()
             }
             .navigationDestination(isPresented: $showTagPopover) {
                 AddTagView(selectedTags: $tags)
             }
+            .interactiveDismissDisabled(hasUnsavedContent)
             .navigationTitle("New Task")
             .navigationBarTitleDisplayMode(.inline)
         }

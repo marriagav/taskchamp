@@ -24,6 +24,14 @@ public struct TaskCellView: View {
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
+                if task.isRecurring, let recur = task.recur {
+                    HStack(spacing: 4) {
+                        Image(systemName: SFSymbols.recurringTask.rawValue)
+                        Text(recur)
+                    }
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                }
                 Spacer()
                 if let priority = task.priority {
                     Text(priority.rawValue)

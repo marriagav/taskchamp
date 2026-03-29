@@ -47,8 +47,7 @@ public class FileService {
     }
 
     public func getSelectedSyncType() -> TaskchampionService.SyncType? {
-        let value: TaskchampionService.SyncType? = UserDefaultsManager.shared.getDecodedValue(forKey: .selectedSyncType)
-        return value
+        return UserDefaultsManager.shared.getDecodedValue(forKey: .selectedSyncType)
     }
 
     public func getDestinationPathForLocalReplica(syncType: TaskchampionService.SyncType) throws -> String {
@@ -217,12 +216,11 @@ public class FileService {
 
     func createSecurityScopedBookmark(for url: URL) -> Data? {
         do {
-            let bookmarkData = try url.bookmarkData(
+            return try url.bookmarkData(
                 options: .minimalBookmark,
                 includingResourceValuesForKeys: nil,
                 relativeTo: nil
             )
-            return bookmarkData
         } catch {
             return nil
         }
@@ -357,7 +355,6 @@ public class FileService {
     }
 
     public func getFileContents(url: URL) -> String? {
-        let contents = try? String(contentsOf: url, encoding: .utf8)
-        return contents
+        return try? String(contentsOf: url, encoding: .utf8)
     }
 }

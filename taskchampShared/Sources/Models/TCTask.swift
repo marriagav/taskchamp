@@ -7,6 +7,7 @@ public struct TCTask: Codable, Hashable {
         case pending
         case completed
         case deleted
+        case recurring
     }
 
     public enum Priority: String, Codable, Comparable, CaseIterable {
@@ -33,12 +34,15 @@ public struct TCTask: Codable, Hashable {
         case priority
         case due
         case tags
+        case recur
     }
 
-    // Helper to handle dynamic keys
+    /// Helper to handle dynamic keys
     private struct DynamicCodingKey: CodingKey {
         var stringValue: String
-        var intValue: Int? { nil }
+        var intValue: Int? {
+            nil
+        }
 
         init?(stringValue: String) {
             self.stringValue = stringValue
@@ -50,7 +54,16 @@ public struct TCTask: Codable, Hashable {
     }
 
     @MainActor
+    // swiftlint:disable:next cyclomatic_complexity
     public static func taskFactory(from rustTask: TaskRef, withFilter filter: TCFilter) -> TCTask? {
+        // Exclude recurring template tasks unless explicitly filtering for them
+        let statusValue = rustTask.get_status().get_value().toString().lowercased()
+        if statusValue == "recurring" {
+            if !filter.didSetStatus || filter.status != .recurring {
+                return nil
+            }
+        }
+
         let prio = rustTask.get_priority().toString()
         if filter.didSetPrio {
             if prio != filter.priority.rawValue {
@@ -65,7 +78,6 @@ public struct TCTask: Codable, Hashable {
             }
         }
 
-        let statusValue = rustTask.get_status().get_value().toString().lowercased()
         if filter.didSetStatus {
             if statusValue != filter.status.rawValue {
                 return nil
@@ -84,6 +96,14 @@ public struct TCTask: Codable, Hashable {
             }
         }
 
+        // Filter for recurring task instances (tasks with recur property set)
+        if filter.didSetRecur {
+            let recur = rustTask.get_recur()?.toString()
+            if recur == nil {
+                return nil
+            }
+        }
+
         return TCTask(from: rustTask)
     }
 
@@ -97,6 +117,7 @@ public struct TCTask: Codable, Hashable {
         let project = rustTask.get_project()?.toString()
         let annotations = rustTask.get_annotations().map { $0.get_description().toString() }
         let tags = rustTask.get_tags().map { TCTag.tagFactory(name: $0.get_value().toString()) }
+        let recur = rustTask.get_recur()?.toString()
 
         // Initialize
         self.uuid = uuid
@@ -109,6 +130,7 @@ public struct TCTask: Codable, Hashable {
             self.due = Date(timeIntervalSince1970: timeInterval)
         }
         self.project = project
+        self.recur = recur
 
         // Look for obsidian note in annotations
         var obsidianNoteValue: String?
@@ -135,6 +157,7 @@ public struct TCTask: Codable, Hashable {
             due = nil
         }
         tags = try container.decodeIfPresent([TCTag].self, forKey: .tags)
+        recur = try container.decodeIfPresent(String.self, forKey: .recur)
         // Decode dynamic keys for annotations
         let dynamicContainer = try decoder.container(keyedBy: DynamicCodingKey.self)
         var obsidianNoteValue: String?
@@ -159,6 +182,7 @@ public struct TCTask: Codable, Hashable {
         try container.encode(status, forKey: .status)
         try container.encodeIfPresent(priority, forKey: .priority)
         try container.encode(tags, forKey: .tags)
+        try container.encodeIfPresent(recur, forKey: .recur)
         if let due = due {
             let timeInterval = due.timeIntervalSince1970.rounded()
             try container.encode(String(timeInterval), forKey: .due)
@@ -193,7 +217,8 @@ public struct TCTask: Codable, Hashable {
         due: Date? = nil,
         obsidianNote: String? = nil,
         noteAnnotationKey: String? = nil,
-        tags: [TCTag]? = nil
+        tags: [TCTag]? = nil,
+        recur: String? = nil
     ) {
         self.uuid = uuid
         self.project = project
@@ -204,6 +229,7 @@ public struct TCTask: Codable, Hashable {
         self.obsidianNote = obsidianNote
         self.noteAnnotationKey = noteAnnotationKey
         self.tags = tags
+        self.recur = recur
         if let tags {
             NLPService.shared.appendTagsToCache(tags)
         }
@@ -218,6 +244,7 @@ public struct TCTask: Codable, Hashable {
     public var obsidianNote: String?
     public var noteAnnotationKey: String?
     public var tags: [TCTag]?
+    public var recur: String?
 
     public var obsidianNoteAnnotation: String? {
         guard let note = obsidianNote else {
@@ -231,11 +258,10 @@ public struct TCTask: Codable, Hashable {
             return nil
         }
 
-        let annotation = Taskchampion.create_annotation(
+        return Taskchampion.create_annotation(
             note,
             String(Int(Date().timeIntervalSince1970.rounded()))
         )
-        return annotation
     }
 
     public var rustTags: [Tag?]? {
@@ -277,6 +303,14 @@ public struct TCTask: Codable, Hashable {
 
     public var hasNote: Bool {
         obsidianNote != nil
+    }
+
+    public var isRecurring: Bool {
+        recur != nil
+    }
+
+    public var isRecurringTemplate: Bool {
+        status == .recurring
     }
 
     public var localDate: String {

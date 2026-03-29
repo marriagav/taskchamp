@@ -14,8 +14,7 @@ public class SwiftDataService {
             guard let container else { return [] }
             let context = container.mainContext
             let descriptor = FetchDescriptor<TCTag>()
-            let tags = try context.fetch(descriptor)
-            return tags
+            return try context.fetch(descriptor)
         } catch {
             return []
         }

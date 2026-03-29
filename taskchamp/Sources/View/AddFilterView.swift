@@ -14,7 +14,7 @@ public struct AddFilterView: View, UseKeyboardToolbar {
 
     @State private var showNlpInfoPopover = false
     @State private var nlpInput = ""
-    @State private var nlpPlaceholder = "project:my-project prio:M status:pending +filter-to-include -filter-to-exclude"
+    @State private var nlpPlaceholder = "project:my-project prio:M status:pending +tag-to-include -tag-to-exclude"
     @State private var showPaywall = false
 
     @State private var isShowingAlert = false
