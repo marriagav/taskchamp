@@ -111,6 +111,7 @@ extension EditTaskView {
             priority: priority == .none ? nil : priority,
             due: finalDate,
             tags: tags,
+            recur: task.recur
         )
 
         do {

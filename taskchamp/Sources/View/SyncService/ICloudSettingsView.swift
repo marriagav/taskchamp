@@ -32,7 +32,7 @@ class ICloudSettingsViewModel: UseSyncServiceViewModel {
         "5. Open the taskwarrior configuration file, usually located at `~/.taskrc`, and add the following line:",
         "`sync.local.server_dir=~/Library/Mobile Documents/iCloud~com~mav~taskchamp/Documents/taskchamp`",
         "6. You will be able to trigger the sync from your computer by executing: `task sync`",
-        "7. Press the button below to finalize",
+        "7. Press the button below to finalize"
     ]
 
     func completeAction(
@@ -107,7 +107,7 @@ struct ICloudSettingsView: View {
                 action: completeAction,
                 isDisabled: viewModel.isDisabled(for: selectedSyncType)
                     ||
-                    isLoading,
+                    isLoading
             )
         }
         .alert(isPresented: $viewModel.isShowingAlert) {

@@ -8,7 +8,7 @@ struct TCPaywall: View {
 
     @State var isShowingAlert = false
 
-    @ViewBuilder private var cloudCardSection: some View {
+    private var cloudCardSection: some View {
         Section {
             VStack {
                 Text("Taskchamp Cloud")
@@ -33,7 +33,7 @@ struct TCPaywall: View {
         }
     }
 
-    public var body: some View {
+    var body: some View {
         NavigationStack {
             List {
                 Section {

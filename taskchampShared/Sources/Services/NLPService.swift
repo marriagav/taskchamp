@@ -18,6 +18,7 @@ public class NLPService {
 
     public var tagsCache: [TCTag] = []
 
+    // TODO: Add "recur:" to .creation autocomplete when recurring task creation is implemented
     private var autoCompleteSources: [Surface: [String]] = [
         .creation: [
             "prio:",
@@ -29,6 +30,7 @@ public class NLPService {
             "prio:",
             "project:",
             "status:",
+            "recur",
             "+",
             "-"
         ],
@@ -40,7 +42,8 @@ public class NLPService {
         .status: [
             "pending",
             "completed",
-            "deleted"
+            "deleted",
+            "recurring"
         ]
     ]
 
@@ -145,12 +148,11 @@ public class NLPService {
             if surface != .filter {
                 tagToFilter = tagsWithoutSynthetic(tagsCache)
             }
-            let tagNames = tagToFilter.filter {
+            return tagToFilter.filter {
                 let lastWordWithoutSymbol = lastWord.dropFirst()
                 return $0.name.contains(lastWordWithoutSymbol)
             }
             .map { $0.name }
-            return tagNames
         }
 
         let trimmedInput = lastWord.trimmingCharacters(in: .whitespaces)
@@ -194,6 +196,10 @@ public class NLPService {
         if remainingString.range(of: "due:") != nil {
             task.due = extractValue(after: "due:", from: &remainingString)?.dateValue
         }
+
+        // TODO: Add recur: extraction here when recurring task creation is implemented
+        // Creating recurring tasks requires more than just setting the recur property -
+        // it needs integration with Taskwarrior's recurrence engine.
 
         // Check for and extract tags
         while remainingString.range(of: "+") != nil {
@@ -244,6 +250,12 @@ public class NLPService {
             filter.setStatus(TCTask.Status(rawValue: status ?? "pending"))
         }
 
+        // Check for recur keyword (filters for recurring task instances)
+        if let range = remainingString.range(of: "\\brecur\\b", options: .regularExpression) {
+            filter.setRecur()
+            remainingString.removeSubrange(range)
+        }
+
         // Check for and extract tags
         while remainingString.range(of: "+") != nil {
             let tagValue = extractValue(after: "+", from: &remainingString)
@@ -263,8 +275,11 @@ public class NLPService {
         return filter
     }
 
+    // TODO: Add recur: to regex patterns when recurring task creation is implemented
     func extractValue(after tag: String, from input: inout String, isFilter: Bool = false) -> String? {
-        let regex = isFilter ? "\\s+(prio:|project:|due:|status:|\\+|\\-)" : "\\s+(prio:|project:|due:|\\+|\\-)"
+        let regex = isFilter
+            ? "\\s+(prio:|project:|due:|status:|recur|\\+|\\-)"
+            : "\\s+(prio:|project:|due:|\\+|\\-)"
         if let range = input.range(of: tag) {
             let substring = input[range.upperBound...]
             if let nextTagRange = substring.range(

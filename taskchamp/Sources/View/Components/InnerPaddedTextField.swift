@@ -74,18 +74,20 @@ public struct InnerPaddedTextView: UIViewRepresentable {
 
         // Manage first responder from binding (optional)
         if let isFirstResponder = isFirstResponder {
-            if isFirstResponder.wrappedValue && !uiView.isFirstResponder {
+            if isFirstResponder.wrappedValue, !uiView.isFirstResponder {
                 uiView.becomeFirstResponder()
-            } else if !isFirstResponder.wrappedValue && uiView.isFirstResponder {
+            } else if !isFirstResponder.wrappedValue, uiView.isFirstResponder {
                 uiView.resignFirstResponder()
             }
         }
     }
 
-    // Coordinator to sync text back to SwiftUI
+    /// Coordinator to sync text back to SwiftUI
     public class Coordinator: NSObject, UITextViewDelegate {
         var parent: InnerPaddedTextView
-        init(_ parent: InnerPaddedTextView) { self.parent = parent }
+        init(_ parent: InnerPaddedTextView) {
+            self.parent = parent
+        }
 
         public func textViewDidChange(_ textView: UITextView) {
             parent.text = textView.text
