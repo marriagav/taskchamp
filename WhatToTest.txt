@@ -1,3 +1,5 @@
-AWS: aws sync support has now been enabled
-GCP: gcp sync support has now been enabled
-Crashes: fix more crashes, please report any new ones
+Recurring tasks: 
+- Read support only, still not possible to create new ones from the app directly
+- Filter by recur tasks
+Obsidian integration bugfixes
+
