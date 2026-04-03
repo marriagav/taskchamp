@@ -6,8 +6,7 @@ struct Provider: TimelineProvider {
     @MainActor
     func placeholder(in _: Context) -> TaskEntry {
         let tasks = getTasks()
-        let entry = TaskEntry(date: Date(), tasks: tasks)
-        return entry
+        return TaskEntry(date: Date(), tasks: tasks)
     }
 
     @MainActor
@@ -36,8 +35,7 @@ struct Provider: TimelineProvider {
             Task {
                 try await TaskchampionService.shared.sync()
             }
-            let tasks = try TaskchampionService.shared.getTasks()
-            return tasks
+            return try TaskchampionService.shared.getTasks()
         } catch {
             print("Error getting tasks \(error)")
             return []

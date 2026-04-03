@@ -37,7 +37,7 @@ public struct KeyboardToolbarView<Content: View>: View {
         onPrevious: @escaping () -> Void,
         onNext: @escaping () -> Void,
         onDismiss: @escaping () -> Void,
-        skipNextAndPrevious: @escaping () -> Bool = { false },
+        skipNextAndPrevious: @escaping () -> Bool = { false }
     ) where Content == EmptyView {
         self.skipNextAndPrevious = skipNextAndPrevious
         self.onPrevious = onPrevious
@@ -48,7 +48,6 @@ public struct KeyboardToolbarView<Content: View>: View {
 
     // MARK: - Body
 
-    @ViewBuilder
     private func bodyWithoutNextAndPrevious() -> some View {
         HStack {
             Button(action: onPrevious) {
@@ -63,7 +62,6 @@ public struct KeyboardToolbarView<Content: View>: View {
         }
     }
 
-    @ViewBuilder
     private func bodyWithoutNextAndPreviousWithBody() -> some View {
         HStack {
             Button("") {}
@@ -77,7 +75,6 @@ public struct KeyboardToolbarView<Content: View>: View {
         }
     }
 
-    @ViewBuilder
     private func bodyWithNextAndPrevious() -> some View {
         HStack {
             Button(action: onPrevious) {

@@ -117,6 +117,14 @@ public struct EditTaskView: View, UseKeyboardToolbar {
                     isSet: $didSetTime,
                     isDateShowing: $isTimeShowing
                 )
+                if task.isRecurring, let recur = task.recur {
+                    HStack {
+                        Label("Recurrence", systemImage: SFSymbols.recurringTask.rawValue)
+                        Spacer()
+                        Text(recur)
+                            .foregroundStyle(.secondary)
+                    }
+                }
             }
             Section {
                 Picker("Priority", systemImage: SFSymbols.exclamationmark.rawValue, selection: $priority) {

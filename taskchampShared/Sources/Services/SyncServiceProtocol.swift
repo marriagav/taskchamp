@@ -73,18 +73,15 @@ public class RemoteSyncService: SyncServiceProtocol {
     private init() {}
 
     public static func getRemoteServerUrl() -> String? {
-        let value: String? = UserDefaultsManager.shared.getValue(forKey: .remoteServerUrl)
-        return value
+        return UserDefaultsManager.shared.getValue(forKey: .remoteServerUrl)
     }
 
     public static func getRemoteClientId() -> String? {
-        let value: String? = UserDefaultsManager.shared.getValue(forKey: .remoteServerClientId)
-        return value
+        return UserDefaultsManager.shared.getValue(forKey: .remoteServerClientId)
     }
 
     public static func getRemoteEncryptionSecret() -> String? {
-        let value: String? = UserDefaultsManager.shared.getValue(forKey: .remoteServerEncryptionSecret)
-        return value
+        return UserDefaultsManager.shared.getValue(forKey: .remoteServerEncryptionSecret)
     }
 
     public static func isAvailable() -> Bool {
@@ -127,18 +124,15 @@ public class GcpSyncService: SyncServiceProtocol {
     private init() {}
 
     public static func getGcpBucket() -> String? {
-        let value: String? = UserDefaultsManager.shared.getValue(forKey: .gcpServerBucket)
-        return value
+        return UserDefaultsManager.shared.getValue(forKey: .gcpServerBucket)
     }
 
     public static func getGcpCredentialPath() -> String? {
-        let value: String? = UserDefaultsManager.shared.getValue(forKey: .gcpServerCredentialPath)
-        return value
+        return UserDefaultsManager.shared.getValue(forKey: .gcpServerCredentialPath)
     }
 
     public static func getGcpEncryptionSecret() -> String? {
-        let value: String? = UserDefaultsManager.shared.getValue(forKey: .gcpServerEncryptionSecret)
-        return value
+        return UserDefaultsManager.shared.getValue(forKey: .gcpServerEncryptionSecret)
     }
 
     public static func isAvailable() -> Bool {
@@ -177,28 +171,23 @@ public class AwsSyncService: SyncServiceProtocol {
         "Make sure that you have the correct AWS configuration"
 
     public static func getAwsBucket() -> String? {
-        let value: String? = UserDefaultsManager.shared.getValue(forKey: .awsServerBucket)
-        return value
+        return UserDefaultsManager.shared.getValue(forKey: .awsServerBucket)
     }
 
     public static func getAwsRegion() -> String? {
-        let value: String? = UserDefaultsManager.shared.getValue(forKey: .awsServerRegion)
-        return value
+        return UserDefaultsManager.shared.getValue(forKey: .awsServerRegion)
     }
 
     public static func getAwsAccessKeyId() -> String? {
-        let value: String? = UserDefaultsManager.shared.getValue(forKey: .awsServerAccessKeyId)
-        return value
+        return UserDefaultsManager.shared.getValue(forKey: .awsServerAccessKeyId)
     }
 
     public static func getAwsSecretAccessKey() -> String? {
-        let value: String? = UserDefaultsManager.shared.getValue(forKey: .awsServerSecretAccessKey)
-        return value
+        return UserDefaultsManager.shared.getValue(forKey: .awsServerSecretAccessKey)
     }
 
     public static func getAwsEncryptionSecret() -> String? {
-        let value: String? = UserDefaultsManager.shared.getValue(forKey: .awsServerEncryptionSecret)
-        return value
+        return UserDefaultsManager.shared.getValue(forKey: .awsServerEncryptionSecret)
     }
 
     private init() {}
