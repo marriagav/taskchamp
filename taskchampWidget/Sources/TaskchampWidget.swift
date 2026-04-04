@@ -11,19 +11,29 @@ struct Provider: AppIntentTimelineProvider {
 
     @MainActor
     func snapshot(for configuration: TaskchampWidgetIntent, in _: Context) async -> TaskEntry {
-        let tasks = getTasks()
+        let filter = resolveFilter(from: configuration)
+        let tasks = getTasks(filter: filter)
         return TaskEntry(date: Date(), title: configuration.widgetTitle, tasks: tasks)
     }
 
     @MainActor
     func timeline(for configuration: TaskchampWidgetIntent, in _: Context) async -> Timeline<TaskEntry> {
-        let tasks = getTasks()
+        let filter = resolveFilter(from: configuration)
+        let tasks = getTasks(filter: filter)
         let entry = TaskEntry(date: Date(), title: configuration.widgetTitle, tasks: tasks)
         return Timeline(entries: [entry], policy: .atEnd)
     }
 
+    private func resolveFilter(from configuration: TaskchampWidgetIntent) -> TCFilter {
+        guard let filterEntity = configuration.filter,
+              let filter = getFilterFromUserDefaults(id: filterEntity.id) else {
+            return .defaultFilter
+        }
+        return filter
+    }
+
     @MainActor
-    func getTasks() -> [TCTask] {
+    func getTasks(filter: TCFilter = .defaultFilter) -> [TCTask] {
         do {
             let localReplicaPath = try FileService.shared.getDestinationPathForLocalReplica()
             try TaskchampionService.shared
@@ -33,7 +43,7 @@ struct Provider: AppIntentTimelineProvider {
             Task {
                 try await TaskchampionService.shared.sync()
             }
-            return try TaskchampionService.shared.getTasks()
+            return try TaskchampionService.shared.getTasks(filter: filter)
         } catch {
             print("Error getting tasks \(error)")
             return []
