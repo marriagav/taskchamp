@@ -62,9 +62,9 @@ struct TaskchampWidgetEntryView: View {
     @Environment(\.widgetFamily) var family
     var entry: Provider.Entry
 
-    var filterURL: URL? {
-        guard let filterId = entry.filterId else { return nil }
-        return URL(string: "taskchamp://filter/\(filterId)")
+    var filterURL: URL {
+        let id = entry.filterId ?? "default"
+        return URL(string: "taskchamp://filter/\(id)")!
     }
 
     var body: some View {

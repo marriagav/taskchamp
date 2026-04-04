@@ -48,8 +48,11 @@ public struct ContentView: View {
 
             if url.host == "filter" {
                 let filterIdString = url.pathComponents[1]
-                if let filters: [TCFilter] = UserDefaultsManager.shared.getDecodedValue(forKey: .savedFilters),
-                   let filter = filters.first(where: { $0.id.uuidString == filterIdString }) {
+                if filterIdString == "default" {
+                    selectedFilter = .defaultFilter
+                    try? UserDefaultsManager.standard.setEncodableValue(TCFilter.defaultFilter, forKey: .selectedFilter)
+                } else if let filters: [TCFilter] = UserDefaultsManager.shared.getDecodedValue(forKey: .savedFilters),
+                          let filter = filters.first(where: { $0.id.uuidString == filterIdString }) {
                     selectedFilter = filter
                     try? UserDefaultsManager.standard.setEncodableValue(filter, forKey: .selectedFilter)
                 }
