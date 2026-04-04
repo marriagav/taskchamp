@@ -2,26 +2,24 @@ import SwiftUI
 import taskchampShared
 import WidgetKit
 
-struct Provider: TimelineProvider {
+struct Provider: AppIntentTimelineProvider {
     @MainActor
     func placeholder(in _: Context) -> TaskEntry {
         let tasks = getTasks()
-        return TaskEntry(date: Date(), tasks: tasks)
+        return TaskEntry(date: Date(), title: "My tasks", tasks: tasks)
     }
 
     @MainActor
-    func getSnapshot(in _: Context, completion: @escaping (TaskEntry) -> Void) {
+    func snapshot(for configuration: TaskchampWidgetIntent, in _: Context) async -> TaskEntry {
         let tasks = getTasks()
-        let entry = TaskEntry(date: Date(), tasks: tasks)
-        completion(entry)
+        return TaskEntry(date: Date(), title: configuration.widgetTitle, tasks: tasks)
     }
 
     @MainActor
-    func getTimeline(in _: Context, completion: @escaping (Timeline<TaskEntry>) -> Void) {
+    func timeline(for configuration: TaskchampWidgetIntent, in _: Context) async -> Timeline<TaskEntry> {
         let tasks = getTasks()
-        let entry = TaskEntry(date: Date(), tasks: tasks)
-        let timeline = Timeline(entries: [entry], policy: .atEnd)
-        completion(timeline)
+        let entry = TaskEntry(date: Date(), title: configuration.widgetTitle, tasks: tasks)
+        return Timeline(entries: [entry], policy: .atEnd)
     }
 
     @MainActor
@@ -45,6 +43,7 @@ struct Provider: TimelineProvider {
 
 struct TaskEntry: TimelineEntry {
     let date: Date
+    let title: String
     let tasks: [TCTask]
 }
 
@@ -56,7 +55,7 @@ struct TaskchampWidgetEntryView: View {
         VStack(spacing: 10) {
             if family != .systemSmall {
                 HStack {
-                    Text("My tasks")
+                    Text(entry.title)
                         .bold()
                         .foregroundStyle(.indigo)
                         .font(family == .systemLarge ? .title2 : .body)
@@ -109,7 +108,7 @@ struct TaskchampWidget: Widget {
     let kind: String = "TaskchampWidget"
 
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: Provider()) { entry in
+        AppIntentConfiguration(kind: kind, intent: TaskchampWidgetIntent.self, provider: Provider()) { entry in
             TaskchampWidgetEntryView(entry: entry)
         }
         .configurationDisplayName("Taskchamp")
