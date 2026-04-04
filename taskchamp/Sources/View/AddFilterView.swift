@@ -2,6 +2,7 @@ import Foundation
 import SwiftData
 import SwiftUI
 import taskchampShared
+import WidgetKit
 
 public struct AddFilterView: View, UseKeyboardToolbar {
     @Environment(StoreKitManager.self) var storeKit: StoreKitManager
@@ -42,6 +43,13 @@ public struct AddFilterView: View, UseKeyboardToolbar {
     private func setSelectedFilterUserDefault(selectedFilter: TCFilter) {
         do {
             try UserDefaultsManager.standard.setEncodableValue(selectedFilter, forKey: .selectedFilter)
+        } catch { print(error) }
+    }
+
+    private func syncFiltersToSharedUserDefaults() {
+        do {
+            try UserDefaultsManager.shared.setEncodableValue(filters, forKey: .savedFilters)
+            WidgetCenter.shared.reloadAllTimelines()
         } catch { print(error) }
     }
 
@@ -201,6 +209,12 @@ public struct AddFilterView: View, UseKeyboardToolbar {
             }
             .navigationTitle("Filter your tasks")
             .navigationBarTitleDisplayMode(.inline)
+            .onAppear {
+                syncFiltersToSharedUserDefaults()
+            }
+            .onChange(of: filters.count) {
+                syncFiltersToSharedUserDefaults()
+            }
         }
     }
 }

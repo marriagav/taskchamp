@@ -2,30 +2,41 @@ import SwiftUI
 import taskchampShared
 import WidgetKit
 
-struct Provider: TimelineProvider {
+struct Provider: AppIntentTimelineProvider {
     @MainActor
     func placeholder(in _: Context) -> TaskEntry {
         let tasks = getTasks()
-        return TaskEntry(date: Date(), tasks: tasks)
+        return TaskEntry(date: Date(), title: "My tasks", tasks: tasks, filterId: nil)
     }
 
     @MainActor
-    func getSnapshot(in _: Context, completion: @escaping (TaskEntry) -> Void) {
-        let tasks = getTasks()
-        let entry = TaskEntry(date: Date(), tasks: tasks)
-        completion(entry)
+    func snapshot(for configuration: TaskchampWidgetIntent, in _: Context) async -> TaskEntry {
+        let filter = resolveFilter(from: configuration)
+        let tasks = getTasks(filter: filter)
+        let filterId = configuration.filter?.isNoFilter == true ? nil : configuration.filter?.id
+        return TaskEntry(date: Date(), title: configuration.widgetTitle, tasks: tasks, filterId: filterId)
     }
 
     @MainActor
-    func getTimeline(in _: Context, completion: @escaping (Timeline<TaskEntry>) -> Void) {
-        let tasks = getTasks()
-        let entry = TaskEntry(date: Date(), tasks: tasks)
-        let timeline = Timeline(entries: [entry], policy: .atEnd)
-        completion(timeline)
+    func timeline(for configuration: TaskchampWidgetIntent, in _: Context) async -> Timeline<TaskEntry> {
+        let filter = resolveFilter(from: configuration)
+        let tasks = getTasks(filter: filter)
+        let filterId = configuration.filter?.isNoFilter == true ? nil : configuration.filter?.id
+        let entry = TaskEntry(date: Date(), title: configuration.widgetTitle, tasks: tasks, filterId: filterId)
+        return Timeline(entries: [entry], policy: .atEnd)
+    }
+
+    private func resolveFilter(from configuration: TaskchampWidgetIntent) -> TCFilter {
+        guard let filterEntity = configuration.filter,
+              !filterEntity.isNoFilter,
+              let filter = getFilterFromUserDefaults(id: filterEntity.id) else {
+            return .defaultFilter
+        }
+        return filter
     }
 
     @MainActor
-    func getTasks() -> [TCTask] {
+    func getTasks(filter: TCFilter = .defaultFilter) -> [TCTask] {
         do {
             let localReplicaPath = try FileService.shared.getDestinationPathForLocalReplica()
             try TaskchampionService.shared
@@ -35,7 +46,7 @@ struct Provider: TimelineProvider {
             Task {
                 try await TaskchampionService.shared.sync()
             }
-            return try TaskchampionService.shared.getTasks()
+            return try TaskchampionService.shared.getTasks(filter: filter)
         } catch {
             print("Error getting tasks \(error)")
             return []
@@ -45,18 +56,25 @@ struct Provider: TimelineProvider {
 
 struct TaskEntry: TimelineEntry {
     let date: Date
+    let title: String
     let tasks: [TCTask]
+    let filterId: String?
 }
 
 struct TaskchampWidgetEntryView: View {
     @Environment(\.widgetFamily) var family
     var entry: Provider.Entry
 
+    var filterURL: URL {
+        let id = entry.filterId ?? "default"
+        return URL(string: "taskchamp://filter/\(id)")!
+    }
+
     var body: some View {
         VStack(spacing: 10) {
             if family != .systemSmall {
                 HStack {
-                    Text("My tasks")
+                    Text(entry.title)
                         .bold()
                         .foregroundStyle(.indigo)
                         .font(family == .systemLarge ? .title2 : .body)
@@ -101,6 +119,7 @@ struct TaskchampWidgetEntryView: View {
                 }
             }
         }
+        .widgetURL(filterURL)
         .containerBackground(.background, for: .widget)
     }
 }
@@ -109,7 +128,7 @@ struct TaskchampWidget: Widget {
     let kind: String = "TaskchampWidget"
 
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: Provider()) { entry in
+        AppIntentConfiguration(kind: kind, intent: TaskchampWidgetIntent.self, provider: Provider()) { entry in
             TaskchampWidgetEntryView(entry: entry)
         }
         .configurationDisplayName("Taskchamp")
