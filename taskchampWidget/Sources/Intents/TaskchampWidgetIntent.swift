@@ -1,4 +1,5 @@
 import AppIntents
+import taskchampShared
 import WidgetKit
 
 struct TaskchampWidgetIntent: WidgetConfigurationIntent {

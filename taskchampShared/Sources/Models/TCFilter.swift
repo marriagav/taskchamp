@@ -152,12 +152,11 @@ public class TCFilter: Codable {
         didSetStatus = try container.decode(Bool.self, forKey: .didSetStatus)
         didSetTags = try container.decode(Bool.self, forKey: .didSetTags)
         didSetRecur = try container.decodeIfPresent(Bool.self, forKey: .didSetRecur) ?? false
-        tagsToInclude = try container.decode(
+        tagsToInclude = try container.decodeIfPresent(
             [TCTag].self,
-            forKey: .
-                tagsToInclude
+            forKey: .tagsToInclude
         )
-        tagsToExclude = try container.decode([TCTag].self, forKey: .tagsToExclude)
+        tagsToExclude = try container.decodeIfPresent([TCTag].self, forKey: .tagsToExclude)
     }
 
     public func encode(to encoder: Encoder) throws {

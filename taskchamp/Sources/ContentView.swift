@@ -12,6 +12,8 @@ public struct ContentView: View {
     @State private var globalState = GlobalState()
     @State private var storeKit = StoreKitManager()
 
+    @Environment(\.scenePhase) private var scenePhase
+
     @State private var isShowingAlert = false
     @State private var selectedFilter: TCFilter = .defaultFilter
     @State private var selectedSyncType: TaskchampionService.SyncType?
@@ -140,6 +142,11 @@ public struct ContentView: View {
                 .environment(storeKit)
         }
         .environment(storeKit)
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active {
+                selectedFilter = getSelectedFilter()
+            }
+        }
     }
 }
 
