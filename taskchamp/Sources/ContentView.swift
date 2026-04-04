@@ -44,9 +44,19 @@ public struct ContentView: View {
 
     func handleDeepLink(url: URL) {
         Task {
-            guard url.scheme == "taskchamp", url.host == "task" else {
+            guard url.scheme == "taskchamp" else { return }
+
+            if url.host == "filter" {
+                let filterIdString = url.pathComponents[1]
+                if let filters: [TCFilter] = UserDefaultsManager.shared.getDecodedValue(forKey: .savedFilters),
+                   let filter = filters.first(where: { $0.id.uuidString == filterIdString }) {
+                    selectedFilter = filter
+                    try? UserDefaultsManager.standard.setEncodableValue(filter, forKey: .selectedFilter)
+                }
                 return
             }
+
+            guard url.host == "task" else { return }
 
             let uuidString = url.pathComponents[1]
 

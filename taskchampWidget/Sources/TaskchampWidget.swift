@@ -6,21 +6,21 @@ struct Provider: AppIntentTimelineProvider {
     @MainActor
     func placeholder(in _: Context) -> TaskEntry {
         let tasks = getTasks()
-        return TaskEntry(date: Date(), title: "My tasks", tasks: tasks)
+        return TaskEntry(date: Date(), title: "My tasks", tasks: tasks, filterId: nil)
     }
 
     @MainActor
     func snapshot(for configuration: TaskchampWidgetIntent, in _: Context) async -> TaskEntry {
         let filter = resolveFilter(from: configuration)
         let tasks = getTasks(filter: filter)
-        return TaskEntry(date: Date(), title: configuration.widgetTitle, tasks: tasks)
+        return TaskEntry(date: Date(), title: configuration.widgetTitle, tasks: tasks, filterId: configuration.filter?.id)
     }
 
     @MainActor
     func timeline(for configuration: TaskchampWidgetIntent, in _: Context) async -> Timeline<TaskEntry> {
         let filter = resolveFilter(from: configuration)
         let tasks = getTasks(filter: filter)
-        let entry = TaskEntry(date: Date(), title: configuration.widgetTitle, tasks: tasks)
+        let entry = TaskEntry(date: Date(), title: configuration.widgetTitle, tasks: tasks, filterId: configuration.filter?.id)
         return Timeline(entries: [entry], policy: .atEnd)
     }
 
@@ -55,11 +55,17 @@ struct TaskEntry: TimelineEntry {
     let date: Date
     let title: String
     let tasks: [TCTask]
+    let filterId: String?
 }
 
 struct TaskchampWidgetEntryView: View {
     @Environment(\.widgetFamily) var family
     var entry: Provider.Entry
+
+    var filterURL: URL? {
+        guard let filterId = entry.filterId else { return nil }
+        return URL(string: "taskchamp://filter/\(filterId)")
+    }
 
     var body: some View {
         VStack(spacing: 10) {
@@ -110,6 +116,7 @@ struct TaskchampWidgetEntryView: View {
                 }
             }
         }
+        .widgetURL(filterURL)
         .containerBackground(.background, for: .widget)
     }
 }
