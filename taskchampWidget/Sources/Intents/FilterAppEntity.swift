@@ -2,25 +2,40 @@ import AppIntents
 import taskchampShared
 
 struct FilterAppEntity: AppEntity {
+    static let noFilterId = "none"
+
     static var typeDisplayRepresentation = TypeDisplayRepresentation(name: "Filter")
     static var defaultQuery = FilterEntityQuery()
 
     var id: String
     var name: String
 
+    var isNoFilter: Bool { id == Self.noFilterId }
+
     var displayRepresentation: DisplayRepresentation {
         DisplayRepresentation(title: "\(name)")
+    }
+
+    static var noFilter: FilterAppEntity {
+        FilterAppEntity(id: noFilterId, name: "No filter")
     }
 }
 
 struct FilterEntityQuery: EntityQuery {
     func entities(for identifiers: [String]) async throws -> [FilterAppEntity] {
-        let allFilters = getSavedFilters()
-        return allFilters.filter { identifiers.contains($0.id) }
+        var results: [FilterAppEntity] = []
+        if identifiers.contains(FilterAppEntity.noFilterId) {
+            results.append(.noFilter)
+        }
+        let savedFilters = getSavedFilters()
+        results.append(contentsOf: savedFilters.filter { identifiers.contains($0.id) })
+        return results
     }
 
     func suggestedEntities() async throws -> [FilterAppEntity] {
-        return getSavedFilters()
+        var results: [FilterAppEntity] = [.noFilter]
+        results.append(contentsOf: getSavedFilters())
+        return results
     }
 
     private func getSavedFilters() -> [FilterAppEntity] {

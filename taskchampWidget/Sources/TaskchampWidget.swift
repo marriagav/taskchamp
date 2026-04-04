@@ -13,19 +13,22 @@ struct Provider: AppIntentTimelineProvider {
     func snapshot(for configuration: TaskchampWidgetIntent, in _: Context) async -> TaskEntry {
         let filter = resolveFilter(from: configuration)
         let tasks = getTasks(filter: filter)
-        return TaskEntry(date: Date(), title: configuration.widgetTitle, tasks: tasks, filterId: configuration.filter?.id)
+        let filterId = configuration.filter?.isNoFilter == true ? nil : configuration.filter?.id
+        return TaskEntry(date: Date(), title: configuration.widgetTitle, tasks: tasks, filterId: filterId)
     }
 
     @MainActor
     func timeline(for configuration: TaskchampWidgetIntent, in _: Context) async -> Timeline<TaskEntry> {
         let filter = resolveFilter(from: configuration)
         let tasks = getTasks(filter: filter)
-        let entry = TaskEntry(date: Date(), title: configuration.widgetTitle, tasks: tasks, filterId: configuration.filter?.id)
+        let filterId = configuration.filter?.isNoFilter == true ? nil : configuration.filter?.id
+        let entry = TaskEntry(date: Date(), title: configuration.widgetTitle, tasks: tasks, filterId: filterId)
         return Timeline(entries: [entry], policy: .atEnd)
     }
 
     private func resolveFilter(from configuration: TaskchampWidgetIntent) -> TCFilter {
         guard let filterEntity = configuration.filter,
+              !filterEntity.isNoFilter,
               let filter = getFilterFromUserDefaults(id: filterEntity.id) else {
             return .defaultFilter
         }

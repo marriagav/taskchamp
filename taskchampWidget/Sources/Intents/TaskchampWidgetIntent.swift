@@ -10,4 +10,13 @@ struct TaskchampWidgetIntent: WidgetConfigurationIntent {
 
     @Parameter(title: "Filter")
     var filter: FilterAppEntity?
+
+    init() {
+        filter = .noFilter
+    }
+
+    init(widgetTitle: String, filter: FilterAppEntity?) {
+        self.widgetTitle = widgetTitle
+        self.filter = filter
+    }
 }
