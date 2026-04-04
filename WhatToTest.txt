@@ -1,5 +1,4 @@
-Recurring tasks: 
-- Read support only, still not possible to create new ones from the app directly
-- Filter by recur tasks
-Obsidian integration bugfixes
+Recurring tasks read path 
+Widget filters
+Filter shortcuts
 
