@@ -27,9 +27,12 @@ struct Provider: AppIntentTimelineProvider {
     }
 
     private func resolveFilter(from configuration: TaskchampWidgetIntent) -> TCFilter {
-        guard let filterEntity = configuration.filter,
-              !filterEntity.isNoFilter,
-              let filter = getFilterFromUserDefaults(id: filterEntity.id) else {
+        guard let filterEntity =
+            configuration.filter,
+            !filterEntity.isNoFilter,
+            let filter = getFilterFromUserDefaults(id: filterEntity.id) else
+        // swiftlint:disable:next opening_brace
+        {
             return .defaultFilter
         }
         return filter
@@ -67,6 +70,7 @@ struct TaskchampWidgetEntryView: View {
 
     var filterURL: URL {
         let id = entry.filterId ?? "default"
+        // swiftlint:disable:next force_unwrapping
         return URL(string: "taskchamp://filter/\(id)")!
     }
 

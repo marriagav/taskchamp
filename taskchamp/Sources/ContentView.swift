@@ -53,8 +53,11 @@ public struct ContentView: View {
                 if filterIdString == "default" {
                     selectedFilter = .defaultFilter
                     try? UserDefaultsManager.standard.setEncodableValue(TCFilter.defaultFilter, forKey: .selectedFilter)
-                } else if let filters: [TCFilter] = UserDefaultsManager.shared.getDecodedValue(forKey: .savedFilters),
-                          let filter = filters.first(where: { $0.id.uuidString == filterIdString }) {
+                } else if let filters: [TCFilter] =
+                    UserDefaultsManager.shared.getDecodedValue(forKey: .savedFilters),
+                    let filter = filters.first(where: { $0.id.uuidString == filterIdString })
+                // swiftlint:disable:next opening_brace
+                {
                     selectedFilter = filter
                     try? UserDefaultsManager.standard.setEncodableValue(filter, forKey: .selectedFilter)
                 }

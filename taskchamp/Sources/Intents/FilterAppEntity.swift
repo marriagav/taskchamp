@@ -10,7 +10,9 @@ struct FilterAppEntity: AppEntity {
     var id: String
     var name: String
 
-    var isNoFilter: Bool { id == Self.noFilterId }
+    var isNoFilter: Bool {
+        id == Self.noFilterId
+    }
 
     var displayRepresentation: DisplayRepresentation {
         DisplayRepresentation(title: "\(name)")
@@ -28,9 +30,11 @@ struct FilterEntityQuery: EntityQuery {
             results.append(.noFilter)
         }
         let savedFilters = getSavedFiltersFromUserDefaults()
-        results.append(contentsOf: savedFilters.map {
-            FilterAppEntity(id: $0.id.uuidString, name: $0.fullDescription)
-        }.filter { identifiers.contains($0.id) })
+        results
+            .append(contentsOf: savedFilters.map {
+                FilterAppEntity(id: $0.id.uuidString, name: $0.fullDescription)
+            }
+            .filter { identifiers.contains($0.id) })
         return results
     }
 
