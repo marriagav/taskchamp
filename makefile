@@ -21,9 +21,9 @@ download_metadata:
 download_screenshots:
 	fastlane deliver download_screenshots
 lint:
-	swiftlint taskchamp/Sources
-	swiftlint taskchampWidget/Sources
-	swiftlint taskchampShared/Sources
+	swiftlint taskchamp/Sources --quiet
+	swiftlint taskchampWidget/Sources --quiet
+	swiftlint taskchampShared/Sources --quiet
 format:
 	swiftformat taskchamp/Sources
 	swiftformat taskchampWidget/Sources

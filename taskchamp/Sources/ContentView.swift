@@ -12,6 +12,8 @@ public struct ContentView: View {
     @State private var globalState = GlobalState()
     @State private var storeKit = StoreKitManager()
 
+    @Environment(\.scenePhase) private var scenePhase
+
     @State private var isShowingAlert = false
     @State private var selectedFilter: TCFilter = .defaultFilter
     @State private var selectedSyncType: TaskchampionService.SyncType?
@@ -44,9 +46,25 @@ public struct ContentView: View {
 
     func handleDeepLink(url: URL) {
         Task {
-            guard url.scheme == "taskchamp", url.host == "task" else {
+            guard url.scheme == "taskchamp" else { return }
+
+            if url.host == "filter" {
+                let filterIdString = url.pathComponents[1]
+                if filterIdString == "default" {
+                    selectedFilter = .defaultFilter
+                    try? UserDefaultsManager.standard.setEncodableValue(TCFilter.defaultFilter, forKey: .selectedFilter)
+                } else if let filters: [TCFilter] =
+                    UserDefaultsManager.shared.getDecodedValue(forKey: .savedFilters),
+                    let filter = filters.first(where: { $0.id.uuidString == filterIdString })
+                // swiftlint:disable:next opening_brace
+                {
+                    selectedFilter = filter
+                    try? UserDefaultsManager.standard.setEncodableValue(filter, forKey: .selectedFilter)
+                }
                 return
             }
+
+            guard url.host == "task" else { return }
 
             let uuidString = url.pathComponents[1]
 
@@ -127,6 +145,11 @@ public struct ContentView: View {
                 .environment(storeKit)
         }
         .environment(storeKit)
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active {
+                selectedFilter = getSelectedFilter()
+            }
+        }
     }
 }
 

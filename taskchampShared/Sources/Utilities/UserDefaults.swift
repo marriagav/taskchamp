@@ -2,6 +2,7 @@ import Foundation
 
 public enum TCUserDefaults: String {
     case selectedFilter
+    case savedFilters
     case sortType
 
     case taskNoteFolderBookmark
