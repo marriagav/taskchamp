@@ -95,10 +95,17 @@ public struct EditTaskView: View, UseKeyboardToolbar {
     public var body: some View {
         Form {
             Section {
-                TextEditor(text: $description)
-                    .focused($focusedField, equals: .description)
-                    .bold()
-                    .frame(minHeight: 40)
+                ZStack(alignment: .topLeading) {
+                    Text(description.isEmpty ? " " : description)
+                        .bold()
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 5)
+                        .opacity(0)
+                    TextEditor(text: $description)
+                        .focused($focusedField, equals: .description)
+                        .bold()
+                }
+                .frame(minHeight: 40)
                 TextField("Project", text: $project)
                     .focused($focusedField, equals: .project)
             } header: {
@@ -163,6 +170,7 @@ public struct EditTaskView: View, UseKeyboardToolbar {
                 }
                 .disabled(!didChange)
                 .bold()
+                .tint(.indigo)
             }
             ToolbarItemGroup(placement: .bottomBar) {
                 Button {

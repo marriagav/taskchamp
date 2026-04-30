@@ -183,7 +183,7 @@ public struct CreateTaskView: View, UseKeyboardToolbar {
                 }
             }.toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
+                    Button("Add") {
                         if description.isEmpty {
                             isShowingAlert = true
                             alertTitle = "Missing field"
@@ -226,9 +226,10 @@ public struct CreateTaskView: View, UseKeyboardToolbar {
                         }
                     }
                     .bold()
+                    .tint(.indigo)
                 }
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Back") {
+                    Button("Cancel") {
                         if hasUnsavedContent {
                             showDismissConfirmation = true
                         } else {

@@ -174,10 +174,11 @@ struct ShareComposeView: View {
             }
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
+                    Button("Add") {
                         createTask()
                     }
                     .bold()
+                    .tint(.indigo)
                 }
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {
