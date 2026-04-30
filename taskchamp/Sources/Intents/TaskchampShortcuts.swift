@@ -11,5 +11,15 @@ struct TaskchampShortcuts: AppShortcutsProvider {
             shortTitle: "Open Filter",
             systemImageName: "line.3.horizontal.decrease.circle"
         )
+        AppShortcut(
+            intent: OpenNewTaskIntent(),
+            phrases: [
+                "Quick add in \(.applicationName)",
+                "New task in \(.applicationName)",
+                "Add task in \(.applicationName)"
+            ],
+            shortTitle: "Open Quick Add",
+            systemImageName: "plus.circle.fill"
+        )
     }
 }
