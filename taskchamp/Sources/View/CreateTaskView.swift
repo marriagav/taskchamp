@@ -231,7 +231,7 @@ public struct CreateTaskView: View, UseKeyboardToolbar {
                         }
                     }
                     .bold()
-                    .tint(.indigo)
+                    .tint(Color(asset: TaskchampAsset.Assets.accentColor))
                 }
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {

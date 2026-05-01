@@ -170,7 +170,7 @@ public struct EditTaskView: View, UseKeyboardToolbar {
                 }
                 .disabled(!didChange)
                 .bold()
-                .tint(.indigo)
+                .tint(Color(asset: TaskchampAsset.Assets.accentColor))
             }
             ToolbarItemGroup(placement: .bottomBar) {
                 Button {
