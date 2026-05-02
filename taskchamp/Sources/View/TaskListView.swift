@@ -13,6 +13,7 @@ public struct TaskListView: View {
     @Binding var selectedFilter: TCFilter
     @Binding var selectedSyncType: TaskchampionService.SyncType?
     @Binding var isShowingCreateTaskView: Bool
+    @Binding var createTaskContent: String
 
     @State var rebuildingCache = true
     @State var tasks: [TCTask] = []
@@ -31,13 +32,15 @@ public struct TaskListView: View {
         isShowingICloudAlert: Binding<Bool>,
         selectedFilter: Binding<TCFilter>,
         selectedSyncType: Binding<TaskchampionService.SyncType?>,
-        isShowingCreateTaskView: Binding<Bool>
+        isShowingCreateTaskView: Binding<Bool>,
+        createTaskContent: Binding<String>
     ) {
         UINavigationBar.appearance().largeTitleTextAttributes = [.foregroundColor: UIColor.tintColor]
         _isShowingICloudAlert = isShowingICloudAlert
         _selectedFilter = selectedFilter
         _selectedSyncType = selectedSyncType
         _isShowingCreateTaskView = isShowingCreateTaskView
+        _createTaskContent = createTaskContent
     }
 
     private func sortButton(sortType: TasksHelper.TCSortType) -> some View {
@@ -274,9 +277,10 @@ public struct TaskListView: View {
             updateTasks()
         }
         .sheet(isPresented: $isShowingCreateTaskView, onDismiss: {
+            createTaskContent = ""
             updateTasks()
         }, content: {
-            CreateTaskView()
+            CreateTaskView(initialContent: createTaskContent)
         })
         .sheet(isPresented: $isShowingFilterView) {
             AddFilterView(selectedFilter: $selectedFilter)

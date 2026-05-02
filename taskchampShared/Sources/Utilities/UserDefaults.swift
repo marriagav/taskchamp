@@ -28,6 +28,8 @@ public enum TCUserDefaults: String {
 
     case storeKitPremiumUnlocked
     case storeKitCloudSubscriptionActive
+
+    case pendingNewTaskContent
 }
 
 public class UserDefaultsManager {

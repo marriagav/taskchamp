@@ -5,5 +5,6 @@ import WidgetKit
 struct TaskchampWidgetBundle: WidgetBundle {
     var body: some Widget {
         TaskchampWidget()
+        QuickAddCircularWidget()
     }
 }
