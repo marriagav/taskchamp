@@ -6,8 +6,10 @@ public struct TaskCellView: View {
 
     public var body: some View {
         VStack {
-            HStack {
+            HStack(alignment: .top) {
                 Text(task.description)
+                    .lineLimit(2)
+                    .truncationMode(.tail)
                     .strikethrough(task.isCompleted || task.isDeleted, color: task.isDeleted ? .red : nil)
                     .foregroundStyle(task.isCompleted ? .secondary : task.isDeleted ? Color.red : .primary)
                 Spacer()

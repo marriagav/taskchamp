@@ -7,6 +7,8 @@ public struct CreateTaskView: View, UseKeyboardToolbar {
     @Environment(StoreKitManager.self) var storeKit: StoreKitManager
     @Environment(GlobalState.self) var globalState: GlobalState
 
+    var initialContent: String = ""
+
     @State private var nlpInput = ""
     @State private var nlpPlaceholder =
         "New Task due:tomorrow at 1pm project:my-project prio:M +my-tag"
@@ -109,6 +111,9 @@ public struct CreateTaskView: View, UseKeyboardToolbar {
                             }
                         }
                         .onFirstAppear {
+                            if !initialContent.isEmpty {
+                                nlpInput = initialContent + " "
+                            }
                             focusedField = .nlp
                         }
                 } header: {
@@ -183,7 +188,7 @@ public struct CreateTaskView: View, UseKeyboardToolbar {
                 }
             }.toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
+                    Button("Add") {
                         if description.isEmpty {
                             isShowingAlert = true
                             alertTitle = "Missing field"
@@ -226,9 +231,10 @@ public struct CreateTaskView: View, UseKeyboardToolbar {
                         }
                     }
                     .bold()
+                    .tint(Color(asset: TaskchampAsset.Assets.accentColor))
                 }
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Back") {
+                    Button("Cancel") {
                         if hasUnsavedContent {
                             showDismissConfirmation = true
                         } else {
