@@ -1,4 +1,5 @@
 Recurring tasks read path 
-Widget filters
-Filter shortcuts
-
+Quick add using share sheet (text and URLs)
+New quick add widget for lock screen
+New shortcut for quick add (including prefill)
+Various Ui changes to buttons and description field

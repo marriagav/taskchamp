@@ -29,7 +29,7 @@ let project = Project(
                                 "NSUbiquitousContainerSupportedFolderLevels": "Any"
                             ]
                     ],
-                    "CFBundleShortVersionString": "3.4"
+                    "CFBundleShortVersionString": "3.5"
                 ]
             ),
             sources: ["taskchamp/Sources/**"],
@@ -49,7 +49,8 @@ let project = Project(
             dependencies: [
                 .external(name: "MarkdownUI"),
                 .target(name: "taskchampShared"),
-                .target(name: "taskchampWidget")
+                .target(name: "taskchampWidget"),
+                .target(name: "taskchampShareExtension")
             ]
         ),
         .target(
@@ -82,7 +83,7 @@ let project = Project(
                             "NSUbiquitousContainerSupportedFolderLevels": "Any"
                         ]
                 ],
-                "CFBundleShortVersionString": "3.4"
+                "CFBundleShortVersionString": "3.5"
             ]),
             sources: "taskchampWidget/Sources/**",
             entitlements: .dictionary(
@@ -93,6 +94,35 @@ let project = Project(
                     "com.apple.security.application-groups": ["group.com.mav.taskchamp"]
                 ]
             ),
+            dependencies: [
+                .target(name: "taskchampShared")
+            ]
+        ),
+        .target(
+            name: "taskchampShareExtension",
+            destinations: .iOS,
+            product: .appExtension,
+            bundleId: "com.mav.taskchamp.taskchampShareExtension",
+            deploymentTargets: .iOS("17.0"),
+            infoPlist: .extendingDefault(with: [
+                "CFBundleDisplayName": "Taskchamp",
+                "NSExtension": [
+                    "NSExtensionPointIdentifier": "com.apple.share-services",
+                    "NSExtensionPrincipalClass": "$(PRODUCT_MODULE_NAME).ShareViewController",
+                    "NSExtensionAttributes": [
+                        "NSExtensionActivationRule": [
+                            "NSExtensionActivationSupportsText": true,
+                            "NSExtensionActivationSupportsWebURLWithMaxCount": 1,
+                            "NSExtensionActivationSupportsWebPageWithMaxCount": 1
+                        ]
+                    ]
+                ],
+                "CFBundleShortVersionString": "3.5"
+            ]),
+            sources: "taskchampShareExtension/Sources/**",
+            entitlements: .dictionary([
+                "com.apple.security.application-groups": ["group.com.mav.taskchamp"]
+            ]),
             dependencies: [
                 .target(name: "taskchampShared")
             ]
@@ -116,8 +146,9 @@ let project = Project(
             name: "taskchamp",
             runAction: .runAction(
                 configuration: .release,
-                executable: .target("taskchamp"),
-                options: .options(storeKitConfigurationPath: .path("taskchamp/Resources/Products.storekit"))
+                executable: .target("taskchamp")
+                // TODO: add store kit configuration when ready
+                // options: .options(storeKitConfigurationPath: .path("taskchamp/Resources/Products.storekit"))
             )
         )
     ]
