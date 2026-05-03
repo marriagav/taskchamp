@@ -11,7 +11,7 @@ brew install fastlane
 
 brew install mise
 mise install
-curl https://sh.rustup.rs -sSf | sh -s -- -y
+brew install rustup
 
 pushd ..
 make clone_taskchampion
