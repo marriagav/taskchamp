@@ -9,6 +9,7 @@ disabled_rules:
   - orphaned_doc_comment
   - todo
   - function_parameter_count
+  - opening_brace
 
 analyzer_rules:
   - unused_import
