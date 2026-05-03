@@ -25,9 +25,10 @@ class StoreKitManager {
     }
 
     func hasPremiumAccess() -> Bool {
-        let isPremium: Bool = isPremiumUser
-        let isCloud: Bool = isCloudUser
-        return isPremium || isCloud
+        return true // make premium features free for now
+        // let isPremium: Bool = isPremiumUser
+        // let isCloud: Bool = isCloudUser
+        // return isPremium || isCloud
     }
 
     func restorePurchases() async throws {
