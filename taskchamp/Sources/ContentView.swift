@@ -70,13 +70,15 @@ public struct ContentView: View {
             let uuidString = url.pathComponents[1]
 
             if uuidString == "new" {
-                if let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
-                   let contentParam = components.queryItems?.first(where: { $0.name == "content" })?.value,
-                   !contentParam.isEmpty
+                if
+                    let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+                    let contentParam = components.queryItems?.first(where: { $0.name == "content" })?.value,
+                    !contentParam.isEmpty
                 {
                     createTaskContent = contentParam
-                } else if let pending: String = UserDefaultsManager.standard.getValue(forKey: .pendingNewTaskContent),
-                          !pending.isEmpty
+                } else if
+                    let pending: String = UserDefaultsManager.standard.getValue(forKey: .pendingNewTaskContent),
+                    !pending.isEmpty
                 {
                     createTaskContent = pending
                 } else {
