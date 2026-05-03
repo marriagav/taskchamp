@@ -29,7 +29,7 @@ let project = Project(
                                 "NSUbiquitousContainerSupportedFolderLevels": "Any"
                             ]
                     ],
-                    "CFBundleShortVersionString": "3.5"
+                    "CFBundleShortVersionString": "3.6"
                 ]
             ),
             sources: ["taskchamp/Sources/**"],
@@ -83,7 +83,7 @@ let project = Project(
                             "NSUbiquitousContainerSupportedFolderLevels": "Any"
                         ]
                 ],
-                "CFBundleShortVersionString": "3.5"
+                "CFBundleShortVersionString": "3.6"
             ]),
             sources: "taskchampWidget/Sources/**",
             entitlements: .dictionary(
@@ -117,7 +117,7 @@ let project = Project(
                         ]
                     ]
                 ],
-                "CFBundleShortVersionString": "3.5"
+                "CFBundleShortVersionString": "3.6"
             ]),
             sources: "taskchampShareExtension/Sources/**",
             entitlements: .dictionary([
@@ -146,8 +146,9 @@ let project = Project(
             name: "taskchamp",
             runAction: .runAction(
                 configuration: .release,
-                executable: .target("taskchamp"),
-                options: .options(storeKitConfigurationPath: .path("taskchamp/Resources/Products.storekit"))
+                executable: .target("taskchamp")
+                // TODO: add store kit configuration when ready
+                // options: .options(storeKitConfigurationPath: .path("taskchamp/Resources/Products.storekit"))
             )
         )
     ]
