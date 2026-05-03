@@ -117,7 +117,7 @@ let project = Project(
                         ]
                     ]
                 ],
-                "CFBundleShortVersionString": "3.4"
+                "CFBundleShortVersionString": "3.5"
             ]),
             sources: "taskchampShareExtension/Sources/**",
             entitlements: .dictionary([
