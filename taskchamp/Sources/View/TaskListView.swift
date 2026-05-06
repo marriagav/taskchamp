@@ -91,6 +91,18 @@ public struct TaskListView: View {
                             )
                         }
                         .tint(task.isCompleted ? .yellow : .green)
+                        if task.status == .pending {
+                            Button {
+                                toggleStartStop(task)
+                            } label: {
+                                Label(
+                                    task.isActive ? "Stop" : "Start",
+                                    systemImage: task.isActive ? SFSymbols.stopFill.rawValue : SFSymbols.playFill
+                                        .rawValue
+                                )
+                            }
+                            .tint(task.isActive ? .orange : .blue)
+                        }
                     }
                 }
                 .swipeActions(edge: .leading, allowsFullSwipe: true) {

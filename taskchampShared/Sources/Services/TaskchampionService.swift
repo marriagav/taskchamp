@@ -257,6 +257,38 @@ public class TaskchampionService {
         }
     }
 
+    public func startTask(_ uuid: String, onSync: @escaping () -> Void = {}) throws {
+        guard let replica else {
+            throw TCError.genericError("Database not set")
+        }
+        let task = replica.start_task(uuid.intoRustString())
+        if task == nil {
+            throw TCError.genericError("Failed to start task")
+        }
+        _ = replica.sync_no_server()
+        _Concurrency.Task.detached {
+            try? await self.sync {
+                onSync()
+            }
+        }
+    }
+
+    public func stopTask(_ uuid: String, onSync: @escaping () -> Void = {}) throws {
+        guard let replica else {
+            throw TCError.genericError("Database not set")
+        }
+        let task = replica.stop_task(uuid.intoRustString())
+        if task == nil {
+            throw TCError.genericError("Failed to stop task")
+        }
+        _ = replica.sync_no_server()
+        _Concurrency.Task.detached {
+            try? await self.sync {
+                onSync()
+            }
+        }
+    }
+
     public func createTask(_ task: TCTask, onSync: @escaping () -> Void = {}) throws {
         guard let replica else {
             throw TCError.genericError("Database not set")

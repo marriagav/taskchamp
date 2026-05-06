@@ -148,6 +148,23 @@ public struct EditTaskView: View, UseKeyboardToolbar {
                     showTagPopover = true
                 }
             }
+            if task.status == .pending {
+                Section {
+                    Button(action: {
+                        handleStartStopTap()
+                    }, label: {
+                        Label(
+                            task.isActive ? "Stop task" : "Start task",
+                            systemImage: task.isActive ? SFSymbols.stopFill.rawValue : SFSymbols.playFill.rawValue
+                        )
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                        .foregroundStyle(.white)
+                    })
+                    .buttonStyle(.borderedProminent)
+                    .tint(task.isActive ? .orange : .green)
+                    .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
+                }
+            }
             Section {
                 Button(action: {
                     handleTaskActionTap()

@@ -260,6 +260,10 @@ public struct TCTask: Codable, Hashable {
         return rustVec
     }
 
+    public var isActive: Bool {
+        tags?.contains(where: { $0.name == "ACTIVE" }) ?? false
+    }
+
     public var isCompleted: Bool {
         status == .completed
     }

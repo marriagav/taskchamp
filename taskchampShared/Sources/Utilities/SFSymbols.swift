@@ -29,4 +29,7 @@ public enum SFSymbols: String {
     case cloudCheck = "checkmark.icloud"
     case tag
     case recurringTask = "repeat"
+    case play
+    case playFill = "play.fill"
+    case stopFill = "stop.fill"
 }
