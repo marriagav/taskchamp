@@ -107,8 +107,7 @@ public struct AddFilterView: View, UseKeyboardToolbar {
             isShowingAlert = true
             return
         }
-        let testFilter = NLPService.shared.createFilter(from: trimmedQuery)
-        if !testFilter.isValidFilter {
+        if FilterParser.parse(trimmedQuery) == nil {
             alertTitle = "Invalid filter"
             alertMessage = "Please enter a valid filter query"
             isShowingAlert = true
