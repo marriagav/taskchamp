@@ -141,6 +141,7 @@ public struct TCTask: Codable, Hashable {
         obsidianNote = obsidianNoteValue
 
         self.tags = tags.isEmpty ? nil : tags
+        appendSwiftSyntheticTags(hasAnnotations: !annotations.isEmpty)
     }
 
     public init(from decoder: Decoder) throws {
@@ -349,5 +350,122 @@ public struct TCTask: Codable, Hashable {
         }
 
         return url
+    }
+
+    // swiftlint:disable:next cyclomatic_complexity function_body_length
+    private mutating func appendSwiftSyntheticTags(hasAnnotations: Bool) {
+        var syntheticTags: [TCTag] = []
+        let existingTagNames = Set((tags ?? []).map { $0.name })
+        let now = Date()
+        let calendar = Calendar.current
+
+        if let due = due {
+            // OVERDUE
+            if due < now && !existingTagNames.contains("OVERDUE") {
+                syntheticTags.append(TCTag(name: "OVERDUE"))
+            }
+
+            // DUE: due within 7 days (includes overdue)
+            if let sevenDaysFromNow = calendar.date(byAdding: .day, value: 7, to: now),
+               due <= sevenDaysFromNow && !existingTagNames.contains("DUE") {
+                syntheticTags.append(TCTag(name: "DUE"))
+            }
+
+            // DUETODAY / TODAY
+            if calendar.isDateInToday(due) {
+                if !existingTagNames.contains("DUETODAY") {
+                    syntheticTags.append(TCTag(name: "DUETODAY"))
+                }
+                if !existingTagNames.contains("TODAY") {
+                    syntheticTags.append(TCTag(name: "TODAY"))
+                }
+            }
+
+            // YESTERDAY
+            if calendar.isDateInYesterday(due) && !existingTagNames.contains("YESTERDAY") {
+                syntheticTags.append(TCTag(name: "YESTERDAY"))
+            }
+
+            // TOMORROW
+            if calendar.isDateInTomorrow(due) && !existingTagNames.contains("TOMORROW") {
+                syntheticTags.append(TCTag(name: "TOMORROW"))
+            }
+
+            // WEEK
+            if calendar.isDate(due, equalTo: now, toGranularity: .weekOfYear)
+                && !existingTagNames.contains("WEEK") {
+                syntheticTags.append(TCTag(name: "WEEK"))
+            }
+
+            // MONTH
+            if calendar.isDate(due, equalTo: now, toGranularity: .month)
+                && !existingTagNames.contains("MONTH") {
+                syntheticTags.append(TCTag(name: "MONTH"))
+            }
+
+            // QUARTER
+            let dueQuarter = (calendar.component(.month, from: due) - 1) / 3
+            let nowQuarter = (calendar.component(.month, from: now) - 1) / 3
+            if calendar.component(.year, from: due) == calendar.component(.year, from: now)
+                && dueQuarter == nowQuarter
+                && !existingTagNames.contains("QUARTER") {
+                syntheticTags.append(TCTag(name: "QUARTER"))
+            }
+
+            // YEAR
+            if calendar.isDate(due, equalTo: now, toGranularity: .year)
+                && !existingTagNames.contains("YEAR") {
+                syntheticTags.append(TCTag(name: "YEAR"))
+            }
+        }
+
+        // ANNOTATED
+        if hasAnnotations && !existingTagNames.contains("ANNOTATED") {
+            syntheticTags.append(TCTag(name: "ANNOTATED"))
+        }
+
+        // TAGGED: has any user (non-synthetic) tags
+        if let tags = tags, tags.contains(where: { !$0.isSynthetic() })
+            && !existingTagNames.contains("TAGGED") {
+            syntheticTags.append(TCTag(name: "TAGGED"))
+        }
+
+        // PRIORITY
+        if let priority = priority, priority != .none
+            && !existingTagNames.contains("PRIORITY") {
+            syntheticTags.append(TCTag(name: "PRIORITY"))
+        }
+
+        // PROJECT
+        if let project = project, !project.isEmpty
+            && !existingTagNames.contains("PROJECT") {
+            syntheticTags.append(TCTag(name: "PROJECT"))
+        }
+
+        // PARENT: recurring template
+        if status == .recurring && !existingTagNames.contains("PARENT") {
+            syntheticTags.append(TCTag(name: "PARENT"))
+        }
+
+        // CHILD: recurring instance
+        if recur != nil && status != .recurring && !existingTagNames.contains("CHILD") {
+            syntheticTags.append(TCTag(name: "CHILD"))
+        }
+
+        // READY: pending, not blocked, not waiting
+        if status == .pending
+            && !existingTagNames.contains("BLOCKED")
+            && !existingTagNames.contains("WAITING")
+            && !existingTagNames.contains("READY") {
+            syntheticTags.append(TCTag(name: "READY"))
+        }
+
+        if !syntheticTags.isEmpty {
+            if self.tags == nil {
+                self.tags = syntheticTags
+            } else {
+                self.tags?.append(contentsOf: syntheticTags)
+            }
+        }
     }
 }
