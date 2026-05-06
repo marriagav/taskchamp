@@ -317,7 +317,7 @@ public struct TaskListView: View {
                 isEditModeActive ?
                 selection
                 .isEmpty ? "Select Tasks" : "\(selection.count) Selected" :
-                selectedFilter.fullDescription
+                selectedFilter.displayName
         )
         .environment(\.editMode, $editMode)
         .onChange(of: scenePhase) { _, newScenePhase in
