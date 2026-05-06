@@ -128,6 +128,7 @@ public class TaskchampionService {
         var taskObjects: [TCTask] = []
         if filter.isDefaultFilter {
             taskObjects = try getPendingTasks()
+            TCTask.markLatestTask(in: &taskObjects)
             TasksHelper.sortTasksWithSortType(&taskObjects, sortType: sortType)
             return taskObjects
         }
@@ -144,6 +145,7 @@ public class TaskchampionService {
             return nil
         }
 
+        TCTask.markLatestTask(in: &taskObjects)
         TasksHelper.sortTasksWithSortType(&taskObjects, sortType: sortType)
         return taskObjects
     }

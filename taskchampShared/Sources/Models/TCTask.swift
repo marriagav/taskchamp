@@ -84,6 +84,9 @@ public struct TCTask: Codable, Hashable {
         let annotations = rustTask.get_annotations().map { $0.get_description().toString() }
         let tags = rustTask.get_tags().map { TCTag.tagFactory(name: $0.get_value().toString()) }
         let recur = rustTask.get_recur()?.toString()
+        let scheduled = rustTask.get_scheduled()?.toString()
+        let until = rustTask.get_until()?.toString()
+        let modified = rustTask.get_modified()?.toString()
 
         // Initialize
         self.uuid = uuid
@@ -97,6 +100,15 @@ public struct TCTask: Codable, Hashable {
         }
         self.project = project
         self.recur = recur
+        if let scheduled, let timeInterval = TimeInterval(scheduled) {
+            self.scheduled = Date(timeIntervalSince1970: timeInterval)
+        }
+        if let until, let timeInterval = TimeInterval(until) {
+            self.until = Date(timeIntervalSince1970: timeInterval)
+        }
+        if let modified, let timeInterval = TimeInterval(modified) {
+            self.modified = Date(timeIntervalSince1970: timeInterval)
+        }
 
         // Look for obsidian note in annotations
         var obsidianNoteValue: String?
@@ -212,6 +224,9 @@ public struct TCTask: Codable, Hashable {
     public var noteAnnotationKey: String?
     public var tags: [TCTag]?
     public var recur: String?
+    public var scheduled: Date?
+    public var until: Date?
+    public var modified: Date?
 
     public var obsidianNoteAnnotation: String? {
         guard let note = obsidianNote else {
@@ -430,11 +445,36 @@ public struct TCTask: Codable, Hashable {
             syntheticTags.append(TCTag(name: "READY"))
         }
 
+        // SCHEDULED
+        if scheduled != nil && !existingTagNames.contains("SCHEDULED") {
+            syntheticTags.append(TCTag(name: "SCHEDULED"))
+        }
+
+        // UNTIL
+        if until != nil && !existingTagNames.contains("UNTIL") {
+            syntheticTags.append(TCTag(name: "UNTIL"))
+        }
+
         if !syntheticTags.isEmpty {
             if self.tags == nil {
                 self.tags = syntheticTags
             } else {
                 self.tags?.append(contentsOf: syntheticTags)
+            }
+        }
+    }
+
+    public static func markLatestTask(in tasks: inout [TCTask]) {
+        guard let latestIndex = tasks.enumerated().max(by: { lhs, rhs in
+            (lhs.element.modified ?? .distantPast) < (rhs.element.modified ?? .distantPast)
+        })?.offset else { return }
+
+        let existingTagNames = Set((tasks[latestIndex].tags ?? []).map { $0.name })
+        if !existingTagNames.contains("LATEST") {
+            if tasks[latestIndex].tags == nil {
+                tasks[latestIndex].tags = [TCTag(name: "LATEST")]
+            } else {
+                tasks[latestIndex].tags?.append(TCTag(name: "LATEST"))
             }
         }
     }
