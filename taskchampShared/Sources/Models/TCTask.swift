@@ -54,57 +54,23 @@ public struct TCTask: Codable, Hashable {
     }
 
     @MainActor
-    // swiftlint:disable:next cyclomatic_complexity
     public static func taskFactory(from rustTask: TaskRef, withFilter filter: TCFilter) -> TCTask? {
         // Exclude recurring template tasks unless explicitly filtering for them
         let statusValue = rustTask.get_status().get_value().toString().lowercased()
         if statusValue == "recurring" {
-            if !filter.didSetStatus || filter.status != .recurring {
+            guard let expression = filter.filterExpression,
+                  expression.containsStatus(.recurring) else {
                 return nil
             }
         }
 
-        let prio = rustTask.get_priority().toString()
-        if filter.didSetPrio {
-            if prio != filter.priority.rawValue {
-                return nil
-            }
+        let task = TCTask(from: rustTask)
+
+        guard let expression = filter.filterExpression else {
+            return task
         }
 
-        let project = rustTask.get_project()?.toString() ?? ""
-        if filter.didSetProject {
-            if project != filter.project {
-                return nil
-            }
-        }
-
-        if filter.didSetStatus {
-            if statusValue != filter.status.rawValue {
-                return nil
-            }
-        }
-
-        if filter.didSetTags {
-            let tagsToInclude = filter.tagsToInclude
-            let tagsToExclude = filter.tagsToExclude
-            let rustTags = rustTask.get_tags().map { $0.get_value().toString }
-            for tag in tagsToInclude ?? [] where !rustTags.contains(where: { $0() == tag.name }) {
-                return nil
-            }
-            for tag in tagsToExclude ?? [] where rustTags.contains(where: { $0() == tag.name }) {
-                return nil
-            }
-        }
-
-        // Filter for recurring task instances (tasks with recur property set)
-        if filter.didSetRecur {
-            let recur = rustTask.get_recur()?.toString()
-            if recur == nil {
-                return nil
-            }
-        }
-
-        return TCTask(from: rustTask)
+        return expression.matches(task) ? task : nil
     }
 
     @MainActor

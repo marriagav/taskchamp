@@ -45,7 +45,12 @@ public class TCFilter: Codable {
         return didSetDue ? due : nil
     }
 
+    public var filterExpression: FilterExpression? {
+        return FilterParser.parse(fullDescription)
+    }
+
     public var isValidFilter: Bool {
+        if filterExpression != nil { return true }
         return didSetPrio || didSetProject || didSetDue || didSetStatus || didSetTags || didSetRecur
     }
 
