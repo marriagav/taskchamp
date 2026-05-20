@@ -108,28 +108,31 @@ public struct FilterParser {
 
             guard !word.isEmpty else { continue }
 
-            if word.lowercased() == "or" {
+            switch word {
+            case _ where word.lowercased() == "or":
                 tokens.append(.orKeyword)
-            } else if word.lowercased() == "and" {
+            case _ where word.lowercased() == "and":
                 tokens.append(.andKeyword)
-            } else if word.hasPrefix("project:") {
+            case _ where word.hasPrefix("project:"):
                 tokens.append(.project(String(word.dropFirst("project:".count))))
-            } else if word.hasPrefix("prio:") {
+            case _ where word.hasPrefix("prio:"):
                 tokens.append(.priority(String(word.dropFirst("prio:".count))))
-            } else if word.hasPrefix("status:") {
+            case _ where word.hasPrefix("status:"):
                 tokens.append(.status(String(word.dropFirst("status:".count))))
-            } else if word.lowercased() == "recur" {
+            case _ where word.lowercased() == "recur":
                 tokens.append(.recur)
-            } else if word.hasPrefix("+") {
+            case _ where word.hasPrefix("+"):
                 let value = String(word.dropFirst())
                 if !value.isEmpty {
                     tokens.append(.tag(value))
                 }
-            } else if word.hasPrefix("-") {
+            case _ where word.hasPrefix("-"):
                 let value = String(word.dropFirst())
                 if !value.isEmpty {
                     tokens.append(.notTag(value))
                 }
+            default:
+                break
             }
         }
 
