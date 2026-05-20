@@ -73,10 +73,11 @@ extension EditTaskView {
                 try TaskchampionService.shared.stopTask(task.uuid) {
                     globalState.isSyncingTasks = false
                 }
-            } else {
-                try TaskchampionService.shared.startTask(task.uuid) {
-                    globalState.isSyncingTasks = false
-                }
+                task = try TaskchampionService.shared.getTask(uuid: task.uuid)
+                return
+            }
+            try TaskchampionService.shared.startTask(task.uuid) {
+                globalState.isSyncingTasks = false
             }
             task = try TaskchampionService.shared.getTask(uuid: task.uuid)
         } catch {
