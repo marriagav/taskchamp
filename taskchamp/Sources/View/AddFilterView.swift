@@ -29,101 +29,6 @@ public struct AddFilterView: View, UseKeyboardToolbar {
 
     @FocusState private var isFocusedNLP: Bool
 
-    func skipNextAndPrevious() -> Bool {
-        return true
-    }
-
-    func calculateNextField() {
-        // No next field
-    }
-
-    func calculatePreviousField() {
-        // No previous field
-    }
-
-    func onDismissKeyboard() {
-        isFocusedNLP = false
-    }
-
-    private func setSelectedFilterUserDefault(selectedFilter: TCFilter) {
-        do {
-            try UserDefaultsManager.standard.setEncodableValue(selectedFilter, forKey: .selectedFilter)
-        } catch { print(error) }
-    }
-
-    private func syncFiltersToSharedUserDefaults() {
-        do {
-            try UserDefaultsManager.shared.setEncodableValue(filters, forKey: .savedFilters)
-            WidgetCenter.shared.reloadAllTimelines()
-        } catch { print(error) }
-    }
-
-    private func addFilter() {
-        if !storeKit.hasPremiumAccess() {
-            showPaywall = true
-            return
-        }
-        withAnimation {
-            if nlpInput.isEmpty {
-                alertTitle = "Empty input"
-                alertMessage = "Please enter a valid filter"
-                isShowingAlert = true
-                return
-            }
-            let nlpFilter = NLPService.shared.createFilter(from: nlpInput)
-            if !nlpFilter.isValidFilter {
-                alertTitle = "Invalid filter"
-                alertMessage = "Please enter a valid filter"
-                isShowingAlert = true
-                return
-            }
-            nlpFilter.order = filters.count
-            modelContext.insert(nlpFilter)
-            selectedFilter = nlpFilter
-
-            setSelectedFilterUserDefault(selectedFilter: selectedFilter)
-
-            nlpInput = ""
-            isFocusedNLP = false
-            dismiss()
-        }
-    }
-
-    private func moveFilters(from source: IndexSet, to destination: Int) {
-        var reordered = filters
-        reordered.move(fromOffsets: source, toOffset: destination)
-        for (index, filter) in reordered.enumerated() {
-            filter.order = index
-        }
-        syncFiltersToSharedUserDefaults()
-    }
-
-    private func saveEditingFilter() {
-        guard let filter = editingFilter else { return }
-        let trimmedQuery = editQuery.trimmingCharacters(in: .whitespacesAndNewlines)
-        if trimmedQuery.isEmpty {
-            alertTitle = "Empty query"
-            alertMessage = "Please enter a valid filter query"
-            isShowingAlert = true
-            return
-        }
-        if FilterParser.parse(trimmedQuery) == nil {
-            alertTitle = "Invalid filter"
-            alertMessage = "Please enter a valid filter query"
-            isShowingAlert = true
-            return
-        }
-        let trimmedName = editName.trimmingCharacters(in: .whitespacesAndNewlines)
-        filter.name = trimmedName.isEmpty ? nil : trimmedName
-        filter.fullDescription = trimmedQuery
-        if selectedFilter.id == filter.id {
-            selectedFilter = filter
-            setSelectedFilterUserDefault(selectedFilter: selectedFilter)
-        }
-        syncFiltersToSharedUserDefaults()
-        editingFilter = nil
-    }
-
     public var body: some View {
         NavigationStack {
             Form {
@@ -283,7 +188,7 @@ public struct AddFilterView: View, UseKeyboardToolbar {
             .alert(isPresented: $isShowingAlert) {
                 Alert(title: Text(alertTitle), message: Text(alertMessage), dismissButton: .default(Text("OK")))
             }
-            .sheet(item: $editingFilter) { filter in
+            .sheet(item: $editingFilter) { _ in
                 NavigationStack {
                     Form {
                         Section(header: Text("Name")) {
@@ -326,5 +231,102 @@ public struct AddFilterView: View, UseKeyboardToolbar {
                 syncFiltersToSharedUserDefaults()
             }
         }
+    }
+}
+
+extension AddFilterView {
+    func skipNextAndPrevious() -> Bool {
+        return true
+    }
+
+    func calculateNextField() {
+        // No next field
+    }
+
+    func calculatePreviousField() {
+        // No previous field
+    }
+
+    func onDismissKeyboard() {
+        isFocusedNLP = false
+    }
+
+    fileprivate func setSelectedFilterUserDefault(selectedFilter: TCFilter) {
+        do {
+            try UserDefaultsManager.standard.setEncodableValue(selectedFilter, forKey: .selectedFilter)
+        } catch { print(error) }
+    }
+
+    fileprivate func syncFiltersToSharedUserDefaults() {
+        do {
+            try UserDefaultsManager.shared.setEncodableValue(filters, forKey: .savedFilters)
+            WidgetCenter.shared.reloadAllTimelines()
+        } catch { print(error) }
+    }
+
+    fileprivate func addFilter() {
+        if !storeKit.hasPremiumAccess() {
+            showPaywall = true
+            return
+        }
+        withAnimation {
+            if nlpInput.isEmpty {
+                alertTitle = "Empty input"
+                alertMessage = "Please enter a valid filter"
+                isShowingAlert = true
+                return
+            }
+            let nlpFilter = NLPService.shared.createFilter(from: nlpInput)
+            if !nlpFilter.isValidFilter {
+                alertTitle = "Invalid filter"
+                alertMessage = "Please enter a valid filter"
+                isShowingAlert = true
+                return
+            }
+            nlpFilter.order = filters.count
+            modelContext.insert(nlpFilter)
+            selectedFilter = nlpFilter
+
+            setSelectedFilterUserDefault(selectedFilter: selectedFilter)
+
+            nlpInput = ""
+            isFocusedNLP = false
+            dismiss()
+        }
+    }
+
+    fileprivate func moveFilters(from source: IndexSet, to destination: Int) {
+        var reordered = filters
+        reordered.move(fromOffsets: source, toOffset: destination)
+        for (index, filter) in reordered.enumerated() {
+            filter.order = index
+        }
+        syncFiltersToSharedUserDefaults()
+    }
+
+    fileprivate func saveEditingFilter() {
+        guard let filter = editingFilter else { return }
+        let trimmedQuery = editQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmedQuery.isEmpty {
+            alertTitle = "Empty query"
+            alertMessage = "Please enter a valid filter query"
+            isShowingAlert = true
+            return
+        }
+        if FilterParser.parse(trimmedQuery) == nil {
+            alertTitle = "Invalid filter"
+            alertMessage = "Please enter a valid filter query"
+            isShowingAlert = true
+            return
+        }
+        let trimmedName = editName.trimmingCharacters(in: .whitespacesAndNewlines)
+        filter.name = trimmedName.isEmpty ? nil : trimmedName
+        filter.fullDescription = trimmedQuery
+        if selectedFilter.id == filter.id {
+            selectedFilter = filter
+            setSelectedFilterUserDefault(selectedFilter: selectedFilter)
+        }
+        syncFiltersToSharedUserDefaults()
+        editingFilter = nil
     }
 }
