@@ -31,6 +31,7 @@ public class NLPService {
             "project:",
             "status:",
             "recur",
+            "or",
             "+",
             "-"
         ],
@@ -82,7 +83,7 @@ public class NLPService {
 
     private func autoCompleteSourcesNotAlreadyInInput(_ input: String, surface: Surface) -> [String] {
         return (autoCompleteSources[surface] ?? []).filter {
-            if isTag($0) {
+            if isTag($0) || $0 == "or" {
                 return true
             }
             return !input.contains($0)
@@ -226,53 +227,36 @@ public class NLPService {
         let filter = TCFilter(
             fullDescription: input
         )
-        var remainingString = input
 
-        // Check for and extract prio
-        if remainingString.range(of: "prio:") != nil {
-            let prio = extractValue(after: "prio:", from: &remainingString, isFilter: true)
-            filter.setPrio(TCTask.Priority(rawValue: prio ?? ""))
+        guard let expression = FilterParser.parse(input) else {
+            return filter
         }
 
-        // Check for and extract project
-        if remainingString.range(of: "project:") != nil {
-            filter.setProject(extractValue(after: "project:", from: &remainingString, isFilter: true))
-        }
-
-        // Check for and extract due
-        if remainingString.range(of: "due:") != nil {
-            filter.setDue(extractValue(after: "due:", from: &remainingString, isFilter: true)?.dateValue)
-        }
-
-        // Check for and extract status
-        if remainingString.range(of: "status:") != nil {
-            let status = extractValue(after: "status:", from: &remainingString, isFilter: true)
-            filter.setStatus(TCTask.Status(rawValue: status ?? "pending"))
-        }
-
-        // Check for recur keyword (filters for recurring task instances)
-        if let range = remainingString.range(of: "\\brecur\\b", options: .regularExpression) {
-            filter.setRecur()
-            remainingString.removeSubrange(range)
-        }
-
-        // Check for and extract tags
-        while remainingString.range(of: "+") != nil {
-            let tagValue = extractValue(after: "+", from: &remainingString)
-            if let tagValue, !tagValue.isEmpty {
-                filter.setTag(tagValue, forInclusion: true)
-            }
-        }
-
-        // Check for and extract negative tags
-        while remainingString.range(of: "-") != nil {
-            let tagValue = extractValue(after: "-", from: &remainingString)
-            if let tagValue, !tagValue.isEmpty {
-                filter.setTag(tagValue, forInclusion: false)
-            }
-        }
+        setLegacyProperties(on: filter, from: expression)
 
         return filter
+    }
+
+    @MainActor
+    private func setLegacyProperties(on filter: TCFilter, from expression: FilterExpression) {
+        switch expression {
+        case .and(let expressions), .or(let expressions):
+            for expr in expressions {
+                setLegacyProperties(on: filter, from: expr)
+            }
+        case .project(let name):
+            filter.setProject(name)
+        case .priority(let prio):
+            filter.setPrio(prio)
+        case .status(let status):
+            filter.setStatus(status)
+        case .tag(let name):
+            filter.setTag(name, forInclusion: true)
+        case .notTag(let name):
+            filter.setTag(name, forInclusion: false)
+        case .recur:
+            filter.setRecur()
+        }
     }
 
     // TODO: Add recur: to regex patterns when recurring task creation is implemented

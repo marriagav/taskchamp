@@ -54,57 +54,23 @@ public struct TCTask: Codable, Hashable {
     }
 
     @MainActor
-    // swiftlint:disable:next cyclomatic_complexity
     public static func taskFactory(from rustTask: TaskRef, withFilter filter: TCFilter) -> TCTask? {
         // Exclude recurring template tasks unless explicitly filtering for them
         let statusValue = rustTask.get_status().get_value().toString().lowercased()
         if statusValue == "recurring" {
-            if !filter.didSetStatus || filter.status != .recurring {
+            guard let expression = filter.filterExpression,
+                  expression.containsStatus(.recurring) else {
                 return nil
             }
         }
 
-        let prio = rustTask.get_priority().toString()
-        if filter.didSetPrio {
-            if prio != filter.priority.rawValue {
-                return nil
-            }
+        let task = TCTask(from: rustTask)
+
+        guard let expression = filter.filterExpression else {
+            return task
         }
 
-        let project = rustTask.get_project()?.toString() ?? ""
-        if filter.didSetProject {
-            if project != filter.project {
-                return nil
-            }
-        }
-
-        if filter.didSetStatus {
-            if statusValue != filter.status.rawValue {
-                return nil
-            }
-        }
-
-        if filter.didSetTags {
-            let tagsToInclude = filter.tagsToInclude
-            let tagsToExclude = filter.tagsToExclude
-            let rustTags = rustTask.get_tags().map { $0.get_value().toString }
-            for tag in tagsToInclude ?? [] where !rustTags.contains(where: { $0() == tag.name }) {
-                return nil
-            }
-            for tag in tagsToExclude ?? [] where rustTags.contains(where: { $0() == tag.name }) {
-                return nil
-            }
-        }
-
-        // Filter for recurring task instances (tasks with recur property set)
-        if filter.didSetRecur {
-            let recur = rustTask.get_recur()?.toString()
-            if recur == nil {
-                return nil
-            }
-        }
-
-        return TCTask(from: rustTask)
+        return expression.matches(task) ? task : nil
     }
 
     @MainActor
@@ -118,6 +84,9 @@ public struct TCTask: Codable, Hashable {
         let annotations = rustTask.get_annotations().map { $0.get_description().toString() }
         let tags = rustTask.get_tags().map { TCTag.tagFactory(name: $0.get_value().toString()) }
         let recur = rustTask.get_recur()?.toString()
+        let scheduled = rustTask.get_scheduled()?.toString()
+        let until = rustTask.get_until()?.toString()
+        let modified = rustTask.get_modified()?.toString()
 
         // Initialize
         self.uuid = uuid
@@ -131,6 +100,15 @@ public struct TCTask: Codable, Hashable {
         }
         self.project = project
         self.recur = recur
+        if let scheduled, let timeInterval = TimeInterval(scheduled) {
+            self.scheduled = Date(timeIntervalSince1970: timeInterval)
+        }
+        if let until, let timeInterval = TimeInterval(until) {
+            self.until = Date(timeIntervalSince1970: timeInterval)
+        }
+        if let modified, let timeInterval = TimeInterval(modified) {
+            self.modified = Date(timeIntervalSince1970: timeInterval)
+        }
 
         // Look for obsidian note in annotations
         var obsidianNoteValue: String?
@@ -141,6 +119,7 @@ public struct TCTask: Codable, Hashable {
         obsidianNote = obsidianNoteValue
 
         self.tags = tags.isEmpty ? nil : tags
+        appendSwiftSyntheticTags(hasAnnotations: !annotations.isEmpty)
     }
 
     public init(from decoder: Decoder) throws {
@@ -245,6 +224,9 @@ public struct TCTask: Codable, Hashable {
     public var noteAnnotationKey: String?
     public var tags: [TCTag]?
     public var recur: String?
+    public var scheduled: Date?
+    public var until: Date?
+    public var modified: Date?
 
     public var obsidianNoteAnnotation: String? {
         guard let note = obsidianNote else {
@@ -291,6 +273,10 @@ public struct TCTask: Codable, Hashable {
             }
         }
         return rustVec
+    }
+
+    public var isActive: Bool {
+        tags?.contains(where: { $0.name == "ACTIVE" }) ?? false
     }
 
     public var isCompleted: Bool {
@@ -349,5 +335,39 @@ public struct TCTask: Codable, Hashable {
         }
 
         return url
+    }
+
+    private mutating func appendSwiftSyntheticTags(hasAnnotations: Bool) {
+        let existingTagNames = Set((tags ?? []).map { $0.name })
+        let syntheticTags = TCSyntheticTag.allCases
+            .filter { tag in
+                tag != .latest
+                    && !existingTagNames.contains(tag.rawValue)
+                    && tag.applies(to: self, hasAnnotations: hasAnnotations)
+            }
+            .map { $0.toTCTag() }
+
+        guard !syntheticTags.isEmpty else { return }
+        if self.tags == nil {
+            self.tags = syntheticTags
+        } else {
+            self.tags?.append(contentsOf: syntheticTags)
+        }
+    }
+
+    public static func markLatestTask(in tasks: inout [TCTask]) {
+        guard let latestIndex = tasks.enumerated().max(by: { lhs, rhs in
+            (lhs.element.modified ?? .distantPast) < (rhs.element.modified ?? .distantPast)
+        })?.offset else { return }
+
+        let latestTag = TCSyntheticTag.latest
+        let existingTagNames = Set((tasks[latestIndex].tags ?? []).map { $0.name })
+        guard !existingTagNames.contains(latestTag.rawValue) else { return }
+
+        if tasks[latestIndex].tags == nil {
+            tasks[latestIndex].tags = [latestTag.toTCTag()]
+        } else {
+            tasks[latestIndex].tags?.append(latestTag.toTCTag())
+        }
     }
 }
