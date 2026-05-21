@@ -41,9 +41,7 @@ public enum TCSyntheticTag: String, CaseIterable {
             guard
                 let due = task.due,
                 let sevenDaysFromNow = calendar.date(byAdding: .day, value: 7, to: now)
-            else {
-                return false
-            }
+            else { return false }
             return due <= sevenDaysFromNow
         case .dueToday, .today:
             guard let due = task.due else { return false }

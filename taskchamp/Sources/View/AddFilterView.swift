@@ -103,7 +103,7 @@ public struct AddFilterView: View, UseKeyboardToolbar {
                                         Text(filter.fullDescription)
                                             .font(.system(.body, design: .monospaced))
                                             .foregroundStyle(
-                                                filter.name != nil && !filter.name!.isEmpty
+                                                (filter.name?.isEmpty == false)
                                                     ? .secondary : .primary
                                             )
                                         if selectedFilter.id == filter.id {
@@ -251,20 +251,20 @@ extension AddFilterView {
         isFocusedNLP = false
     }
 
-    fileprivate func setSelectedFilterUserDefault(selectedFilter: TCFilter) {
+    private func setSelectedFilterUserDefault(selectedFilter: TCFilter) {
         do {
             try UserDefaultsManager.standard.setEncodableValue(selectedFilter, forKey: .selectedFilter)
         } catch { print(error) }
     }
 
-    fileprivate func syncFiltersToSharedUserDefaults() {
+    private func syncFiltersToSharedUserDefaults() {
         do {
             try UserDefaultsManager.shared.setEncodableValue(filters, forKey: .savedFilters)
             WidgetCenter.shared.reloadAllTimelines()
         } catch { print(error) }
     }
 
-    fileprivate func addFilter() {
+    private func addFilter() {
         if !storeKit.hasPremiumAccess() {
             showPaywall = true
             return
@@ -295,7 +295,7 @@ extension AddFilterView {
         }
     }
 
-    fileprivate func moveFilters(from source: IndexSet, to destination: Int) {
+    private func moveFilters(from source: IndexSet, to destination: Int) {
         var reordered = filters
         reordered.move(fromOffsets: source, toOffset: destination)
         for (index, filter) in reordered.enumerated() {
@@ -304,7 +304,7 @@ extension AddFilterView {
         syncFiltersToSharedUserDefaults()
     }
 
-    fileprivate func saveEditingFilter() {
+    private func saveEditingFilter() {
         guard let filter = editingFilter else { return }
         let trimmedQuery = editQuery.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmedQuery.isEmpty {

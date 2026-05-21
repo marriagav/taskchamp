@@ -29,22 +29,10 @@ public struct EditTaskView: View, UseKeyboardToolbar {
     @State var alertMessage = ""
     @State var showNoteView = false
 
-    @FocusState private var focusedField: FormField?
+    @FocusState var focusedField: FormField?
     enum FormField {
         case description
         case project
-    }
-
-    var didChange: Bool {
-        task.project ?? "" != project ||
-            task.description != description ||
-            task.status != status ||
-            task.priority != (priority == TCTask.Priority.none ? nil : priority) ||
-            task.due != Calendar.current.mergeDateWithTime(
-                date: didSetDate ? due : nil,
-                time: didSetTime ? time : nil
-            ) ||
-            task.tags ?? [] != tags
     }
 
     init(task: TCTask) {
@@ -64,32 +52,6 @@ public struct EditTaskView: View, UseKeyboardToolbar {
         }
 
         self.task = task
-    }
-
-    func calculateNextField() {
-        switch focusedField {
-        case .description:
-            focusedField = .project
-        case .project:
-            focusedField = .project
-        default:
-            focusedField = nil
-        }
-    }
-
-    func calculatePreviousField() {
-        switch focusedField {
-        case .description:
-            focusedField = .description
-        case .project:
-            focusedField = .description
-        default:
-            focusedField = nil
-        }
-    }
-
-    func onDismissKeyboard() {
-        focusedField = nil
     }
 
     public var body: some View {
