@@ -4,6 +4,7 @@ import Foundation
 
 public indirect enum FilterExpression {
     case and([FilterExpression])
+    // swiftlint:disable:next identifier_name
     case or([FilterExpression])
     case tag(String)
     case notTag(String)
@@ -63,8 +64,7 @@ enum FilterToken: Equatable {
 
 // MARK: - FilterParser
 
-public struct FilterParser {
-
+public enum FilterParser {
     // MARK: - Public API
 
     public static func parse(_ input: String) -> FilterExpression? {

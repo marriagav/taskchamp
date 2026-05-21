@@ -38,8 +38,10 @@ public enum TCSyntheticTag: String, CaseIterable {
             guard let due = task.due else { return false }
             return due < now
         case .due:
-            guard let due = task.due,
-                  let sevenDaysFromNow = calendar.date(byAdding: .day, value: 7, to: now) else {
+            guard
+                let due = task.due,
+                let sevenDaysFromNow = calendar.date(byAdding: .day, value: 7, to: now)
+            else {
                 return false
             }
             return due <= sevenDaysFromNow
@@ -70,7 +72,7 @@ public enum TCSyntheticTag: String, CaseIterable {
         case .annotated:
             return hasAnnotations
         case .tagged:
-            return task.tags?.contains(where: { !$0.isSynthetic() }) ?? false
+            return task.tags?.contains { !$0.isSynthetic() } ?? false
         case .priority:
             guard let priority = task.priority else { return false }
             return priority != .none
