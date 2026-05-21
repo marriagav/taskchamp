@@ -58,8 +58,10 @@ public struct TCTask: Codable, Hashable {
         // Exclude recurring template tasks unless explicitly filtering for them
         let statusValue = rustTask.get_status().get_value().toString().lowercased()
         if statusValue == "recurring" {
-            guard let expression = filter.filterExpression,
-                  expression.containsStatus(.recurring) else {
+            guard
+                let expression = filter.filterExpression,
+                expression.containsStatus(.recurring)
+            else {
                 return nil
             }
         }
@@ -276,7 +278,7 @@ public struct TCTask: Codable, Hashable {
     }
 
     public var isActive: Bool {
-        tags?.contains(where: { $0.name == "ACTIVE" }) ?? false
+        tags?.contains { $0.name == "ACTIVE" } ?? false
     }
 
     public var isCompleted: Bool {
