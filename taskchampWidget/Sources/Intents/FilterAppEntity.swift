@@ -32,7 +32,7 @@ struct FilterEntityQuery: EntityQuery {
         let savedFilters = getSavedFiltersFromUserDefaults()
         results
             .append(contentsOf: savedFilters.map {
-                FilterAppEntity(id: $0.id.uuidString, name: $0.fullDescription)
+                FilterAppEntity(id: $0.id.uuidString, name: $0.displayName)
             }
             .filter { identifiers.contains($0.id) })
         return results
@@ -41,7 +41,7 @@ struct FilterEntityQuery: EntityQuery {
     func suggestedEntities() async throws -> [FilterAppEntity] {
         var results: [FilterAppEntity] = [.noFilter]
         results.append(contentsOf: getSavedFiltersFromUserDefaults().map {
-            FilterAppEntity(id: $0.id.uuidString, name: $0.fullDescription)
+            FilterAppEntity(id: $0.id.uuidString, name: $0.displayName)
         })
         return results
     }
