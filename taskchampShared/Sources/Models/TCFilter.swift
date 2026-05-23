@@ -24,6 +24,8 @@ public class TCFilter: Codable {
     }
 
     public var id = UUID()
+    public var name: String?
+    public var order: Int = 0
     public var fullDescription: String = ""
     public var project: String = ""
     public var status = TCTask.Status.deleted
@@ -41,11 +43,23 @@ public class TCFilter: Codable {
     public var didSetTags: Bool = false
     public var didSetRecur: Bool = false
 
+    public var displayName: String {
+        if let name, !name.isEmpty {
+            return name
+        }
+        return fullDescription
+    }
+
     public var realDue: Date? {
         return didSetDue ? due : nil
     }
 
+    public var filterExpression: FilterExpression? {
+        return FilterParser.parse(fullDescription)
+    }
+
     public var isValidFilter: Bool {
+        if filterExpression != nil { return true }
         return didSetPrio || didSetProject || didSetDue || didSetStatus || didSetTags || didSetRecur
     }
 
@@ -108,12 +122,16 @@ public class TCFilter: Codable {
     }
 
     init(
+        name: String? = nil,
+        order: Int = 0,
         fullDescription: String = "",
         project: String = "",
         status: TCTask.Status = .deleted,
         priority: TCTask.Priority = .none,
         due: Date = Date(timeIntervalSince1970: 0)
     ) {
+        self.name = name
+        self.order = order
         self.fullDescription = fullDescription
         self.project = project
         self.status = status
@@ -123,6 +141,8 @@ public class TCFilter: Codable {
 
     enum CodingKeys: CodingKey {
         case id
+        case name
+        case order
         case fullDescription
         case project
         case status
@@ -141,6 +161,8 @@ public class TCFilter: Codable {
     public required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(UUID.self, forKey: .id)
+        name = try container.decodeIfPresent(String.self, forKey: .name)
+        order = try container.decodeIfPresent(Int.self, forKey: .order) ?? 0
         fullDescription = try container.decode(String.self, forKey: .fullDescription)
         project = try container.decode(String.self, forKey: .project)
         status = try container.decode(TCTask.Status.self, forKey: .status)
@@ -162,6 +184,8 @@ public class TCFilter: Codable {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(id, forKey: .id)
+        try container.encodeIfPresent(name, forKey: .name)
+        try container.encode(order, forKey: .order)
         try container.encode(fullDescription, forKey: .fullDescription)
         try container.encode(project, forKey: .project)
         try container.encode(status, forKey: .status)

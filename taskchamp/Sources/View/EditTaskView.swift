@@ -29,22 +29,10 @@ public struct EditTaskView: View, UseKeyboardToolbar {
     @State var alertMessage = ""
     @State var showNoteView = false
 
-    @FocusState private var focusedField: FormField?
+    @FocusState var focusedField: FormField?
     enum FormField {
         case description
         case project
-    }
-
-    var didChange: Bool {
-        task.project ?? "" != project ||
-            task.description != description ||
-            task.status != status ||
-            task.priority != (priority == TCTask.Priority.none ? nil : priority) ||
-            task.due != Calendar.current.mergeDateWithTime(
-                date: didSetDate ? due : nil,
-                time: didSetTime ? time : nil
-            ) ||
-            task.tags ?? [] != tags
     }
 
     init(task: TCTask) {
@@ -64,32 +52,6 @@ public struct EditTaskView: View, UseKeyboardToolbar {
         }
 
         self.task = task
-    }
-
-    func calculateNextField() {
-        switch focusedField {
-        case .description:
-            focusedField = .project
-        case .project:
-            focusedField = .project
-        default:
-            focusedField = nil
-        }
-    }
-
-    func calculatePreviousField() {
-        switch focusedField {
-        case .description:
-            focusedField = .description
-        case .project:
-            focusedField = .description
-        default:
-            focusedField = nil
-        }
-    }
-
-    func onDismissKeyboard() {
-        focusedField = nil
     }
 
     public var body: some View {
@@ -146,6 +108,23 @@ public struct EditTaskView: View, UseKeyboardToolbar {
                 }
                 AddTagButton(tags: $tags) {
                     showTagPopover = true
+                }
+            }
+            if task.status == .pending {
+                Section {
+                    Button(action: {
+                        handleStartStopTap()
+                    }, label: {
+                        Label(
+                            task.isActive ? "Stop task" : "Start task",
+                            systemImage: task.isActive ? SFSymbols.stopFill.rawValue : SFSymbols.playFill.rawValue
+                        )
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                        .foregroundStyle(.white)
+                    })
+                    .buttonStyle(.borderedProminent)
+                    .tint(task.isActive ? .orange : .green)
+                    .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
                 }
             }
             Section {

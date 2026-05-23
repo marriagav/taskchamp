@@ -3,6 +3,44 @@ import taskchampShared
 import UIKit
 
 extension EditTaskView {
+    var didChange: Bool {
+        task.project ?? "" != project ||
+            task.description != description ||
+            task.status != status ||
+            task.priority != (priority == TCTask.Priority.none ? nil : priority) ||
+            task.due != Calendar.current.mergeDateWithTime(
+                date: didSetDate ? due : nil,
+                time: didSetTime ? time : nil
+            ) ||
+            task.tags ?? [] != tags
+    }
+
+    func calculateNextField() {
+        switch focusedField {
+        case .description:
+            focusedField = .project
+        case .project:
+            focusedField = .project
+        default:
+            focusedField = nil
+        }
+    }
+
+    func calculatePreviousField() {
+        switch focusedField {
+        case .description:
+            focusedField = .description
+        case .project:
+            focusedField = .description
+        default:
+            focusedField = nil
+        }
+    }
+
+    func onDismissKeyboard() {
+        focusedField = nil
+    }
+
     func handleObsidianTap() {
         do {
             let taskNoteFolderBookmark: Data? = UserDefaultsManager.shared.getValue(forKey: .taskNoteFolderBookmark)
@@ -63,6 +101,27 @@ extension EditTaskView {
             alertTitle = "There was an error"
             alertMessage =
                 "Failed to create task note. Please check your Obsidian vault and path settings and try again."
+        }
+    }
+
+    func handleStartStopTap() {
+        do {
+            globalState.isSyncingTasks = true
+            if task.isActive {
+                try TaskchampionService.shared.stopTask(task.uuid) {
+                    globalState.isSyncingTasks = false
+                }
+                task = try TaskchampionService.shared.getTask(uuid: task.uuid)
+                return
+            }
+            try TaskchampionService.shared.startTask(task.uuid) {
+                globalState.isSyncingTasks = false
+            }
+            task = try TaskchampionService.shared.getTask(uuid: task.uuid)
+        } catch {
+            isShowingAlert = true
+            alertTitle = "There was an error"
+            alertMessage = "Failed to \(task.isActive ? "stop" : "start") task. Please try again."
         }
     }
 

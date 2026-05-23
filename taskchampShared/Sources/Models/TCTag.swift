@@ -63,6 +63,9 @@ public class TCTag: Codable, Equatable {
     }
 
     public func isSynthetic() -> Bool {
+        if !name.isEmpty && name.allSatisfy({ $0.isASCII && $0.isLetter && $0.isUppercase }) {
+            return true
+        }
         return rustTag?.is_synthetic() ?? false
     }
 
