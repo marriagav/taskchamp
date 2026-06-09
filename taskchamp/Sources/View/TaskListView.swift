@@ -227,7 +227,6 @@ public struct TaskListView: View {
                 Menu {
                     Link(
                         "Documentation",
-                        // swiftlint:disable:next force_unwrapping
                         destination: URL(string: "https://github.com/marriagav/taskchamp")!
                     )
                     Divider()
