@@ -227,7 +227,7 @@ public struct TaskListView: View {
                 Menu {
                     Link(
                         "Documentation",
-                        destination: URL(string: "https://github.com/marriagav/taskchamp")!
+                        destination: URL(string: "https://github.com/marriagav/taskchamp")! // swiftlint:disable:this force_unwrapping
                     )
                     Divider()
                     Button("Sync Settings") {
