@@ -225,10 +225,9 @@ public struct TaskListView: View {
             }
             ToolbarItemGroup(placement: .topBarTrailing) {
                 Menu {
-                    Link(
-                        "Documentation",
-                        destination: URL(string: "https://github.com/marriagav/taskchamp")! // swiftlint:disable:this force_unwrapping
-                    )
+                    if let url = URL(string: "https://github.com/marriagav/taskchamp") {
+                        Link("Documentation", destination: url)
+                    }
                     Divider()
                     Button("Sync Settings") {
                         isShowingSyncSettings.toggle()
