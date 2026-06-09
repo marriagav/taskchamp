@@ -26,6 +26,11 @@ public struct TaskCellView: View {
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
+                if task.isActive {
+                    Image(systemName: SFSymbols.play.rawValue)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
                 if task.isRecurring, let recur = task.recur {
                     HStack(spacing: 4) {
                         Image(systemName: SFSymbols.recurringTask.rawValue)

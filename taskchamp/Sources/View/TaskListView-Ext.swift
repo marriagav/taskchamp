@@ -20,6 +20,26 @@ extension TaskListView {
         return editMode.isEditing == true
     }
 
+    func toggleStartStop(_ task: TCTask) {
+        withAnimation {
+            do {
+                globalState.isSyncingTasks = true
+                if task.isActive {
+                    try TaskchampionService.shared.stopTask(task.uuid) {
+                        globalState.isSyncingTasks = false
+                    }
+                } else {
+                    try TaskchampionService.shared.startTask(task.uuid) {
+                        globalState.isSyncingTasks = false
+                    }
+                }
+                updateTasks()
+            } catch {
+                print(error)
+            }
+        }
+    }
+
     func updateTasks(_ uuids: Set<String>, withStatus newStatus: TCTask.Status) {
         withAnimation {
             do {
