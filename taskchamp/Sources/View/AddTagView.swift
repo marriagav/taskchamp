@@ -10,11 +10,16 @@ public struct AddTagView: View, UseKeyboardToolbar {
     @Binding var selectedTags: [TCTag]
 
     @Query var tags: [TCTag]
+
+    var userTags: [TCTag] {
+        tags.filter { !$0.isSynthetic() }
+    }
+
     var searchTags: [TCTag] {
         if input.isEmpty {
-            return tags
+            return userTags
         }
-        return tags.filter { $0.name.lowercased().contains(input.lowercased()) }
+        return userTags.filter { $0.name.lowercased().contains(input.lowercased()) }
     }
 
     @State private var showPopover = false
@@ -133,7 +138,7 @@ public struct AddTagView: View, UseKeyboardToolbar {
                 }
             }
             Section(header: Text("Saved Tags")) {
-                if tags.isEmpty {
+                if userTags.isEmpty {
                     ContentUnavailableView {
                         Label("No tags", systemImage: "bolt.heart")
                     } description: {
@@ -164,17 +169,14 @@ public struct AddTagView: View, UseKeyboardToolbar {
                                 }
                             }
                         }
-                        .disabled(tag.isSynthetic())
                         .swipeActions(edge: .leading, allowsFullSwipe: true) {
-                            if !tag.isSynthetic() {
-                                Button(role: .destructive) {
-                                    withAnimation {
-                                        modelContext.delete(tag)
-                                        selectedTags.removeAll { $0.name == tag.name }
-                                    }
-                                } label: {
-                                    Label("Delete", systemImage: SFSymbols.trash.rawValue)
+                            Button(role: .destructive) {
+                                withAnimation {
+                                    modelContext.delete(tag)
+                                    selectedTags.removeAll { $0.name == tag.name }
                                 }
+                            } label: {
+                                Label("Delete", systemImage: SFSymbols.trash.rawValue)
                             }
                         }
                     }
