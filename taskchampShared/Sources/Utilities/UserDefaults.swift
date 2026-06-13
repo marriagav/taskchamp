@@ -32,6 +32,7 @@ public enum TCUserDefaults: String {
     case pendingNewTaskContent
 
     case suggestOnlyActiveProjects
+    case taskCellLineLimit
 }
 
 public class UserDefaultsManager {
