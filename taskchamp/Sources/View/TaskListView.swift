@@ -47,7 +47,13 @@ public struct TaskListView: View {
     }
 
     private func sortButton(sortType: TasksHelper.TCSortType) -> some View {
-        let label = sortType == .defaultSort ? "Default" : sortType == .date ? "Date" : "Priority"
+        let label: String
+        switch sortType {
+        case .defaultSort: label = "Default"
+        case .date: label = "Date"
+        case .priority: label = "Priority"
+        case .status: label = "Status"
+        }
         if self.sortType != sortType {
             return AnyView(
                 Button(label) {
@@ -253,6 +259,7 @@ public struct TaskListView: View {
                         sortButton(sortType: .defaultSort)
                         sortButton(sortType: .date)
                         sortButton(sortType: .priority)
+                        sortButton(sortType: .status)
                     }
                     Button("Filters") {
                         isShowingFilterView.toggle()

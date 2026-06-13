@@ -4,6 +4,7 @@ public enum TasksHelper {
     public enum TCSortType: String {
         case date
         case priority
+        case status
         case defaultSort
     }
 
@@ -13,6 +14,8 @@ public enum TasksHelper {
             tasks.sort(by: compareByDate)
         case .priority:
             tasks.sort(by: compareByPriority)
+        case .status:
+            tasks.sort(by: compareByStatus)
         case .defaultSort:
             tasks.sort(by: compareByDefault)
         }
@@ -98,6 +101,24 @@ public enum TasksHelper {
                 if right.status == .completed, left.status == .pending { return -1 }
                 return 0
             },
+            { left, right in compareOptional(left.priority, right.priority, reversed: true) },
+            { left, right in compare(left.description, right.description) },
+            { left, right in compare(left.uuid, right.uuid) }
+        ])
+    }
+
+    private static func statusBucket(for task: TCTask) -> Int {
+        if task.status == .deleted { return 3 }
+        if task.status == .completed { return 2 }
+        let tagNames = Set((task.tags ?? []).map { $0.name })
+        if tagNames.contains("WAITING") || tagNames.contains("BLOCKED") { return 1 }
+        return 0
+    }
+
+    private static func compareByStatus(_ lhs: TCTask, _ rhs: TCTask) -> Bool {
+        return compareChain(lhs, rhs, [
+            { left, right in compare(statusBucket(for: left), statusBucket(for: right)) },
+            { left, right in compareOptional(left.due, right.due) },
             { left, right in compareOptional(left.priority, right.priority, reversed: true) },
             { left, right in compare(left.description, right.description) },
             { left, right in compare(left.uuid, right.uuid) }

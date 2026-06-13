@@ -111,6 +111,92 @@ extension AddFilterView {
         dismiss()
     }
 
+    @ViewBuilder
+    func projectRow(_ project: String) -> some View {
+        let query = "project:\(project)"
+        let savedFilter = filters.first { $0.fullDescription == query }
+        Button {
+            selectProject(project)
+        } label: {
+            HStack {
+                Label(project, systemImage: SFSymbols.folder.rawValue)
+                    .font(.system(.body, design: .monospaced))
+                if selectedFilter.fullDescription == query {
+                    Spacer()
+                    Image(systemName: SFSymbols.checkmark.rawValue)
+                }
+            }
+        }
+        .contextMenu {
+            Button {
+                saveProjectAsFilter(project, favorite: true)
+            } label: {
+                Label("Add to favorites", systemImage: SFSymbols.starFill.rawValue)
+            }
+            .disabled(savedFilter?.isFavorite == true)
+            Button {
+                saveProjectAsFilter(project, favorite: false)
+            } label: {
+                Label("Save as filter", systemImage: "plus")
+            }
+            .disabled(savedFilter != nil)
+        }
+        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+            Button {
+                saveProjectAsFilter(project, favorite: true)
+            } label: {
+                Label("Favorite", systemImage: SFSymbols.starFill.rawValue)
+            }
+            .tint(.yellow)
+            .disabled(savedFilter?.isFavorite == true)
+            Button {
+                saveProjectAsFilter(project, favorite: false)
+            } label: {
+                Label("Save", systemImage: "plus")
+            }
+            .tint(.blue)
+            .disabled(savedFilter != nil)
+        }
+    }
+
+    func selectProject(_ project: String) {
+        if !storeKit.hasPremiumAccess() {
+            showPaywall = true
+            return
+        }
+        let filter = NLPService.shared.createFilter(from: "project:\(project)")
+        guard filter.isValidFilter else { return }
+        selectedFilter = filter
+        setSelectedFilterUserDefault(selectedFilter: selectedFilter)
+        dismiss()
+    }
+
+    func saveProjectAsFilter(_ project: String, favorite: Bool) {
+        if !storeKit.hasPremiumAccess() {
+            showPaywall = true
+            return
+        }
+        let query = "project:\(project)"
+        if let existing = filters.first(where: { $0.fullDescription == query }) {
+            withAnimation {
+                if favorite && !existing.isFavorite {
+                    existing.isFavorite = true
+                }
+                syncFiltersToSharedUserDefaults()
+            }
+            return
+        }
+        let newFilter = NLPService.shared.createFilter(from: query)
+        guard newFilter.isValidFilter else { return }
+        newFilter.name = project
+        newFilter.isFavorite = favorite
+        newFilter.order = filters.count
+        withAnimation {
+            modelContext.insert(newFilter)
+            syncFiltersToSharedUserDefaults()
+        }
+    }
+
     func deleteFilter(_ filter: TCFilter) {
         withAnimation {
             modelContext.delete(filter)

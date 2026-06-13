@@ -27,6 +27,8 @@ public struct AddFilterView: View, UseKeyboardToolbar {
     @State var editName = ""
     @State var editQuery = ""
 
+    @State var availableProjects: [String] = []
+
     @FocusState var isFocusedNLP: Bool
 
     public var body: some View {
@@ -98,6 +100,19 @@ public struct AddFilterView: View, UseKeyboardToolbar {
                             filterRow(filter)
                         }
                         .onMove(perform: moveRegularFilters)
+                    }
+                }
+                Section(header: Text("Projects")) {
+                    if availableProjects.isEmpty {
+                        ContentUnavailableView {
+                            Label("No projects", systemImage: SFSymbols.folder.rawValue)
+                        } description: {
+                            Text("Set a project on a task to see it here.")
+                        }
+                    } else {
+                        ForEach(availableProjects, id: \.self) { project in
+                            projectRow(project)
+                        }
                     }
                 }
             }
@@ -176,6 +191,8 @@ public struct AddFilterView: View, UseKeyboardToolbar {
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {
                 syncFiltersToSharedUserDefaults()
+                NLPService.shared.refreshProjectsCache()
+                availableProjects = NLPService.shared.projectsCache
             }
             .onChange(of: filters.count) {
                 syncFiltersToSharedUserDefaults()
