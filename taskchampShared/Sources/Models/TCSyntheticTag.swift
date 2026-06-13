@@ -38,11 +38,12 @@ public enum TCSyntheticTag: String, CaseIterable {
             guard let due = task.due else { return false }
             return due < now
         case .due:
+            let lookaheadDays: Int = UserDefaultsManager.standard.getValue(forKey: .dueLookaheadDays) ?? 7
             guard
                 let due = task.due,
-                let sevenDaysFromNow = calendar.date(byAdding: .day, value: 7, to: now)
+                let lookaheadDate = calendar.date(byAdding: .day, value: max(1, lookaheadDays), to: now)
             else { return false }
-            return due <= sevenDaysFromNow
+            return due <= lookaheadDate
         case .dueToday, .today:
             guard let due = task.due else { return false }
             return calendar.isDateInToday(due)

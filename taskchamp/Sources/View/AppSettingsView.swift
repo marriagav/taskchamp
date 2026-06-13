@@ -8,6 +8,7 @@ public struct AppSettingsView: View {
         .getValue(forKey: .suggestOnlyActiveProjects) ?? true
 
     @AppStorage(TCUserDefaults.taskCellLineLimit.rawValue) private var taskCellLineLimit: Int = 2
+    @AppStorage(TCUserDefaults.dueLookaheadDays.rawValue) private var dueLookaheadDays: Int = 7
 
     public init() {}
 
@@ -24,6 +25,22 @@ public struct AppSettingsView: View {
                     Text("Task List")
                 } footer: {
                     Text("Sets how many lines a task description can wrap to in the main task list.")
+                }
+                Section {
+                    Stepper(value: $dueLookaheadDays, in: 1...365) {
+                        HStack {
+                            Text("+DUE look-ahead")
+                            Spacer()
+                            Text("\(dueLookaheadDays) day\(dueLookaheadDays == 1 ? "" : "s")")
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                } header: {
+                    Text("Filters")
+                } footer: {
+                    Text(
+                        "Tasks due within this many days from now will match the +DUE synthetic tag."
+                    )
                 }
                 Section {
                     Toggle("Suggest only active projects", isOn: $suggestOnlyActiveProjects)

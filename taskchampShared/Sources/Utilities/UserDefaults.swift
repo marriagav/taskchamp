@@ -33,6 +33,7 @@ public enum TCUserDefaults: String {
 
     case suggestOnlyActiveProjects
     case taskCellLineLimit
+    case dueLookaheadDays
 }
 
 public class UserDefaultsManager {
