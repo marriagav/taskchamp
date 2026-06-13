@@ -199,7 +199,9 @@ public struct CreateTaskView: View, UseKeyboardToolbar {
                         }
 
                         let date: Date? = didSetDate ? due : nil
-                        let time: Date? = didSetTime ? time : nil
+                        let time: Date? = didSetTime
+                            ? time
+                            : (didSetDate ? UserDefaultsManager.standard.defaultDueTime() : nil)
                         let finalDate = Calendar.current.mergeDateWithTime(date: date, time: time)
 
                         let task = TCTask(

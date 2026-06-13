@@ -211,7 +211,8 @@ public class NLPService {
 
         // Check for and extract due
         if remainingString.range(of: "due:") != nil {
-            task.due = extractValue(after: "due:", from: &remainingString)?.dateValue
+            let parsedDue = extractValue(after: "due:", from: &remainingString)?.dateValue
+            task.due = UserDefaultsManager.standard.applyDefaultDueTimeIfMidnight(to: parsedDue)
         }
 
         // TODO: Add recur: extraction here when recurring task creation is implemented

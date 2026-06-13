@@ -36,7 +36,7 @@ extension TaskListView {
             Button {
                 isShowingFilterView = true
             } label: {
-                Label("All Filters", systemImage: SFSymbols.star.rawValue)
+                Label("All Filters", systemImage: "line.3.horizontal.decrease.circle")
             }
         } label: {
             Label("Favorite Filters", systemImage: "line.3.horizontal.decrease.circle")

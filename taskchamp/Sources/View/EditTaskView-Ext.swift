@@ -4,13 +4,16 @@ import UIKit
 
 extension EditTaskView {
     var didChange: Bool {
-        task.project ?? "" != project ||
+        let timeForSave: Date? = didSetTime
+            ? time
+            : (didSetDate ? UserDefaultsManager.standard.defaultDueTime() : nil)
+        return task.project ?? "" != project ||
             task.description != description ||
             task.status != status ||
             task.priority != (priority == TCTask.Priority.none ? nil : priority) ||
             task.due != Calendar.current.mergeDateWithTime(
                 date: didSetDate ? due : nil,
-                time: didSetTime ? time : nil
+                time: timeForSave
             ) ||
             task.tags ?? [] != tags
     }
@@ -144,7 +147,9 @@ extension EditTaskView {
         }
 
         let date: Date? = didSetDate ? due : nil
-        let time: Date? = didSetTime ? time : nil
+        let time: Date? = didSetTime
+            ? time
+            : (didSetDate ? UserDefaultsManager.standard.defaultDueTime() : nil)
         let finalDate = Calendar.current.mergeDateWithTime(date: date, time: time)
         let tags = tags.isEmpty ? nil : tags
 
