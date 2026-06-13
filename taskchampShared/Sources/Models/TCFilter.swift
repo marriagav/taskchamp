@@ -26,6 +26,7 @@ public class TCFilter: Codable {
     public var id = UUID()
     public var name: String?
     public var order: Int = 0
+    public var isFavorite: Bool = false
     public var fullDescription: String = ""
     public var project: String = ""
     public var status = TCTask.Status.deleted
@@ -143,6 +144,7 @@ public class TCFilter: Codable {
         case id
         case name
         case order
+        case isFavorite
         case fullDescription
         case project
         case status
@@ -163,6 +165,7 @@ public class TCFilter: Codable {
         id = try container.decode(UUID.self, forKey: .id)
         name = try container.decodeIfPresent(String.self, forKey: .name)
         order = try container.decodeIfPresent(Int.self, forKey: .order) ?? 0
+        isFavorite = try container.decodeIfPresent(Bool.self, forKey: .isFavorite) ?? false
         fullDescription = try container.decode(String.self, forKey: .fullDescription)
         project = try container.decode(String.self, forKey: .project)
         status = try container.decode(TCTask.Status.self, forKey: .status)
@@ -186,6 +189,7 @@ public class TCFilter: Codable {
         try container.encode(id, forKey: .id)
         try container.encodeIfPresent(name, forKey: .name)
         try container.encode(order, forKey: .order)
+        try container.encode(isFavorite, forKey: .isFavorite)
         try container.encode(fullDescription, forKey: .fullDescription)
         try container.encode(project, forKey: .project)
         try container.encode(status, forKey: .status)

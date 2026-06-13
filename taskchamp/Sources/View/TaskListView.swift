@@ -15,6 +15,8 @@ public struct TaskListView: View {
     @Binding var isShowingCreateTaskView: Bool
     @Binding var createTaskContent: String
 
+    @Query(sort: \TCFilter.order) var allFilters: [TCFilter]
+
     @State var rebuildingCache = true
     @State var tasks: [TCTask] = []
     @State var selection = Set<String>()
@@ -164,6 +166,10 @@ public struct TaskListView: View {
                 ToolbarSpacer(.fixed, placement: .bottomBar)
                 if !isEditModeActive {
                     ToolbarItem(placement: .bottomBar) {
+                        favoriteFiltersMenu
+                    }
+                    ToolbarSpacer(.fixed, placement: .bottomBar)
+                    ToolbarItem(placement: .bottomBar) {
                         Button {
                             isShowingCreateTaskView.toggle()
                         } label: {
@@ -218,6 +224,9 @@ public struct TaskListView: View {
                             .buttonStyle(PlainButtonStyle())
                             .foregroundStyle(.tint)
                             Spacer()
+                            favoriteFiltersMenu
+                                .imageScale(.large)
+                                .bold()
                         }
                         .animation(.default, value: editMode)
                     }
@@ -227,7 +236,6 @@ public struct TaskListView: View {
                 Menu {
                     Link(
                         "Documentation",
-                        // swiftlint:disable:next force_unwrapping
                         destination: URL(string: "https://github.com/marriagav/taskchamp")!
                     )
                     Divider()
