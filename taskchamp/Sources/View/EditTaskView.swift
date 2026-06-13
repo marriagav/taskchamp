@@ -23,6 +23,7 @@ public struct EditTaskView: View, UseKeyboardToolbar {
     @State var time: Date = .init()
 
     @State private var showTagPopover = false
+    @State private var showProjectPopover = false
     @State var isShowingAlert = false
     @State var isShowingObsidianSettings = false
     @State var alertTitle = ""
@@ -32,7 +33,6 @@ public struct EditTaskView: View, UseKeyboardToolbar {
     @FocusState var focusedField: FormField?
     enum FormField {
         case description
-        case project
     }
 
     init(task: TCTask) {
@@ -68,8 +68,9 @@ public struct EditTaskView: View, UseKeyboardToolbar {
                         .bold()
                 }
                 .frame(minHeight: 40)
-                TextField("Project", text: $project)
-                    .focused($focusedField, equals: .project)
+                SelectProjectButton(project: $project) {
+                    showProjectPopover = true
+                }
             } header: {
                 Text("Description")
             }
@@ -225,6 +226,11 @@ public struct EditTaskView: View, UseKeyboardToolbar {
         .sheet(isPresented: $showTagPopover) {
             NavigationStack {
                 AddTagView(selectedTags: $tags)
+            }
+        }
+        .sheet(isPresented: $showProjectPopover) {
+            NavigationStack {
+                SelectProjectView(selectedProject: $project)
             }
         }
         .sheet(isPresented: $showNoteView) {

@@ -16,25 +16,11 @@ extension EditTaskView {
     }
 
     func calculateNextField() {
-        switch focusedField {
-        case .description:
-            focusedField = .project
-        case .project:
-            focusedField = .project
-        default:
-            focusedField = nil
-        }
+        focusedField = nil
     }
 
     func calculatePreviousField() {
-        switch focusedField {
-        case .description:
-            focusedField = .description
-        case .project:
-            focusedField = .description
-        default:
-            focusedField = nil
-        }
+        focusedField = nil
     }
 
     func onDismissKeyboard() {

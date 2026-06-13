@@ -151,6 +151,23 @@ public class TaskchampionService {
     }
 
     @MainActor
+    public func getAllProjects(onlyActive: Bool = false) -> [String] {
+        guard let replica else { return [] }
+        let rawTasks = onlyActive ? replica.pending_tasks() : replica.all_tasks()
+        guard let rawTasks else { return [] }
+        var seen = Set<String>()
+        var projects: [String] = []
+        for raw in rawTasks {
+            let project = TCTask(from: raw).project ?? ""
+            let trimmed = project.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty, !seen.contains(trimmed) else { continue }
+            seen.insert(trimmed)
+            projects.append(trimmed)
+        }
+        return projects.sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
+    }
+
+    @MainActor
     public func getPendingTasks() throws -> [TCTask] {
         guard let replica else {
             throw TCError.genericError("Database not set")

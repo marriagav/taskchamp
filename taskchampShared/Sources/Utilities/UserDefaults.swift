@@ -30,6 +30,8 @@ public enum TCUserDefaults: String {
     case storeKitCloudSubscriptionActive
 
     case pendingNewTaskContent
+
+    case suggestOnlyActiveProjects
 }
 
 public class UserDefaultsManager {

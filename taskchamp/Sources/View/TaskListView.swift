@@ -25,6 +25,7 @@ public struct TaskListView: View {
     @State var isShowingFilterView = false
     @State var isShowingObsidianSettings = false
     @State var isShowingSyncSettings = false
+    @State var isShowingAppSettings = false
     @State var sortType: TasksHelper.TCSortType = .init(
         rawValue: UserDefaultsManager.standard
             .getValue(forKey: .sortType) ?? TasksHelper.TCSortType.defaultSort.rawValue
@@ -239,6 +240,9 @@ public struct TaskListView: View {
                         destination: URL(string: "https://github.com/marriagav/taskchamp")!
                     )
                     Divider()
+                    Button("App Settings") {
+                        isShowingAppSettings.toggle()
+                    }
                     Button("Sync Settings") {
                         isShowingSyncSettings.toggle()
                     }
@@ -313,6 +317,9 @@ public struct TaskListView: View {
                 isShowingSyncServiceModal: $isShowingSyncSettings,
                 selectedSyncType: $selectedSyncType
             )
+        }
+        .sheet(isPresented: $isShowingAppSettings) {
+            AppSettingsView()
         }
         .navigationDestination(for: TCTask.self) { task in
             EditTaskView(task: task)

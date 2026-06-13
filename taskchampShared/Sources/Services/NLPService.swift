@@ -8,6 +8,7 @@ public class NLPService {
         case filter
         case prio = "prio:"
         case status = "status:"
+        case project = "project:"
         case withTag = "+"
         case withoutTag = "-"
     }
@@ -17,6 +18,7 @@ public class NLPService {
     private init() {}
 
     public var tagsCache: [TCTag] = []
+    public var projectsCache: [String] = []
 
     // TODO: Add "recur:" to .creation autocomplete when recurring task creation is implemented
     private var autoCompleteSources: [Surface: [String]] = [
@@ -58,6 +60,11 @@ public class NLPService {
         if let surface = Surface(rawValue: String(lastWord)) {
             _ = surface
             return text + suggestion
+        }
+
+        if lastWord.hasPrefix(Surface.project.rawValue) {
+            let prefix = text.dropLast(lastWord.count)
+            return prefix + Surface.project.rawValue + suggestion
         }
 
         if containsTag(text) && !isTag(suggestion) {
@@ -115,6 +122,9 @@ public class NLPService {
             return autoCompleteSources[.prio] ?? []
         case .status:
             return autoCompleteSources[.status] ?? []
+        case .project:
+            refreshProjectsCache()
+            return projectsCache
         case .withTag, .withoutTag:
             let newTags = SwiftDataService.shared.fetchAllTags()
             appendTagsToCache(newTags)
@@ -142,6 +152,12 @@ public class NLPService {
 
         if let newSurface = Surface(rawValue: String(lastWord)) {
             return autoCompleteForKeywords(lastWord: newSurface, originalSurface: surface)
+        }
+
+        if lastWord.hasPrefix(Surface.project.rawValue) {
+            refreshProjectsCache()
+            let query = String(lastWord.dropFirst(Surface.project.rawValue.count))
+            return projectSuggestions(matching: query)
         }
 
         if containsTag(input) {
@@ -280,5 +296,32 @@ public class NLPService {
             }
         }
         return nil
+    }
+}
+
+extension NLPService {
+    public func appendProjectsToCache(_ projects: [String]) {
+        for project in projects where !projectsCache.contains(project) {
+            projectsCache.append(project)
+        }
+    }
+
+    public func setProjectsCache(_ projects: [String]) {
+        projectsCache = projects
+    }
+
+    @MainActor
+    public func refreshProjectsCache() {
+        let onlyActive: Bool = UserDefaultsManager.standard.getValue(forKey: .suggestOnlyActiveProjects) ?? true
+        let projects = TaskchampionService.shared.getAllProjects(onlyActive: onlyActive)
+        setProjectsCache(projects)
+    }
+
+    public func projectSuggestions(matching query: String) -> [String] {
+        let trimmed = query.trimmingCharacters(in: .whitespaces)
+        if trimmed.isEmpty {
+            return projectsCache
+        }
+        return projectsCache.filter { $0.localizedCaseInsensitiveContains(trimmed) }
     }
 }
