@@ -66,7 +66,7 @@ extension AddFilterView {
             editQuery = filter.fullDescription
             editingFilter = filter
         } label: {
-            Label("Edit", systemImage: "pencil")
+            Label("Edit", systemImage: SFSymbols.pencil.rawValue)
         }
         Button(role: .destructive) {
             deleteFilter(filter)
@@ -137,7 +137,7 @@ extension AddFilterView {
             Button {
                 saveProjectAsFilter(project, favorite: false)
             } label: {
-                Label("Save as filter", systemImage: "plus")
+                Label("Save as filter", systemImage: SFSymbols.plus.rawValue)
             }
             .disabled(savedFilter != nil)
         }
@@ -152,7 +152,7 @@ extension AddFilterView {
             Button {
                 saveProjectAsFilter(project, favorite: false)
             } label: {
-                Label("Save", systemImage: "plus")
+                Label("Save", systemImage: SFSymbols.plus.rawValue)
             }
             .tint(.blue)
             .disabled(savedFilter != nil)
