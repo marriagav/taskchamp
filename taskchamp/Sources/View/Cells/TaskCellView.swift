@@ -4,11 +4,13 @@ import taskchampShared
 public struct TaskCellView: View {
     let task: TCTask
 
+    @AppStorage(TCUserDefaults.taskCellLineLimit.rawValue) private var lineLimit: Int = 2
+
     public var body: some View {
         VStack {
             HStack(alignment: .top) {
                 Text(task.description)
-                    .lineLimit(2)
+                    .lineLimit(max(1, min(lineLimit, 5)))
                     .truncationMode(.tail)
                     .strikethrough(task.isCompleted || task.isDeleted, color: task.isDeleted ? .red : nil)
                     .foregroundStyle(task.isCompleted ? .secondary : task.isDeleted ? Color.red : .primary)

@@ -3,6 +3,59 @@ import taskchampShared
 import UIKit
 
 extension TaskListView {
+    var favoriteFilters: [TCFilter] {
+        allFilters.filter { $0.isFavorite }
+    }
+
+    @ViewBuilder
+    var favoriteFiltersMenu: some View {
+        Menu {
+            if favoriteFilters.isEmpty {
+                Text("No favorite filters")
+            } else {
+                ForEach(favoriteFilters) { filter in
+                    Button {
+                        selectFilter(filter)
+                    } label: {
+                        if selectedFilter.id == filter.id {
+                            Label(filter.displayName, systemImage: SFSymbols.checkmark.rawValue)
+                        } else {
+                            Text(filter.displayName)
+                        }
+                    }
+                }
+                Divider()
+                Button {
+                    selectFilter(.defaultFilter)
+                } label: {
+                    Label("Clear filters", systemImage: SFSymbols.backArrow.rawValue)
+                }
+                .disabled(selectedFilter.fullDescription == TCFilter.defaultFilter.fullDescription)
+            }
+            Divider()
+            Button {
+                isShowingFilterView = true
+            } label: {
+                Label("All Filters", systemImage: "line.3.horizontal.decrease.circle")
+            }
+        } label: {
+            Label("Favorite Filters", systemImage: "line.3.horizontal.decrease.circle")
+        } primaryAction: {
+            isShowingFilterView = true
+        }
+        .foregroundStyle(.tint)
+    }
+
+    func selectFilter(_ filter: TCFilter) {
+        withAnimation {
+            selectedFilter = filter
+            do {
+                let res = try JSONEncoder().encode(selectedFilter)
+                UserDefaultsManager.standard.set(value: res, forKey: .selectedFilter)
+            } catch { print(error) }
+        }
+    }
+
     var searchedTasks: [TCTask] {
         if searchText.isEmpty {
             return tasks

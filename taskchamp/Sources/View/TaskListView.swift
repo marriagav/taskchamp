@@ -15,6 +15,8 @@ public struct TaskListView: View {
     @Binding var isShowingCreateTaskView: Bool
     @Binding var createTaskContent: String
 
+    @Query(sort: \TCFilter.order) var allFilters: [TCFilter]
+
     @State var rebuildingCache = true
     @State var tasks: [TCTask] = []
     @State var selection = Set<String>()
@@ -23,6 +25,7 @@ public struct TaskListView: View {
     @State var isShowingFilterView = false
     @State var isShowingObsidianSettings = false
     @State var isShowingSyncSettings = false
+    @State var isShowingAppSettings = false
     @State var sortType: TasksHelper.TCSortType = .init(
         rawValue: UserDefaultsManager.standard
             .getValue(forKey: .sortType) ?? TasksHelper.TCSortType.defaultSort.rawValue
@@ -44,7 +47,13 @@ public struct TaskListView: View {
     }
 
     private func sortButton(sortType: TasksHelper.TCSortType) -> some View {
-        let label = sortType == .defaultSort ? "Default" : sortType == .date ? "Date" : "Priority"
+        let label: String
+        switch sortType {
+        case .defaultSort: label = "Default"
+        case .date: label = "Date"
+        case .priority: label = "Priority"
+        case .status: label = "Status"
+        }
         if self.sortType != sortType {
             return AnyView(
                 Button(label) {
@@ -164,6 +173,10 @@ public struct TaskListView: View {
                 ToolbarSpacer(.fixed, placement: .bottomBar)
                 if !isEditModeActive {
                     ToolbarItem(placement: .bottomBar) {
+                        favoriteFiltersMenu
+                    }
+                    ToolbarSpacer(.fixed, placement: .bottomBar)
+                    ToolbarItem(placement: .bottomBar) {
                         Button {
                             isShowingCreateTaskView.toggle()
                         } label: {
@@ -218,6 +231,9 @@ public struct TaskListView: View {
                             .buttonStyle(PlainButtonStyle())
                             .foregroundStyle(.tint)
                             Spacer()
+                            favoriteFiltersMenu
+                                .imageScale(.large)
+                                .bold()
                         }
                         .animation(.default, value: editMode)
                     }
@@ -227,10 +243,12 @@ public struct TaskListView: View {
                 Menu {
                     Link(
                         "Documentation",
-                        // swiftlint:disable:next force_unwrapping
                         destination: URL(string: "https://github.com/marriagav/taskchamp")!
                     )
                     Divider()
+                    Button("App Settings") {
+                        isShowingAppSettings.toggle()
+                    }
                     Button("Sync Settings") {
                         isShowingSyncSettings.toggle()
                     }
@@ -241,6 +259,7 @@ public struct TaskListView: View {
                         sortButton(sortType: .defaultSort)
                         sortButton(sortType: .date)
                         sortButton(sortType: .priority)
+                        sortButton(sortType: .status)
                     }
                     Button("Filters") {
                         isShowingFilterView.toggle()
@@ -305,6 +324,9 @@ public struct TaskListView: View {
                 isShowingSyncServiceModal: $isShowingSyncSettings,
                 selectedSyncType: $selectedSyncType
             )
+        }
+        .sheet(isPresented: $isShowingAppSettings) {
+            AppSettingsView()
         }
         .navigationDestination(for: TCTask.self) { task in
             EditTaskView(task: task)

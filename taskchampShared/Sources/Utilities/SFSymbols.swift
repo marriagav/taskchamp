@@ -32,4 +32,8 @@ public enum SFSymbols: String {
     case play
     case playFill = "play.fill"
     case stopFill = "stop.fill"
+    case star
+    case starFill = "star.fill"
+    case starSlash = "star.slash"
+    case pencil
 }

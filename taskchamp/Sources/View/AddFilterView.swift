@@ -13,21 +13,23 @@ public struct AddFilterView: View, UseKeyboardToolbar {
 
     @Query(sort: \TCFilter.order) var filters: [TCFilter]
 
-    @State private var showNlpInfoPopover = false
-    @State private var nlpInput = ""
-    @State private var nlpPlaceholder =
+    @State var showNlpInfoPopover = false
+    @State var nlpInput = ""
+    @State var nlpPlaceholder =
         "project:my-project prio:M status:pending +tag -tag\n(project:A or project:B) +urgent"
-    @State private var showPaywall = false
+    @State var showPaywall = false
 
-    @State private var isShowingAlert = false
-    @State private var alertTitle = ""
-    @State private var alertMessage = ""
+    @State var isShowingAlert = false
+    @State var alertTitle = ""
+    @State var alertMessage = ""
 
-    @State private var editingFilter: TCFilter?
-    @State private var editName = ""
-    @State private var editQuery = ""
+    @State var editingFilter: TCFilter?
+    @State var editName = ""
+    @State var editQuery = ""
 
-    @FocusState private var isFocusedNLP: Bool
+    @State var availableProjects: [String] = []
+
+    @FocusState var isFocusedNLP: Bool
 
     public var body: some View {
         NavigationStack {
@@ -72,6 +74,14 @@ public struct AddFilterView: View, UseKeyboardToolbar {
                         }
                     }
                 }
+                if !favoriteFilters.isEmpty {
+                    Section(header: Text("Favorites")) {
+                        ForEach(favoriteFilters) { filter in
+                            filterRow(filter)
+                        }
+                        .onMove(perform: moveFavoriteFilters)
+                    }
+                }
                 Section(header: Text("Saved filters")) {
                     if filters.isEmpty {
                         ContentUnavailableView {
@@ -79,75 +89,30 @@ public struct AddFilterView: View, UseKeyboardToolbar {
                         } description: {
                             Text("Add a filter using the command line input above.")
                         }
-                    } else {
-                        ForEach(filters) { filter in
-                            Button {
-                                if !storeKit.hasPremiumAccess() {
-                                    showPaywall = true
-                                    return
-                                }
-                                if filter == selectedFilter {
-                                    selectedFilter = TCFilter.defaultFilter
-                                } else {
-                                    selectedFilter = filter
-                                }
-                                setSelectedFilterUserDefault(selectedFilter: selectedFilter)
-                                dismiss()
-                            } label: {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    if let name = filter.name, !name.isEmpty {
-                                        Text(name)
-                                            .font(.body)
-                                    }
-                                    HStack {
-                                        Text(filter.fullDescription)
-                                            .font(.system(.body, design: .monospaced))
-                                            .foregroundStyle(
-                                                (filter.name?.isEmpty == false)
-                                                    ? .secondary : .primary
-                                            )
-                                        if selectedFilter.id == filter.id {
-                                            Spacer()
-                                            Image(systemName: SFSymbols.checkmark.rawValue)
-                                        }
-                                    }
-                                }
-                            }
-                            .contextMenu {
-                                Button {
-                                    editName = filter.name ?? ""
-                                    editQuery = filter.fullDescription
-                                    editingFilter = filter
-                                } label: {
-                                    Label("Edit", systemImage: "pencil")
-                                }
-                                Button(role: .destructive) {
-                                    withAnimation {
-                                        modelContext.delete(filter)
-                                        if filter == selectedFilter {
-                                            selectedFilter = TCFilter.defaultFilter
-                                            setSelectedFilterUserDefault(selectedFilter: selectedFilter)
-                                        }
-                                    }
-                                } label: {
-                                    Label("Delete", systemImage: SFSymbols.trash.rawValue)
-                                }
-                            }
-                            .swipeActions(edge: .leading, allowsFullSwipe: true) {
-                                Button(role: .destructive) {
-                                    withAnimation {
-                                        modelContext.delete(filter)
-                                        if filter == selectedFilter {
-                                            selectedFilter = TCFilter.defaultFilter
-                                            setSelectedFilterUserDefault(selectedFilter: selectedFilter)
-                                        }
-                                    }
-                                } label: {
-                                    Label("Delete", systemImage: SFSymbols.trash.rawValue)
-                                }
-                            }
+                    } else if regularFilters.isEmpty {
+                        ContentUnavailableView {
+                            Label("No saved filters", systemImage: "bolt.heart")
+                        } description: {
+                            Text("All your filters are favorites.")
                         }
-                        .onMove(perform: moveFilters)
+                    } else {
+                        ForEach(regularFilters) { filter in
+                            filterRow(filter)
+                        }
+                        .onMove(perform: moveRegularFilters)
+                    }
+                }
+                Section(header: Text("Projects")) {
+                    if availableProjects.isEmpty {
+                        ContentUnavailableView {
+                            Label("No projects", systemImage: SFSymbols.folder.rawValue)
+                        } description: {
+                            Text("Set a project on a task to see it here.")
+                        }
+                    } else {
+                        ForEach(availableProjects, id: \.self) { project in
+                            projectRow(project)
+                        }
                     }
                 }
             }
@@ -226,6 +191,8 @@ public struct AddFilterView: View, UseKeyboardToolbar {
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {
                 syncFiltersToSharedUserDefaults()
+                NLPService.shared.refreshProjectsCache()
+                availableProjects = NLPService.shared.projectsCache
             }
             .onChange(of: filters.count) {
                 syncFiltersToSharedUserDefaults()
@@ -251,20 +218,7 @@ extension AddFilterView {
         isFocusedNLP = false
     }
 
-    private func setSelectedFilterUserDefault(selectedFilter: TCFilter) {
-        do {
-            try UserDefaultsManager.standard.setEncodableValue(selectedFilter, forKey: .selectedFilter)
-        } catch { print(error) }
-    }
-
-    private func syncFiltersToSharedUserDefaults() {
-        do {
-            try UserDefaultsManager.shared.setEncodableValue(filters, forKey: .savedFilters)
-            WidgetCenter.shared.reloadAllTimelines()
-        } catch { print(error) }
-    }
-
-    private func addFilter() {
+    func addFilter() {
         if !storeKit.hasPremiumAccess() {
             showPaywall = true
             return
@@ -295,16 +249,7 @@ extension AddFilterView {
         }
     }
 
-    private func moveFilters(from source: IndexSet, to destination: Int) {
-        var reordered = filters
-        reordered.move(fromOffsets: source, toOffset: destination)
-        for (index, filter) in reordered.enumerated() {
-            filter.order = index
-        }
-        syncFiltersToSharedUserDefaults()
-    }
-
-    private func saveEditingFilter() {
+    func saveEditingFilter() {
         guard let filter = editingFilter else { return }
         let trimmedQuery = editQuery.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmedQuery.isEmpty {

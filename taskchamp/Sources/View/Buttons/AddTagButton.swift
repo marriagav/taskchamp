@@ -5,7 +5,7 @@ public struct AddTagButton: View {
     @Binding var tags: [TCTag]
     var action: () -> Void
 
-    var uniqueTags: [TCTag] {
+    private var uniqueTags: [TCTag] {
         var seen = Set<String>()
         return tags.filter { tag in
             if seen.contains(tag.name) {
@@ -15,6 +15,26 @@ public struct AddTagButton: View {
                 return true
             }
         }
+    }
+
+    private var userTags: [TCTag] {
+        uniqueTags.filter { !$0.isSynthetic() }
+    }
+
+    private var syntheticTags: [TCTag] {
+        uniqueTags.filter { $0.isSynthetic() }
+    }
+
+    @ViewBuilder
+    private func tagChip(_ tag: TCTag, synthetic: Bool) -> some View {
+        Text(tag.name)
+            .font(.system(.body, design: .monospaced))
+            .foregroundStyle(synthetic ? .secondary : .primary)
+            .padding(5)
+            .background(
+                RoundedRectangle(cornerRadius: 5)
+                    .fill((synthetic ? Color.secondary : Color.accentColor).opacity(0.2))
+            )
     }
 
     public var body: some View {
@@ -27,15 +47,24 @@ public struct AddTagButton: View {
             } else {
                 Label {
                     ScrollView(.horizontal, showsIndicators: false) {
-                        HStack {
-                            ForEach(uniqueTags, id: \.self) { tag in
-                                Text(tag.name)
-                                    .font(.system(.body, design: .monospaced))
-                                    .padding(5)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 5)
-                                            .fill(Color.accentColor.opacity(0.2))
-                                    )
+                        HStack(spacing: 8) {
+                            if !userTags.isEmpty {
+                                HStack {
+                                    ForEach(userTags, id: \.self) { tag in
+                                        tagChip(tag, synthetic: false)
+                                    }
+                                }
+                            }
+                            if !userTags.isEmpty && !syntheticTags.isEmpty {
+                                Divider()
+                                    .frame(height: 20)
+                            }
+                            if !syntheticTags.isEmpty {
+                                HStack {
+                                    ForEach(syntheticTags, id: \.self) { tag in
+                                        tagChip(tag, synthetic: true)
+                                    }
+                                }
                             }
                         }
                     }

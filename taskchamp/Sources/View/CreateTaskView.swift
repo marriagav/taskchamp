@@ -30,6 +30,7 @@ public struct CreateTaskView: View, UseKeyboardToolbar {
 
     @State private var showPaywall = false
     @State private var showTagPopover = false
+    @State private var showProjectPopover = false
     @State private var isShowingAlert = false
     @State private var alertTitle = ""
     @State private var alertMessage = ""
@@ -40,7 +41,6 @@ public struct CreateTaskView: View, UseKeyboardToolbar {
     enum FormField {
         case nlp
         case description
-        case project
     }
 
     func calculateNextField() {
@@ -48,9 +48,7 @@ public struct CreateTaskView: View, UseKeyboardToolbar {
         case .nlp:
             focusedField = .description
         case .description:
-            focusedField = .project
-        case .project:
-            focusedField = .project
+            focusedField = .description
         default:
             focusedField = nil
         }
@@ -62,8 +60,6 @@ public struct CreateTaskView: View, UseKeyboardToolbar {
             focusedField = .nlp
         case .description:
             focusedField = .nlp
-        case .project:
-            focusedField = .description
         default:
             focusedField = nil
         }
@@ -152,8 +148,9 @@ public struct CreateTaskView: View, UseKeyboardToolbar {
                     TextEditor(text: $description)
                         .focused($focusedField, equals: .description)
                         .bold()
-                    TextField("Project", text: $project)
-                        .focused($focusedField, equals: .project)
+                    SelectProjectButton(project: $project) {
+                        showProjectPopover = true
+                    }
                 } header: {
                     Text("Description")
                 }
@@ -202,7 +199,9 @@ public struct CreateTaskView: View, UseKeyboardToolbar {
                         }
 
                         let date: Date? = didSetDate ? due : nil
-                        let time: Date? = didSetTime ? time : nil
+                        let time: Date? = didSetTime
+                            ? time
+                            : (didSetDate ? UserDefaultsManager.standard.defaultDueTime() : nil)
                         let finalDate = Calendar.current.mergeDateWithTime(date: date, time: time)
 
                         let task = TCTask(
@@ -308,6 +307,11 @@ public struct CreateTaskView: View, UseKeyboardToolbar {
             }
             .navigationDestination(isPresented: $showTagPopover) {
                 AddTagView(selectedTags: $tags)
+            }
+            .sheet(isPresented: $showProjectPopover) {
+                NavigationStack {
+                    SelectProjectView(selectedProject: $project)
+                }
             }
             .interactiveDismissDisabled(hasUnsavedContent)
             .navigationTitle("New Task")

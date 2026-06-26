@@ -30,6 +30,12 @@ public enum TCUserDefaults: String {
     case storeKitCloudSubscriptionActive
 
     case pendingNewTaskContent
+
+    case suggestOnlyActiveProjects
+    case taskCellLineLimit
+    case dueLookaheadDays
+    case hasDefaultDueTime
+    case defaultDueTimeMinutes
 }
 
 public class UserDefaultsManager {
@@ -75,5 +81,35 @@ public class UserDefaultsManager {
         if let appDomain = Bundle.main.bundleIdentifier {
             defaults.removePersistentDomain(forName: appDomain)
         }
+    }
+}
+
+extension UserDefaultsManager {
+    /// Returns a Date with the user's configured default-due-time as its hour/minute,
+    /// or nil if the user has not enabled a default.
+    public func defaultDueTime() -> Date? {
+        let hasDefault: Bool = getValue(forKey: .hasDefaultDueTime) ?? false
+        guard hasDefault else { return nil }
+        let minutes: Int = getValue(forKey: .defaultDueTimeMinutes) ?? (9 * 60)
+        return Calendar.current.date(
+            bySettingHour: minutes / 60,
+            minute: minutes % 60,
+            second: 0,
+            of: Date()
+        )
+    }
+
+    /// If `date` has a midnight time component and the user has a default due time
+    /// configured, returns the same date with the default hour/minute applied.
+    public func applyDefaultDueTimeIfMidnight(to date: Date?) -> Date? {
+        guard let date else { return nil }
+        let calendar = Calendar.current
+        let comp = calendar.dateComponents([.hour, .minute], from: date)
+        guard comp.hour == 0, comp.minute == 0, let defaultTime = defaultDueTime() else { return date }
+        let timeComp = calendar.dateComponents([.hour, .minute], from: defaultTime)
+        var dateComp = calendar.dateComponents([.year, .month, .day], from: date)
+        dateComp.hour = timeComp.hour
+        dateComp.minute = timeComp.minute
+        return calendar.date(from: dateComp)
     }
 }
