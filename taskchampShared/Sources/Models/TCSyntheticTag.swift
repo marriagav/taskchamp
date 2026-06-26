@@ -21,6 +21,8 @@ public enum TCSyntheticTag: String, CaseIterable {
     case scheduled = "SCHEDULED"
     case until = "UNTIL"
     case latest = "LATEST"
+    case waiting = "WAITING"
+    case blocked = "BLOCKED"
 
     public func toTCTag() -> TCTag {
         TCTag(name: rawValue)
@@ -85,7 +87,8 @@ public enum TCSyntheticTag: String, CaseIterable {
         case .ready:
             guard task.status == .pending else { return false }
             let existingTagNames = Set((task.tags ?? []).map { $0.name })
-            return !existingTagNames.contains("BLOCKED") && !existingTagNames.contains("WAITING")
+            return !existingTagNames.contains(Self.blocked.rawValue)
+                && !existingTagNames.contains(Self.waiting.rawValue)
         case .scheduled:
             return task.scheduled != nil
         case .until:
@@ -93,6 +96,8 @@ public enum TCSyntheticTag: String, CaseIterable {
         case .latest:
             // LATEST is collection-dependent; see TCTask.markLatestTask(in:).
             return false
+        case .waiting, .blocked:
+            return task.tags?.contains { $0.name == rawValue } ?? false
         }
     }
 }

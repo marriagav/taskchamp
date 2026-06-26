@@ -111,7 +111,10 @@ public enum TasksHelper {
         if task.status == .deleted { return 3 }
         if task.status == .completed { return 2 }
         let tagNames = Set((task.tags ?? []).map { $0.name })
-        if tagNames.contains("WAITING") || tagNames.contains("BLOCKED") { return 1 }
+        if tagNames.contains(TCSyntheticTag.waiting.rawValue)
+            || tagNames.contains(TCSyntheticTag.blocked.rawValue) {
+            return 1
+        }
         return 0
     }
 
