@@ -5,6 +5,7 @@ import taskchampShared
 class GlobalState {
     var isSyncingTasks = true
     var isShowingPaywall = false
+    var replicaReady = false
 }
 
 public struct ContentView: View {
@@ -40,6 +41,7 @@ public struct ContentView: View {
     func setReplicaAndSync() async throws {
         let localReplicaPath = try FileService.shared.getDestinationPathForLocalReplica()
         try TaskchampionService.shared.setDbUrl(path: localReplicaPath)
+        globalState.replicaReady = true
         try await TaskchampionService.shared.sync {
             globalState.isSyncingTasks = false
         }

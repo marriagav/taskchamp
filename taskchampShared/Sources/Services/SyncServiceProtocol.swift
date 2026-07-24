@@ -52,7 +52,7 @@ public class ICloudSyncService: SyncServiceProtocol {
         do {
             let icloudPath = try FileService.shared.getDestinationPathForICloudServer()
             return await withCheckedContinuation { continuation in
-                DispatchQueue.main.async {
+                DispatchQueue.global(qos: .userInitiated).async {
                     let synced = replica.sync_local_server(icloudPath)
                     continuation.resume(returning: synced)
                 }
@@ -102,7 +102,7 @@ public class RemoteSyncService: SyncServiceProtocol {
         }
 
         return await withCheckedContinuation { continuation in
-            DispatchQueue.main.async {
+            DispatchQueue.global(qos: .userInitiated).async {
                 let synced = replica.sync_remote_server(
                     remoteServerUrl.intoRustString(),
                     remoteClientId.intoRustString(),
@@ -151,7 +151,7 @@ public class GcpSyncService: SyncServiceProtocol {
         }
 
         return await withCheckedContinuation { continuation in
-            DispatchQueue.main.async {
+            DispatchQueue.global(qos: .userInitiated).async {
                 let synced = replica.sync_gcp(
                     bucket.intoRustString(),
                     getGcpCredentialPath()?.intoRustString(),
@@ -214,7 +214,7 @@ public class AwsSyncService: SyncServiceProtocol {
         }
 
         return await withCheckedContinuation { continuation in
-            DispatchQueue.main.async {
+            DispatchQueue.global(qos: .userInitiated).async {
                 let synced = replica.sync_aws(
                     region.intoRustString(),
                     bucket.intoRustString(),
