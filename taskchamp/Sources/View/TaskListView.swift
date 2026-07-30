@@ -307,6 +307,16 @@ public struct TaskListView: View {
         .onChange(of: selectedSyncType) {
             updateTasks()
         }
+        .onChange(of: globalState.replicaReady) { _, isReady in
+            if isReady {
+                updateTasks()
+            }
+        }
+        .onChange(of: globalState.isSyncingTasks) { _, isSyncing in
+            if !isSyncing {
+                updateTasks()
+            }
+        }
         .sheet(isPresented: $isShowingCreateTaskView, onDismiss: {
             createTaskContent = ""
             updateTasks()
