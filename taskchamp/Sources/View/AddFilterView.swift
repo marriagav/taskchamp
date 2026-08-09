@@ -113,7 +113,6 @@ public struct AddFilterView: View, UseKeyboardToolbar {
                         ForEach(availableProjects, id: \.self) { project in
                             projectRow(project)
                         }
-                        .onMove(perform: moveFilters)
                     }
                 }
             }
