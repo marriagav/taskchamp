@@ -22,6 +22,8 @@ public enum TCUserDefaults: String {
 
     case awsServerBucket
     case awsServerRegion
+    case awsServerEndpointUrl
+    case awsServerForcePathStyle
     case awsServerAccessKeyId
     case awsServerSecretAccessKey
     case awsServerEncryptionSecret
