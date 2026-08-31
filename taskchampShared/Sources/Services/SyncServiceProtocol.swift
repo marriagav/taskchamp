@@ -164,11 +164,11 @@ public class GcpSyncService: SyncServiceProtocol {
 }
 
 public class AwsSyncService: SyncServiceProtocol {
-    public static let syncServiceType: TaskchampionService.SyncType = .gcp
-    public static let settingName = "Amazon Web Services"
+    public static let syncServiceType: TaskchampionService.SyncType = .aws
+    public static let settingName = "S3"
     public static let errorTitle = "There was an error"
     public static let errorMessage =
-        "Make sure that you have the correct AWS configuration"
+        "Make sure that you have the correct S3 configuration"
 
     public static func getAwsBucket() -> String? {
         return UserDefaultsManager.shared.getValue(forKey: .awsServerBucket)
@@ -176,6 +176,14 @@ public class AwsSyncService: SyncServiceProtocol {
 
     public static func getAwsRegion() -> String? {
         return UserDefaultsManager.shared.getValue(forKey: .awsServerRegion)
+    }
+
+    public static func getAwsEndpointUrl() -> String? {
+        return UserDefaultsManager.shared.getValue(forKey: .awsServerEndpointUrl)
+    }
+
+    public static func getAwsForcePathStyle() -> Bool {
+        return UserDefaultsManager.shared.getValue(forKey: .awsServerForcePathStyle) ?? false
     }
 
     public static func getAwsAccessKeyId() -> String? {
@@ -194,7 +202,6 @@ public class AwsSyncService: SyncServiceProtocol {
 
     public static func isAvailable() -> Bool {
         return getAwsBucket() != nil &&
-            getAwsRegion() != nil &&
             getAwsAccessKeyId() != nil &&
             getAwsSecretAccessKey() != nil &&
             getAwsEncryptionSecret() != nil
@@ -204,20 +211,21 @@ public class AwsSyncService: SyncServiceProtocol {
     public static func sync(replica: Replica) async throws -> Bool {
         // swiftlint:disable all
         guard let bucket = getAwsBucket(),
-              let region = getAwsRegion(),
               let accessKeyId = getAwsAccessKeyId(),
               let secretAccessKey = getAwsSecretAccessKey(),
               let encryptionSecret = getAwsEncryptionSecret() else
         {
             // swiftlint:enable all
-            throw TCError.genericError("AWS configuration is incomplete")
+            throw TCError.genericError("S3 configuration is incomplete")
         }
 
         return await withCheckedContinuation { continuation in
             DispatchQueue.global(qos: .userInitiated).async {
                 let synced = replica.sync_aws(
-                    region.intoRustString(),
+                    nonEmptyString(getAwsRegion())?.intoRustString(),
                     bucket.intoRustString(),
+                    nonEmptyString(getAwsEndpointUrl())?.intoRustString(),
+                    getAwsForcePathStyle(),
                     accessKeyId.intoRustString(),
                     secretAccessKey.intoRustString(),
                     encryptionSecret.intoRustString()
@@ -225,5 +233,12 @@ public class AwsSyncService: SyncServiceProtocol {
                 continuation.resume(returning: synced)
             }
         }
+    }
+
+    private static func nonEmptyString(_ value: String?) -> String? {
+        guard let value, !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return nil
+        }
+        return value
     }
 }

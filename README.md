@@ -17,7 +17,7 @@ Use [Taskwarrior](https://taskwarrior.org/), a simple command line interface to 
 - [Installation](#installation)
 - [Setup with Taskwarrior](#setup-with-taskwarrior)
   - [Setup with Taskchampion Sync Server](#setup-with-taskchampion-sync-server)
-  - [Setup with AWS](#setup-with-aws)
+  - [Setup with S3](#setup-with-s3)
   - [Setup with GCP](#setup-with-gcp)
   - [Setup with iCloud Drive](#setup-with-icloud-drive)
 - [Obsidian integration](#obsidian-integration)
@@ -39,7 +39,7 @@ Taskchamp can work as a standalone iOS app, but it's recommended to use it with 
 
 ## Setup with Taskwarrior
 
-There are currently four ways to setup Taskchamp to work with Taskwarrior: using a Taskchampion Sync Server, using AWS, using GCP, or using iCloud Drive.
+There are currently four ways to setup Taskchamp to work with Taskwarrior: using a Taskchampion Sync Server, using S3, using GCP, or using iCloud Drive.
 
 > [!NOTE]
 > You only need to setup one of these methods, not all of them.
@@ -68,17 +68,17 @@ The documentation for how sync works in Taskwarrior can be found [here](https://
 
 7. Your tasks should now be synced between your computer and your phone. You can add tasks from the command line using Taskwarrior, `task sync`, and they will appear on Taskchamp.
 
-<!-- TOC --><a name="setup-with-aws"></a>
+<!-- TOC --><a name="setup-with-s3"></a>
 
-### Setup with AWS
+### Setup with S3
 
-> AWS Sync works by connecting to an S3 bucket that will handle the synchronization of your tasks across devices.
+> S3 sync works with Amazon S3 and compatible storage services such as MinIO.
 
 1. Setup an S3 bucket that is compatible with taskwarrior sync by following the instructions [here](https://man.archlinux.org/man/extra/task/task-sync.5.en#Amazon_Web_Services).
 
-2. Open the Taskchamp app on your phone and select `Amazon Web Services` as your sync service.
+2. Open the Taskchamp app on your phone and select `S3` as your sync service.
 
-3. Enter the bucket name, region, access key id, secret access key and encryption secret.
+3. Enter the bucket name, access key ID, secret access key and encryption secret. For Amazon S3, also enter the region. For another S3 service, enter its endpoint URL and enable path-style URLs if the provider requires them.
 
 4. You will be able to trigger the sync from your computer by executing: `task sync`.
 

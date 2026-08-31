@@ -8,6 +8,8 @@ class AwsSettingsViewModel: UseSyncServiceViewModel {
 
     var awsServerBucket = ""
     var awsServerRegion = ""
+    var awsServerEndpointUrl = ""
+    var awsServerForcePathStyle = false
     var awsServerAccessKeyId = ""
     var awsServerSecretAccessKey = ""
     var awsServerEncryptionSecret = ""
@@ -17,16 +19,18 @@ class AwsSettingsViewModel: UseSyncServiceViewModel {
     }
 
     var summary: String {
-        "AWS Sync works by connecting to a S3 bucket that will handle the synchronization of your tasks across devices."
+        "S3 sync connects to an S3 service to synchronize your tasks across devices."
     }
 
     func buttonTitle(for _: TaskchampionService.SyncType? = nil) -> String {
-        return "Save Aws Sync"
+        return "Save S3 Sync"
     }
 
     func setOtherUserDefaults() {
         UserDefaultsManager.shared.set(value: awsServerBucket, forKey: .awsServerBucket)
         UserDefaultsManager.shared.set(value: awsServerRegion, forKey: .awsServerRegion)
+        UserDefaultsManager.shared.set(value: awsServerEndpointUrl, forKey: .awsServerEndpointUrl)
+        UserDefaultsManager.shared.set(value: awsServerForcePathStyle, forKey: .awsServerForcePathStyle)
         UserDefaultsManager.shared.set(value: awsServerAccessKeyId, forKey: .awsServerAccessKeyId)
         UserDefaultsManager.shared.set(value: awsServerSecretAccessKey, forKey: .awsServerSecretAccessKey)
         UserDefaultsManager.shared.set(value: awsServerEncryptionSecret, forKey: .awsServerEncryptionSecret)
@@ -40,6 +44,12 @@ class AwsSettingsViewModel: UseSyncServiceViewModel {
         if let region = AwsSyncService.getAwsRegion() {
             awsServerRegion = region
         }
+
+        if let endpointUrl = AwsSyncService.getAwsEndpointUrl() {
+            awsServerEndpointUrl = endpointUrl
+        }
+
+        awsServerForcePathStyle = AwsSyncService.getAwsForcePathStyle()
 
         if let accessKeyId = AwsSyncService.getAwsAccessKeyId() {
             awsServerAccessKeyId = accessKeyId
@@ -66,6 +76,7 @@ struct AwsSettingsView: View, UseKeyboardToolbar {
     enum FormField {
         case bucket
         case region
+        case endpointUrl
         case accessKeyId
         case secretAccessKey
         case encryptionSecret
@@ -76,6 +87,8 @@ struct AwsSettingsView: View, UseKeyboardToolbar {
         case .bucket:
             focusedField = .region
         case .region:
+            focusedField = .endpointUrl
+        case .endpointUrl:
             focusedField = .accessKeyId
         case .accessKeyId:
             focusedField = .secretAccessKey
@@ -95,6 +108,8 @@ struct AwsSettingsView: View, UseKeyboardToolbar {
         case .region:
             focusedField = .bucket
         case .accessKeyId:
+            focusedField = .endpointUrl
+        case .endpointUrl:
             focusedField = .region
         case .secretAccessKey:
             focusedField = .accessKeyId
@@ -128,24 +143,33 @@ struct AwsSettingsView: View, UseKeyboardToolbar {
         ) {
             Section {
                 Text(
-                    "**AWS region in which the S3 bucket is located.**"
+                    "**Region in which the S3 bucket is located. Optional for some S3 services.**"
                 )
-                TextField("AWS Region", text: $viewModel.awsServerRegion)
+                TextField("Region", text: $viewModel.awsServerRegion)
                     .autocapitalization(.none)
                     .focused($focusedField, equals: .region)
                 Text(
+                    "**Endpoint URL for an S3 service. Leave blank when using Amazon S3.**"
+                )
+                TextField("Endpoint URL", text: $viewModel.awsServerEndpointUrl)
+                    .keyboardType(.URL)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    .focused($focusedField, equals: .endpointUrl)
+                Toggle("Force path-style URLs", isOn: $viewModel.awsServerForcePathStyle)
+                Text(
                     "**Bucket in which to store the task data. This bucket must not be used for any other purpose.**"
                 )
-                TextField("AWS S3 bucket", text: $viewModel.awsServerBucket)
+                TextField("S3 bucket", text: $viewModel.awsServerBucket)
                     .autocapitalization(.none)
                     .focused($focusedField, equals: .bucket)
                 Text(
-                    "**A pair of access key ID and secret access key.**"
+                    "**A pair of S3 access key ID and secret access key.**"
                 )
-                TextField("AWS Access Key ID", text: $viewModel.awsServerAccessKeyId)
+                TextField("S3 Access Key ID", text: $viewModel.awsServerAccessKeyId)
                     .autocapitalization(.none)
                     .focused($focusedField, equals: .accessKeyId)
-                SecureField("AWS Secret Access Key", text: $viewModel.awsServerSecretAccessKey)
+                SecureField("S3 Secret Access Key", text: $viewModel.awsServerSecretAccessKey)
                     .autocapitalization(.none)
                     .focused($focusedField, equals: .secretAccessKey)
                 Text(
@@ -174,11 +198,11 @@ struct AwsSettingsView: View, UseKeyboardToolbar {
         .alert(isPresented: $viewModel.isShowingAlert) {
             Alert(
                 title: Text("There was an error"),
-                message: Text("Make sure that you set the AWS server configurations"),
+                message: Text("Make sure that you set the S3 server configuration"),
                 dismissButton: .default(Text("OK"))
             )
         }
-        .navigationTitle("Amazon Web Services Sync")
+        .navigationTitle("S3 Sync")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             viewModel.onAppear()
