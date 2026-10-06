@@ -7,7 +7,12 @@ import ProjectDescription
 let packageSettings = PackageSettings(
     productTypes: [
         "MarkdownUI": .framework // default is .staticFramework
-    ]
+    ],
+    baseSettings: .settings(
+        base: [
+            "IPHONEOS_DEPLOYMENT_TARGET": "15.0"
+        ]
+    )
 )
 #endif
 
