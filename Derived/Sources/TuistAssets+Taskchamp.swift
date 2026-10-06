@@ -4,15 +4,28 @@
 // swiftformat:disable all
 // Generated using tuist — https://github.com/tuist/tuist
 
+
+
 #if os(macOS)
-  import AppKit
-#elseif os(iOS)
-  import UIKit
-#elseif os(tvOS) || os(watchOS)
-  import UIKit
+#if hasFeature(InternalImportsByDefault)
+public import AppKit
+#else
+import AppKit
 #endif
+#else
+#if hasFeature(InternalImportsByDefault)
+public import UIKit
+#else
+import UIKit
+#endif
+#endif
+
 #if canImport(SwiftUI)
-  import SwiftUI
+#if hasFeature(InternalImportsByDefault)
+public import SwiftUI
+#else
+import SwiftUI
+#endif
 #endif
 
 // MARK: - Asset Catalogs

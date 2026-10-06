@@ -10,7 +10,7 @@ let packageSettings = PackageSettings(
     ],
     baseSettings: .settings(
         base: [
-            "IPHONEOS_DEPLOYMENT_TARGET": "15.0"
+            "IPHONEOS_DEPLOYMENT_TARGET": "17.0"
         ]
     )
 )

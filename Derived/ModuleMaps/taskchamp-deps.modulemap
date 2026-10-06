@@ -1,0 +1,2 @@
+extern module cmark_gfm "/Users/marriagav/Code/taskchamp/Tuist/.build/checkouts/swift-cmark/src/include/module.modulemap"
+extern module cmark_gfm_extensions "/Users/marriagav/Code/taskchamp/Tuist/.build/checkouts/swift-cmark/extensions/include/module.modulemap"
