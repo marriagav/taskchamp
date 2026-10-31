@@ -168,6 +168,10 @@ public struct ContentView: View {
             if newPhase == .active {
                 selectedFilter = getSelectedFilter()
             }
+            // Time-based queries like +DUE change while the app is closed, so refresh on the way out.
+            if newPhase == .background {
+                Task { await BadgeService.refresh() }
+            }
         }
     }
 }

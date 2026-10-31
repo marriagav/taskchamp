@@ -12,6 +12,32 @@ public struct AppSettingsView: View {
     @AppStorage(TCUserDefaults.hasDefaultDueTime.rawValue) private var hasDefaultDueTime: Bool = false
     @AppStorage(TCUserDefaults.defaultDueTimeMinutes.rawValue) private var defaultDueTimeMinutes: Int = 9 * 60
 
+    // Badge settings live in the app group so the widget extension can refresh the badge.
+    @AppStorage(
+        TCUserDefaults.badgeCountEnabled.rawValue,
+        store: UserDefaults(suiteName: UserDefaultsManager.suiteName)
+    ) private var badgeCountEnabled: Bool = false
+    @AppStorage(
+        TCUserDefaults.badgeCountQuery.rawValue,
+        store: UserDefaults(suiteName: UserDefaultsManager.suiteName)
+    ) private var badgeCountQuery: String = BadgeService.defaultQuery
+    @State private var badgeMatchCount: Int?
+
+    private var badgeFooter: String {
+        guard BadgeService.isValidQuery(badgeCountQuery) else {
+            return "Enter a filter query, for example \(BadgeService.defaultQuery)."
+        }
+        let description = "Shows how many tasks match this query on the app icon. " +
+            "Uses the same syntax as filters, plus +PENDING, +COMPLETED and +DELETED."
+        guard let badgeMatchCount else { return description }
+        return description + " \(badgeMatchCount) task\(badgeMatchCount == 1 ? "" : "s") match right now."
+    }
+
+    private func refreshBadge() {
+        badgeMatchCount = BadgeService.count(for: badgeCountQuery)
+        Task { await BadgeService.refresh() }
+    }
+
     private var defaultDueTimeBinding: Binding<Date> {
         Binding(
             get: {
@@ -60,6 +86,34 @@ public struct AppSettingsView: View {
                     Text(
                         "Tasks due within this many days from now will match the +DUE synthetic tag."
                     )
+                }
+                Section {
+                    Toggle("Show badge count", isOn: $badgeCountEnabled)
+                        .onChange(of: badgeCountEnabled) { _, isEnabled in
+                            if isEnabled {
+                                // The badge needs notification permission; this is a no-op if already granted.
+                                NotificationService.shared.requestAuthorization()
+                            }
+                            refreshBadge()
+                        }
+                    if badgeCountEnabled {
+                        TextField("Query", text: $badgeCountQuery, prompt: Text(BadgeService.defaultQuery))
+                            .font(.system(.body, design: .monospaced))
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .onChange(of: badgeCountQuery) { _, _ in
+                                refreshBadge()
+                            }
+                    }
+                } header: {
+                    Text("App Icon Badge")
+                } footer: {
+                    if badgeCountEnabled {
+                        Text(badgeFooter)
+                    }
+                }
+                .onAppear {
+                    badgeMatchCount = BadgeService.count(for: badgeCountQuery)
                 }
                 Section {
                     Toggle("Use default due time", isOn: $hasDefaultDueTime)

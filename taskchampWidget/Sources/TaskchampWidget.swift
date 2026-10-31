@@ -47,6 +47,9 @@ struct Provider: AppIntentTimelineProvider {
             tasks: tasks,
             filterId: filterId
         )
+        // The widget reloads periodically and after completing a task from it, so use that to keep
+        // the app icon badge current while the app isn't running. getTasks has opened the database.
+        await BadgeService.refresh()
         return Timeline(entries: [entry], policy: .atEnd)
     }
 

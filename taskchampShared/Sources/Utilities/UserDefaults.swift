@@ -38,6 +38,10 @@ public enum TCUserDefaults: String {
     case dueLookaheadDays
     case hasDefaultDueTime
     case defaultDueTimeMinutes
+
+    // Stored in the shared app group so the widget extension can refresh the badge too.
+    case badgeCountEnabled
+    case badgeCountQuery
 }
 
 public class UserDefaultsManager {
