@@ -6,7 +6,13 @@ struct Provider: AppIntentTimelineProvider {
     @MainActor
     func placeholder(in _: Context) -> TaskEntry {
         let tasks = getTasks()
-        return TaskEntry(date: Date(), title: "My tasks", tasks: tasks, filterId: nil)
+        return TaskEntry(
+            date: Date(),
+            title: "My tasks",
+            allDoneMessage: TaskchampWidgetIntent.defaultAllDoneMessage,
+            tasks: tasks,
+            filterId: nil
+        )
     }
 
     @MainActor
@@ -14,7 +20,13 @@ struct Provider: AppIntentTimelineProvider {
         let filter = resolveFilter(from: configuration)
         let tasks = getTasks(filter: filter)
         let filterId = configuration.filter?.isNoFilter == true ? nil : configuration.filter?.id
-        return TaskEntry(date: Date(), title: configuration.widgetTitle, tasks: tasks, filterId: filterId)
+        return TaskEntry(
+            date: Date(),
+            title: configuration.widgetTitle,
+            allDoneMessage: configuration.resolvedAllDoneMessage,
+            tasks: tasks,
+            filterId: filterId
+        )
     }
 
     @MainActor
@@ -22,7 +34,13 @@ struct Provider: AppIntentTimelineProvider {
         let filter = resolveFilter(from: configuration)
         let tasks = getTasks(filter: filter)
         let filterId = configuration.filter?.isNoFilter == true ? nil : configuration.filter?.id
-        let entry = TaskEntry(date: Date(), title: configuration.widgetTitle, tasks: tasks, filterId: filterId)
+        let entry = TaskEntry(
+            date: Date(),
+            title: configuration.widgetTitle,
+            allDoneMessage: configuration.resolvedAllDoneMessage,
+            tasks: tasks,
+            filterId: filterId
+        )
         return Timeline(entries: [entry], policy: .atEnd)
     }
 
@@ -60,6 +78,8 @@ struct Provider: AppIntentTimelineProvider {
 struct TaskEntry: TimelineEntry {
     let date: Date
     let title: String
+    /// Message shown when there are no tasks to display.
+    let allDoneMessage: String
     let tasks: [TCTask]
     let filterId: String?
 }
@@ -97,8 +117,9 @@ struct TaskchampWidgetEntryView: View {
                         Image(systemName: SFSymbols.partyPopperFill.rawValue)
                             .font(.largeTitle)
                             .foregroundStyle(.indigo)
-                        Text("All tasks done!")
+                        Text(entry.allDoneMessage)
                             .bold()
+                            .multilineTextAlignment(.center)
                     }
                     .foregroundStyle(.secondary)
                     Spacer()
