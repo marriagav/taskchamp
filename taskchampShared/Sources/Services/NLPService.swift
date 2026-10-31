@@ -277,7 +277,11 @@ public class NLPService {
             filter.setRecur()
         }
     }
+}
 
+// MARK: - Task input extraction
+
+extension NLPService {
     /// Extracts the single word directly after `tag` (e.g. `+chore`, `project:home`, `prio:H`) and removes
     /// both from `input`. Anything after that word stays in place, so it can still become the description.
     func extractToken(after tag: String, from input: inout String) -> String? {
