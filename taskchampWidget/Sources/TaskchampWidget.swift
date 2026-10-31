@@ -11,6 +11,7 @@ struct Provider: AppIntentTimelineProvider {
             title: "My tasks",
             allDoneMessage: TaskchampWidgetIntent.defaultAllDoneMessage,
             showTaskCount: false,
+            newTaskPrefill: "",
             tasks: tasks,
             filterId: nil
         )
@@ -26,6 +27,7 @@ struct Provider: AppIntentTimelineProvider {
             title: configuration.widgetTitle,
             allDoneMessage: configuration.resolvedAllDoneMessage,
             showTaskCount: configuration.showTaskCount,
+            newTaskPrefill: configuration.newTaskPrefill,
             tasks: tasks,
             filterId: filterId
         )
@@ -41,6 +43,7 @@ struct Provider: AppIntentTimelineProvider {
             title: configuration.widgetTitle,
             allDoneMessage: configuration.resolvedAllDoneMessage,
             showTaskCount: configuration.showTaskCount,
+            newTaskPrefill: configuration.newTaskPrefill,
             tasks: tasks,
             filterId: filterId
         )
@@ -85,6 +88,8 @@ struct TaskEntry: TimelineEntry {
     let allDoneMessage: String
     /// Whether to show the number of matching tasks in the header.
     let showTaskCount: Bool
+    /// Text prefilled in the create task screen when tapping the + button.
+    let newTaskPrefill: String
     let tasks: [TCTask]
     let filterId: String?
 }
@@ -115,7 +120,7 @@ struct TaskchampWidgetEntryView: View {
                             .foregroundStyle(.secondary)
                             .font(family == .systemLarge ? .title2 : .body)
                     }
-                    Link(destination: TCTask.newTaskUrl) {
+                    Link(destination: TCTask.newTaskUrl(prefilledWith: entry.newTaskPrefill)) {
                         Image(systemName: SFSymbols.plusCircleFill.rawValue)
                             .font(family == .systemLarge ? .title : .title2)
                     }

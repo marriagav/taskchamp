@@ -21,6 +21,13 @@ struct TaskchampWidgetIntent: WidgetConfigurationIntent {
     @Parameter(title: "Show Task Count", default: false)
     var showTaskCount: Bool
 
+    @Parameter(
+        title: "New Task Prefill",
+        description: "Text prefilled when tapping + on the widget, e.g. \"+chore project:home\".",
+        default: ""
+    )
+    var newTaskPrefill: String
+
     init() {
         filter = .noFilter
     }
@@ -29,12 +36,14 @@ struct TaskchampWidgetIntent: WidgetConfigurationIntent {
         widgetTitle: String,
         filter: FilterAppEntity?,
         allDoneMessage: String = defaultAllDoneMessage,
-        showTaskCount: Bool = false
+        showTaskCount: Bool = false,
+        newTaskPrefill: String = ""
     ) {
         self.widgetTitle = widgetTitle
         self.filter = filter
         self.allDoneMessage = allDoneMessage
         self.showTaskCount = showTaskCount
+        self.newTaskPrefill = newTaskPrefill
     }
 
     /// The message to show when all tasks are done, falling back to the default if the user cleared the field.
