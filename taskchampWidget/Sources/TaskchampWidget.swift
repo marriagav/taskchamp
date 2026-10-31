@@ -10,6 +10,7 @@ struct Provider: AppIntentTimelineProvider {
             date: Date(),
             title: "My tasks",
             allDoneMessage: TaskchampWidgetIntent.defaultAllDoneMessage,
+            showTaskCount: false,
             tasks: tasks,
             filterId: nil
         )
@@ -24,6 +25,7 @@ struct Provider: AppIntentTimelineProvider {
             date: Date(),
             title: configuration.widgetTitle,
             allDoneMessage: configuration.resolvedAllDoneMessage,
+            showTaskCount: configuration.showTaskCount,
             tasks: tasks,
             filterId: filterId
         )
@@ -38,6 +40,7 @@ struct Provider: AppIntentTimelineProvider {
             date: Date(),
             title: configuration.widgetTitle,
             allDoneMessage: configuration.resolvedAllDoneMessage,
+            showTaskCount: configuration.showTaskCount,
             tasks: tasks,
             filterId: filterId
         )
@@ -80,6 +83,8 @@ struct TaskEntry: TimelineEntry {
     let title: String
     /// Message shown when there are no tasks to display.
     let allDoneMessage: String
+    /// Whether to show the number of matching tasks in the header.
+    let showTaskCount: Bool
     let tasks: [TCTask]
     let filterId: String?
 }
@@ -103,6 +108,13 @@ struct TaskchampWidgetEntryView: View {
                         .foregroundStyle(.indigo)
                         .font(family == .systemLarge ? .title2 : .body)
                     Spacer()
+                    if entry.showTaskCount {
+                        Text("\(entry.tasks.count)")
+                            .bold()
+                            .monospacedDigit()
+                            .foregroundStyle(.secondary)
+                            .font(family == .systemLarge ? .title2 : .body)
+                    }
                     Link(destination: TCTask.newTaskUrl) {
                         Image(systemName: SFSymbols.plusCircleFill.rawValue)
                             .font(family == .systemLarge ? .title : .title2)

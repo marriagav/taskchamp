@@ -18,14 +18,23 @@ struct TaskchampWidgetIntent: WidgetConfigurationIntent {
     @Parameter(title: "All Done Message", default: "All tasks done!")
     var allDoneMessage: String
 
+    @Parameter(title: "Show Task Count", default: false)
+    var showTaskCount: Bool
+
     init() {
         filter = .noFilter
     }
 
-    init(widgetTitle: String, filter: FilterAppEntity?, allDoneMessage: String = defaultAllDoneMessage) {
+    init(
+        widgetTitle: String,
+        filter: FilterAppEntity?,
+        allDoneMessage: String = defaultAllDoneMessage,
+        showTaskCount: Bool = false
+    ) {
         self.widgetTitle = widgetTitle
         self.filter = filter
         self.allDoneMessage = allDoneMessage
+        self.showTaskCount = showTaskCount
     }
 
     /// The message to show when all tasks are done, falling back to the default if the user cleared the field.
