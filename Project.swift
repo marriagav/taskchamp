@@ -62,7 +62,10 @@ let project = Project(
             infoPlist: .default,
             sources: ["taskchamp/Tests/**"],
             resources: [],
-            dependencies: [.target(name: "taskchamp")]
+            dependencies: [
+                .target(name: "taskchamp"),
+                .target(name: "taskchampShared")
+            ]
         ),
         .target(
             name: "taskchampWidget",
@@ -144,6 +147,11 @@ let project = Project(
     schemes: [
         .scheme(
             name: "taskchamp",
+            // Tests run in Debug so they build unoptimized; the run action stays in Release.
+            testAction: .targets(
+                ["taskchampTests"],
+                configuration: .debug
+            ),
             runAction: .runAction(
                 configuration: .release,
                 executable: .target("taskchamp")
