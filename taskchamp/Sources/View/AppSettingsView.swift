@@ -22,8 +22,15 @@ public struct AppSettingsView: View {
         store: UserDefaults(suiteName: UserDefaultsManager.suiteName)
     ) private var badgeCountQuery: String = BadgeService.defaultQuery
     @State private var badgeMatchCount: Int?
+    /// What's typed in the query field. Counting matches scans every task, so the query is only
+    /// saved and counted when editing ends rather than on every keystroke.
+    @State private var badgeQueryDraft = ""
+    @FocusState private var isBadgeQueryFocused: Bool
 
     private var badgeFooter: String {
+        if badgeQueryDraft != badgeCountQuery {
+            return "Press Return to apply the new query."
+        }
         guard BadgeService.isValidQuery(badgeCountQuery) else {
             return "Enter a filter query, for example \(BadgeService.defaultQuery)."
         }
@@ -36,6 +43,13 @@ public struct AppSettingsView: View {
     private func refreshBadge() {
         badgeMatchCount = BadgeService.count(for: badgeCountQuery)
         Task { await BadgeService.refresh() }
+    }
+
+    /// Saves the edited query and recounts, but only if it actually changed.
+    private func commitBadgeQuery() {
+        guard badgeQueryDraft != badgeCountQuery else { return }
+        badgeCountQuery = badgeQueryDraft
+        refreshBadge()
     }
 
     private var defaultDueTimeBinding: Binding<Date> {
@@ -97,12 +111,17 @@ public struct AppSettingsView: View {
                             refreshBadge()
                         }
                     if badgeCountEnabled {
-                        TextField("Query", text: $badgeCountQuery, prompt: Text(BadgeService.defaultQuery))
+                        TextField("Query", text: $badgeQueryDraft, prompt: Text(BadgeService.defaultQuery))
                             .font(.system(.body, design: .monospaced))
                             .textInputAutocapitalization(.never)
                             .autocorrectionDisabled()
-                            .onChange(of: badgeCountQuery) { _, _ in
-                                refreshBadge()
+                            .submitLabel(.done)
+                            .focused($isBadgeQueryFocused)
+                            .onSubmit(commitBadgeQuery)
+                            .onChange(of: isBadgeQueryFocused) { _, isFocused in
+                                if !isFocused {
+                                    commitBadgeQuery()
+                                }
                             }
                     }
                 } header: {
@@ -113,8 +132,10 @@ public struct AppSettingsView: View {
                     }
                 }
                 .onAppear {
+                    badgeQueryDraft = badgeCountQuery
                     badgeMatchCount = BadgeService.count(for: badgeCountQuery)
                 }
+                .onDisappear(perform: commitBadgeQuery)
                 Section {
                     Toggle("Use default due time", isOn: $hasDefaultDueTime)
                     if hasDefaultDueTime {
