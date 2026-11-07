@@ -10,8 +10,13 @@ run:
 	mise exec -- tuist run <App>
 clean:
 	mise exec -- tuist clean
+# Generates the normal workspace and runs the tests with xcodebuild. `tuist test` is avoided because it
+# rewrites taskchamp.xcworkspace for testing, which can leave Xcode without a runnable scheme.
+# Override the simulator with e.g. `make test TEST_DESTINATION="platform=iOS Simulator,name=iPhone 17"`.
+TEST_DESTINATION ?= platform=iOS Simulator,name=iPhone 17 Pro
 test:
-	mise exec -- tuist test <Scheme>
+	mise exec -- tuist generate --no-open
+	xcodebuild test -workspace taskchamp.xcworkspace -scheme taskchamp -destination "$(TEST_DESTINATION)" -quiet
 graph:
 	mise exec -- tuist graph
 debug:

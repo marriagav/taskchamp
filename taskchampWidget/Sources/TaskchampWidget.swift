@@ -6,7 +6,15 @@ struct Provider: AppIntentTimelineProvider {
     @MainActor
     func placeholder(in _: Context) -> TaskEntry {
         let tasks = getTasks()
-        return TaskEntry(date: Date(), title: "My tasks", tasks: tasks, filterId: nil)
+        return TaskEntry(
+            date: Date(),
+            title: "My tasks",
+            allDoneMessage: TaskchampWidgetIntent.defaultAllDoneMessage,
+            showTaskCount: false,
+            newTaskPrefill: "",
+            tasks: tasks,
+            filterId: nil
+        )
     }
 
     @MainActor
@@ -14,7 +22,15 @@ struct Provider: AppIntentTimelineProvider {
         let filter = resolveFilter(from: configuration)
         let tasks = getTasks(filter: filter)
         let filterId = configuration.filter?.isNoFilter == true ? nil : configuration.filter?.id
-        return TaskEntry(date: Date(), title: configuration.widgetTitle, tasks: tasks, filterId: filterId)
+        return TaskEntry(
+            date: Date(),
+            title: configuration.widgetTitle,
+            allDoneMessage: configuration.resolvedAllDoneMessage,
+            showTaskCount: configuration.showTaskCount,
+            newTaskPrefill: configuration.newTaskPrefill,
+            tasks: tasks,
+            filterId: filterId
+        )
     }
 
     @MainActor
@@ -22,7 +38,18 @@ struct Provider: AppIntentTimelineProvider {
         let filter = resolveFilter(from: configuration)
         let tasks = getTasks(filter: filter)
         let filterId = configuration.filter?.isNoFilter == true ? nil : configuration.filter?.id
-        let entry = TaskEntry(date: Date(), title: configuration.widgetTitle, tasks: tasks, filterId: filterId)
+        let entry = TaskEntry(
+            date: Date(),
+            title: configuration.widgetTitle,
+            allDoneMessage: configuration.resolvedAllDoneMessage,
+            showTaskCount: configuration.showTaskCount,
+            newTaskPrefill: configuration.newTaskPrefill,
+            tasks: tasks,
+            filterId: filterId
+        )
+        // The widget reloads periodically and after completing a task from it, so use that to keep
+        // the app icon badge current while the app isn't running. getTasks has opened the database.
+        await BadgeService.refresh()
         return Timeline(entries: [entry], policy: .atEnd)
     }
 
@@ -60,6 +87,12 @@ struct Provider: AppIntentTimelineProvider {
 struct TaskEntry: TimelineEntry {
     let date: Date
     let title: String
+    /// Message shown when there are no tasks to display.
+    let allDoneMessage: String
+    /// Whether to show the number of matching tasks in the header.
+    let showTaskCount: Bool
+    /// Text prefilled in the create task screen when tapping the + button.
+    let newTaskPrefill: String
     let tasks: [TCTask]
     let filterId: String?
 }
@@ -83,7 +116,14 @@ struct TaskchampWidgetEntryView: View {
                         .foregroundStyle(.indigo)
                         .font(family == .systemLarge ? .title2 : .body)
                     Spacer()
-                    Link(destination: TCTask.newTaskUrl) {
+                    if entry.showTaskCount {
+                        Text("\(entry.tasks.count)")
+                            .bold()
+                            .monospacedDigit()
+                            .foregroundStyle(.secondary)
+                            .font(family == .systemLarge ? .title2 : .body)
+                    }
+                    Link(destination: TCTask.newTaskUrl(prefilledWith: entry.newTaskPrefill)) {
                         Image(systemName: SFSymbols.plusCircleFill.rawValue)
                             .font(family == .systemLarge ? .title : .title2)
                     }
@@ -97,8 +137,9 @@ struct TaskchampWidgetEntryView: View {
                         Image(systemName: SFSymbols.partyPopperFill.rawValue)
                             .font(.largeTitle)
                             .foregroundStyle(.indigo)
-                        Text("All tasks done!")
+                        Text(entry.allDoneMessage)
                             .bold()
+                            .multilineTextAlignment(.center)
                     }
                     .foregroundStyle(.secondary)
                     Spacer()
