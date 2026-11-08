@@ -5,10 +5,21 @@ import WidgetKit
 // swiftlint:disable:next type_body_length
 public class TaskchampionService {
     public static let shared = TaskchampionService()
-    private var replica: Replica?
+    var replica: Replica?
     private var path: String?
     public var needToSync = false
-    private var currentTask: _Concurrency.Task<Void, Error>?
+
+    /// Sync requests that arrived while a sync was running, merged into one follow-up sync.
+    struct PendingSync {
+        /// The sync service to use, or nil for the user's selected one. The latest request wins.
+        var syncType: SyncType?
+        var onSyncCallbacks: [() -> Void] = []
+        var waiters: [CheckedContinuation<Void, Never>] = []
+    }
+
+    /// Runs syncs one at a time. Nil when no sync is running.
+    @MainActor var syncRunner: _Concurrency.Task<Void, Never>?
+    @MainActor var pendingSync: PendingSync?
 
     /// Set by the app. Called when a sync starts and returns a closure to call when it ends.
     /// The app uses it to request background execution time, so iOS doesn't suspend the app in the
@@ -18,7 +29,7 @@ public class TaskchampionService {
 
     /// False while the app is in the background. Syncs requested then are deferred, not started.
     public private(set) var isSyncAllowed = true
-    private var hasDeferredSync = false
+    var hasDeferredSync = false
 
     /// Stops new syncs from starting, e.g. when the app moves to the background.
     /// A sync that is already running keeps going.
@@ -80,61 +91,6 @@ public class TaskchampionService {
         } catch {
             throw TCError.genericError("Failed to delete replica: \(error.localizedDescription)")
         }
-    }
-
-    public func sync(syncType: SyncType, onSync: @escaping () -> Void = {}) async throws {
-        try await performSync(syncType: syncType, onSync: onSync)
-    }
-
-    public func sync(onSync: @escaping () -> Void = {}) async throws {
-        try await performSync(syncType: nil, onSync: onSync)
-    }
-
-    /// Runs a sync with `syncType`, or with the user's selected sync service when nil.
-    private func performSync(syncType: SyncType?, onSync: @escaping () -> Void) async throws {
-        // A sync started in the background can be suspended halfway while holding the database
-        // lock, which gets the app killed. Remember it and run it once the app is active again.
-        guard isSyncAllowed else {
-            hasDeferredSync = true
-            onSync()
-            return
-        }
-
-        currentTask?.cancel()
-        currentTask = .init {
-            guard let replica else {
-                throw TCError.genericError("Database not set")
-            }
-
-            let syncType: SyncType = syncType ?? FileService.shared.getSelectedSyncType() ?? .none
-            let syncService = getSyncServiceFromType(syncType)
-
-            // Keep the app running until this sync finishes, even if the user leaves the app.
-            let endSyncActivity = await MainActor.run { self.beginSyncActivity?() }
-            defer {
-                if let endSyncActivity {
-                    _Concurrency.Task { @MainActor in endSyncActivity() }
-                }
-            }
-
-            do {
-                let synced = try await syncService.sync(replica: replica)
-
-                if synced {
-                    needToSync = false
-                } else {
-                    needToSync = true
-                }
-                WidgetCenter.shared.reloadAllTimelines()
-                onSync()
-            } catch is CancellationError {
-                // do nothing: task was canceled before finishing
-            } catch {
-                needToSync = true
-                onSync()
-            }
-        }
-        try await currentTask?.value
     }
 
     @MainActor
