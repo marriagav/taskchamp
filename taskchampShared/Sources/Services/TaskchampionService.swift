@@ -10,6 +10,30 @@ public class TaskchampionService {
     public var needToSync = false
     private var currentTask: _Concurrency.Task<Void, Error>?
 
+    /// Set by the app. Called when a sync starts and returns a closure to call when it ends.
+    /// The app uses it to request background execution time, so iOS doesn't suspend the app in the
+    /// middle of a sync while it holds the database lock. That gets the app killed (code 0xdead10cc).
+    /// Extensions leave it nil because they can't request background time.
+    @MainActor public var beginSyncActivity: (() -> () -> Void)?
+
+    /// False while the app is in the background. Syncs requested then are deferred, not started.
+    public private(set) var isSyncAllowed = true
+    private var hasDeferredSync = false
+
+    /// Stops new syncs from starting, e.g. when the app moves to the background.
+    /// A sync that is already running keeps going.
+    public func pauseSyncing() {
+        isSyncAllowed = false
+    }
+
+    /// Allows syncs again. Returns true if a sync was requested while paused and should run now.
+    public func resumeSyncing() -> Bool {
+        isSyncAllowed = true
+        let shouldSync = hasDeferredSync
+        hasDeferredSync = false
+        return shouldSync
+    }
+
     public enum SyncType: Codable, CaseIterable {
         case remote
         case aws
@@ -59,43 +83,39 @@ public class TaskchampionService {
     }
 
     public func sync(syncType: SyncType, onSync: @escaping () -> Void = {}) async throws {
-        currentTask?.cancel()
-        currentTask = .init {
-            guard let replica else {
-                throw TCError.genericError("Database not set")
-            }
-
-            let syncService = getSyncServiceFromType(syncType)
-
-            do {
-                let synced = try await syncService.sync(replica: replica)
-
-                if synced {
-                    needToSync = false
-                } else {
-                    needToSync = true
-                }
-                WidgetCenter.shared.reloadAllTimelines()
-                onSync()
-            } catch is CancellationError {
-                // do nothing: task was canceled before finishing
-            } catch {
-                needToSync = true
-                onSync()
-            }
-        }
-        try await currentTask?.value
+        try await performSync(syncType: syncType, onSync: onSync)
     }
 
     public func sync(onSync: @escaping () -> Void = {}) async throws {
+        try await performSync(syncType: nil, onSync: onSync)
+    }
+
+    /// Runs a sync with `syncType`, or with the user's selected sync service when nil.
+    private func performSync(syncType: SyncType?, onSync: @escaping () -> Void) async throws {
+        // A sync started in the background can be suspended halfway while holding the database
+        // lock, which gets the app killed. Remember it and run it once the app is active again.
+        guard isSyncAllowed else {
+            hasDeferredSync = true
+            onSync()
+            return
+        }
+
         currentTask?.cancel()
         currentTask = .init {
             guard let replica else {
                 throw TCError.genericError("Database not set")
             }
 
-            let syncType: SyncType = FileService.shared.getSelectedSyncType() ?? .none
+            let syncType: SyncType = syncType ?? FileService.shared.getSelectedSyncType() ?? .none
             let syncService = getSyncServiceFromType(syncType)
+
+            // Keep the app running until this sync finishes, even if the user leaves the app.
+            let endSyncActivity = await MainActor.run { self.beginSyncActivity?() }
+            defer {
+                if let endSyncActivity {
+                    _Concurrency.Task { @MainActor in endSyncActivity() }
+                }
+            }
 
             do {
                 let synced = try await syncService.sync(replica: replica)
