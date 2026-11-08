@@ -84,6 +84,10 @@ extension TaskchampionService {
         do {
             let synced = try await syncService.sync(replica: replica)
             needToSync = !synced
+            if synced {
+                // A successful sync uploads every local change, including ones from extensions.
+                hasDeferredSync = false
+            }
             WidgetCenter.shared.reloadAllTimelines()
         } catch {
             needToSync = true

@@ -27,9 +27,21 @@ public class TaskchampionService {
     /// Extensions leave it nil because they can't request background time.
     @MainActor public var beginSyncActivity: (() -> () -> Void)?
 
-    /// False while the app is in the background. Syncs requested then are deferred, not started.
-    public private(set) var isSyncAllowed = true
-    var hasDeferredSync = false
+    /// True in the widget and share extensions. They never sync: they're short-lived processes that
+    /// iOS can suspend mid-sync while they hold the shared database lock. The app syncs for them.
+    static let isRunningInExtension = Bundle.main.bundleURL.pathExtension == "appex"
+
+    /// False while the app is in the background, and always false in extensions.
+    /// Syncs requested then are deferred, not started.
+    public private(set) var isSyncAllowed = !isRunningInExtension
+
+    /// Whether a sync was skipped and local changes may not be uploaded yet. Stored in the shared
+    /// app group, so the app also sees syncs deferred by the widget or share extension.
+    /// Cleared by the next successful sync.
+    var hasDeferredSync: Bool {
+        get { UserDefaultsManager.shared.getValue(forKey: .hasDeferredSync) ?? false }
+        set { UserDefaultsManager.shared.set(value: newValue, forKey: .hasDeferredSync) }
+    }
 
     /// Stops new syncs from starting, e.g. when the app moves to the background.
     /// A sync that is already running keeps going.
@@ -37,12 +49,12 @@ public class TaskchampionService {
         isSyncAllowed = false
     }
 
-    /// Allows syncs again. Returns true if a sync was requested while paused and should run now.
+    /// Allows syncs again in the app. Returns true if a sync was deferred, here or in an extension,
+    /// and should run now.
     public func resumeSyncing() -> Bool {
+        guard !Self.isRunningInExtension else { return false }
         isSyncAllowed = true
-        let shouldSync = hasDeferredSync
-        hasDeferredSync = false
-        return shouldSync
+        return hasDeferredSync
     }
 
     public enum SyncType: Codable, CaseIterable {

@@ -73,9 +73,8 @@ struct Provider: AppIntentTimelineProvider {
                 .setDbUrl(
                     path: localReplicaPath
                 )
-            Task {
-                try await TaskchampionService.shared.sync()
-            }
+            // The widget only reads. Syncing from this short-lived process risks it being suspended
+            // while holding the shared database lock; the app syncs and then reloads the widget.
             return try TaskchampionService.shared.getTasks(filter: filter)
         } catch {
             print("Error getting tasks \(error)")

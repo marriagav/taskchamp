@@ -42,6 +42,9 @@ public enum TCUserDefaults: String {
     // Stored in the shared app group so the widget extension can refresh the badge too.
     case badgeCountEnabled
     case badgeCountQuery
+
+    // Shared with extensions: set when a sync was skipped, so the app knows to sync on next open.
+    case hasDeferredSync
 }
 
 public class UserDefaultsManager {
