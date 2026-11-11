@@ -429,7 +429,7 @@ private struct ShareAddTagButton: View {
                 Label {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack {
-                            ForEach(uniqueTags, id: \.self) { tag in
+                            ForEach(uniqueTags, id: \.name) { tag in
                                 Text(tag.name)
                                     .font(.system(.body, design: .monospaced))
                                     .padding(5)
