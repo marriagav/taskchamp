@@ -13,6 +13,13 @@ public indirect enum FilterExpression {
     case status(TCTask.Status)
     case recur
 
+    /// Taskwarrior-style virtual tags that match on task status, e.g. `+PENDING` or `-COMPLETED`.
+    static let statusVirtualTags: [String: TCTask.Status] = [
+        "PENDING": .pending,
+        "COMPLETED": .completed,
+        "DELETED": .deleted
+    ]
+
     public func matches(_ task: TCTask) -> Bool {
         switch self {
         case .and(let expressions):
@@ -20,8 +27,14 @@ public indirect enum FilterExpression {
         case .or(let expressions):
             return expressions.contains { $0.matches(task) }
         case .tag(let name):
+            if let status = Self.statusVirtualTags[name] {
+                return task.status == status
+            }
             return task.tags?.contains { $0.name == name } ?? false
         case .notTag(let name):
+            if let status = Self.statusVirtualTags[name] {
+                return task.status != status
+            }
             return !(task.tags?.contains { $0.name == name } ?? false)
         case .project(let name):
             return task.project == name

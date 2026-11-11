@@ -167,6 +167,21 @@ public struct ContentView: View {
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active {
                 selectedFilter = getSelectedFilter()
+                // Run any sync that was requested while the app was in the background.
+                if TaskchampionService.shared.resumeSyncing() {
+                    Task {
+                        globalState.isSyncingTasks = true
+                        try? await TaskchampionService.shared.sync {
+                            globalState.isSyncingTasks = false
+                        }
+                    }
+                }
+            }
+            if newPhase == .background {
+                // Don't start new syncs in the background; a running one finishes under its background task.
+                TaskchampionService.shared.pauseSyncing()
+                // Time-based queries like +DUE change while the app is closed, so refresh on the way out.
+                Task { await BadgeService.refresh() }
             }
         }
     }
