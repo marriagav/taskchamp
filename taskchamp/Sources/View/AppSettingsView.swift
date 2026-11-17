@@ -12,6 +12,46 @@ public struct AppSettingsView: View {
     @AppStorage(TCUserDefaults.hasDefaultDueTime.rawValue) private var hasDefaultDueTime: Bool = false
     @AppStorage(TCUserDefaults.defaultDueTimeMinutes.rawValue) private var defaultDueTimeMinutes: Int = 9 * 60
 
+    // Badge settings live in the app group so the widget extension can refresh the badge.
+    @AppStorage(
+        TCUserDefaults.badgeCountEnabled.rawValue,
+        store: UserDefaults(suiteName: UserDefaultsManager.suiteName)
+    ) private var badgeCountEnabled: Bool = false
+    @AppStorage(
+        TCUserDefaults.badgeCountQuery.rawValue,
+        store: UserDefaults(suiteName: UserDefaultsManager.suiteName)
+    ) private var badgeCountQuery: String = BadgeService.defaultQuery
+    @State private var badgeMatchCount: Int?
+    /// What's typed in the query field. Counting matches scans every task, so the query is only
+    /// saved and counted when editing ends rather than on every keystroke.
+    @State private var badgeQueryDraft = ""
+    @FocusState private var isBadgeQueryFocused: Bool
+
+    private var badgeFooter: String {
+        if badgeQueryDraft != badgeCountQuery {
+            return "Press Return to apply the new query."
+        }
+        guard BadgeService.isValidQuery(badgeCountQuery) else {
+            return "Enter a filter query, for example \(BadgeService.defaultQuery)."
+        }
+        let description = "Shows how many tasks match this query on the app icon. " +
+            "Uses the same syntax as filters, plus +PENDING, +COMPLETED and +DELETED."
+        guard let badgeMatchCount else { return description }
+        return description + " \(badgeMatchCount) task\(badgeMatchCount == 1 ? "" : "s") match right now."
+    }
+
+    private func refreshBadge() {
+        badgeMatchCount = BadgeService.count(for: badgeCountQuery)
+        Task { await BadgeService.refresh() }
+    }
+
+    /// Saves the edited query and recounts, but only if it actually changed.
+    private func commitBadgeQuery() {
+        guard badgeQueryDraft != badgeCountQuery else { return }
+        badgeCountQuery = badgeQueryDraft
+        refreshBadge()
+    }
+
     private var defaultDueTimeBinding: Binding<Date> {
         Binding(
             get: {
@@ -61,6 +101,41 @@ public struct AppSettingsView: View {
                         "Tasks due within this many days from now will match the +DUE synthetic tag."
                     )
                 }
+                Section {
+                    Toggle("Show badge count", isOn: $badgeCountEnabled)
+                        .onChange(of: badgeCountEnabled) { _, isEnabled in
+                            if isEnabled {
+                                // The badge needs notification permission; this is a no-op if already granted.
+                                NotificationService.shared.requestAuthorization()
+                            }
+                            refreshBadge()
+                        }
+                    if badgeCountEnabled {
+                        TextField("Query", text: $badgeQueryDraft, prompt: Text(BadgeService.defaultQuery))
+                            .font(.system(.body, design: .monospaced))
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .submitLabel(.done)
+                            .focused($isBadgeQueryFocused)
+                            .onSubmit(commitBadgeQuery)
+                            .onChange(of: isBadgeQueryFocused) { _, isFocused in
+                                if !isFocused {
+                                    commitBadgeQuery()
+                                }
+                            }
+                    }
+                } header: {
+                    Text("App Icon Badge")
+                } footer: {
+                    if badgeCountEnabled {
+                        Text(badgeFooter)
+                    }
+                }
+                .onAppear {
+                    badgeQueryDraft = badgeCountQuery
+                    badgeMatchCount = BadgeService.count(for: badgeCountQuery)
+                }
+                .onDisappear(perform: commitBadgeQuery)
                 Section {
                     Toggle("Use default due time", isOn: $hasDefaultDueTime)
                     if hasDefaultDueTime {

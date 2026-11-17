@@ -200,18 +200,18 @@ public class NLPService {
 
         // Check for and extract prio
         if remainingString.range(of: "prio:") != nil {
-            let prio = extractValue(after: "prio:", from: &remainingString)
+            let prio = extractToken(after: "prio:", from: &remainingString)
             task.priority = TCTask.Priority(rawValue: prio ?? "")
         }
 
         // Check for and extract project
         if remainingString.range(of: "project:") != nil {
-            task.project = extractValue(after: "project:", from: &remainingString)
+            task.project = extractToken(after: "project:", from: &remainingString)
         }
 
         // Check for and extract due
         if remainingString.range(of: "due:") != nil {
-            let parsedDue = extractValue(after: "due:", from: &remainingString)?.dateValue
+            let parsedDue = extractDue(from: &remainingString)
             task.due = UserDefaultsManager.standard.applyDefaultDueTimeIfMidnight(to: parsedDue)
         }
 
@@ -221,7 +221,7 @@ public class NLPService {
 
         // Check for and extract tags
         while remainingString.range(of: "+") != nil {
-            let tagValue = extractValue(after: "+", from: &remainingString)
+            let tagValue = extractToken(after: "+", from: &remainingString)
             if let tagValue, !tagValue.isEmpty {
                 if task.tags == nil {
                     task.tags = []
@@ -233,8 +233,10 @@ public class NLPService {
             }
         }
 
-        // The remaining string is the description
-        task.description = remainingString.trimmingCharacters(in: .whitespaces)
+        // The remaining string is the description. Collapse the gaps left behind by removed keywords.
+        task.description = remainingString
+            .split(whereSeparator: \.isWhitespace)
+            .joined(separator: " ")
 
         return task
     }
@@ -275,28 +277,71 @@ public class NLPService {
             filter.setRecur()
         }
     }
+}
 
-    // TODO: Add recur: to regex patterns when recurring task creation is implemented
-    func extractValue(after tag: String, from input: inout String, isFilter: Bool = false) -> String? {
-        let regex = isFilter
-            ? "\\s+(prio:|project:|due:|status:|recur|\\+|\\-)"
-            : "\\s+(prio:|project:|due:|\\+|\\-)"
-        if let range = input.range(of: tag) {
-            let substring = input[range.upperBound...]
-            if let nextTagRange = substring.range(
-                of: regex,
-                options: .regularExpression
-            ) {
-                let value = String(substring[..<nextTagRange.lowerBound]).trimmingCharacters(in: .whitespaces)
-                input = String(input[..<range.lowerBound] + substring[nextTagRange.lowerBound...])
-                return value
-            } else {
-                let value = String(substring).trimmingCharacters(in: .whitespaces)
-                input = String(input[..<range.lowerBound])
-                return value
+// MARK: - Task input extraction
+
+extension NLPService {
+    /// Extracts the single word directly after `tag` (e.g. `+chore`, `project:home`, `prio:H`) and removes
+    /// both from `input`. Anything after that word stays in place, so it can still become the description.
+    func extractToken(after tag: String, from input: inout String) -> String? {
+        guard let range = input.range(of: tag) else { return nil }
+        let rest = input[range.upperBound...]
+        let end = rest.firstIndex(where: \.isWhitespace) ?? rest.endIndex
+        let value = String(rest[..<end])
+        input.removeSubrange(range.lowerBound..<end)
+        return value
+    }
+
+    // TODO: Add recur: to the boundary regex when recurring task creation is implemented
+    /// Extracts the date after `due:` and removes it from `input`.
+    ///
+    /// Due dates can span several words ("tomorrow at 1pm"), but text after the date may be the task
+    /// description ("due:today Buy milk"). SoulverCore ignores trailing words that aren't part of a date,
+    /// so the date phrase is the shortest run of words that parses to the same date as the whole segment.
+    /// The remaining words are left in `input`.
+    func extractDue(from input: inout String) -> Date? {
+        guard let range = input.range(of: "due:") else { return nil }
+        let rest = input[range.upperBound...]
+        let boundary = rest.range(of: "\\s+(prio:|project:|due:|\\+|\\-)", options: .regularExpression)?
+            .lowerBound ?? rest.endIndex
+        let segment = rest[..<boundary]
+
+        // End index of each word in the segment, so a prefix of N words is segment[..<wordEnds[N - 1]].
+        var wordEnds: [String.Index] = []
+        var index = segment.startIndex
+        while index < segment.endIndex {
+            while index < segment.endIndex, segment[index].isWhitespace {
+                index = segment.index(after: index)
             }
+            guard index < segment.endIndex else { break }
+            while index < segment.endIndex, !segment[index].isWhitespace {
+                index = segment.index(after: index)
+            }
+            wordEnds.append(index)
         }
-        return nil
+
+        guard let firstWordEnd = wordEnds.first else {
+            input.removeSubrange(range)
+            return nil
+        }
+
+        let candidates = wordEnds.map { (end: $0, date: String(segment[..<$0]).dateValue) }
+        // Prefer the date of the whole segment. If trailing words break parsing entirely
+        // ("today 3 apples"), fall back to the longest prefix that still parses.
+        guard let target = candidates.last?.date ?? candidates.last(where: { $0.date != nil })?.date else {
+            // Nothing parses: drop only the first word so the rest can still become the description.
+            input.removeSubrange(range.lowerBound..<firstWordEnd)
+            return nil
+        }
+        // Relative dates ("in 2 hours") are computed from the current time, so compare with a tolerance.
+        let chosenEnd = candidates.first {
+            guard let date = $0.date else { return false }
+            return abs(date.timeIntervalSince(target)) < 1
+        }?.end ?? firstWordEnd
+
+        input.removeSubrange(range.lowerBound..<chosenEnd)
+        return target
     }
 }
 

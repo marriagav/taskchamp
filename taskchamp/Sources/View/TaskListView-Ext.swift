@@ -114,6 +114,7 @@ extension TaskListView {
             try await TaskchampionService.shared.sync {
                 globalState.isSyncingTasks = false
             }
+            await BadgeService.refresh()
             let newTasks = try TaskchampionService.shared.getTasks(sortType: sortType, filter: selectedFilter)
             if newTasks == tasks {
                 return
@@ -130,6 +131,8 @@ extension TaskListView {
     }
 
     func updateTasks() {
+        // Every task change and sync ends up here, so keep the app icon badge in step with it.
+        Task { await BadgeService.refresh() }
         do {
             let newTasks = try TaskchampionService.shared.getTasks(sortType: sortType, filter: selectedFilter)
             if newTasks == tasks {

@@ -339,6 +339,24 @@ public struct TCTask: Codable, Hashable {
         return url
     }
 
+    /// Deep link that opens the create task screen with `content` prefilled in the input field.
+    /// Falls back to `newTaskUrl` when `content` is empty or whitespace.
+    public static func newTaskUrl(prefilledWith content: String) -> URL {
+        let trimmed = content.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return newTaskUrl }
+
+        var components = URLComponents()
+        components.scheme = "taskchamp"
+        components.host = "task"
+        components.path = "/new"
+        components.queryItems = [URLQueryItem(name: "content", value: trimmed)]
+        // URLComponents leaves "+" unescaped in queries; escape it so tokens like "+chore" survive intact.
+        components.percentEncodedQuery = components.percentEncodedQuery?
+            .replacingOccurrences(of: "+", with: "%2B")
+
+        return components.url ?? newTaskUrl
+    }
+
     private mutating func appendSwiftSyntheticTags(hasAnnotations: Bool) {
         let existingTagNames = Set((tags ?? []).map { $0.name })
         let syntheticTags = TCSyntheticTag.allCases

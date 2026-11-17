@@ -50,7 +50,7 @@ public struct AddTagButton: View {
                         HStack(spacing: 8) {
                             if !userTags.isEmpty {
                                 HStack {
-                                    ForEach(userTags, id: \.self) { tag in
+                                    ForEach(userTags, id: \.name) { tag in
                                         tagChip(tag, synthetic: false)
                                     }
                                 }
@@ -61,7 +61,7 @@ public struct AddTagButton: View {
                             }
                             if !syntheticTags.isEmpty {
                                 HStack {
-                                    ForEach(syntheticTags, id: \.self) { tag in
+                                    ForEach(syntheticTags, id: \.name) { tag in
                                         tagChip(tag, synthetic: true)
                                     }
                                 }

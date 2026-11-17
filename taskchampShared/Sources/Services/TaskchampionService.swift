@@ -5,10 +5,57 @@ import WidgetKit
 // swiftlint:disable:next type_body_length
 public class TaskchampionService {
     public static let shared = TaskchampionService()
-    private var replica: Replica?
+    var replica: Replica?
     private var path: String?
     public var needToSync = false
-    private var currentTask: _Concurrency.Task<Void, Error>?
+
+    /// Sync requests that arrived while a sync was running, merged into one follow-up sync.
+    struct PendingSync {
+        /// The sync service to use, or nil for the user's selected one. The latest request wins.
+        var syncType: SyncType?
+        var onSyncCallbacks: [() -> Void] = []
+        var waiters: [CheckedContinuation<Void, Never>] = []
+    }
+
+    /// Runs syncs one at a time. Nil when no sync is running.
+    @MainActor var syncRunner: _Concurrency.Task<Void, Never>?
+    @MainActor var pendingSync: PendingSync?
+
+    /// Set by the app. Called when a sync starts and returns a closure to call when it ends.
+    /// The app uses it to request background execution time, so iOS doesn't suspend the app in the
+    /// middle of a sync while it holds the database lock. That gets the app killed (code 0xdead10cc).
+    /// Extensions leave it nil because they can't request background time.
+    @MainActor public var beginSyncActivity: (() -> () -> Void)?
+
+    /// True in the widget and share extensions. They never sync: they're short-lived processes that
+    /// iOS can suspend mid-sync while they hold the shared database lock. The app syncs for them.
+    static let isRunningInExtension = Bundle.main.bundleURL.pathExtension == "appex"
+
+    /// False while the app is in the background, and always false in extensions.
+    /// Syncs requested then are deferred, not started.
+    public private(set) var isSyncAllowed = !isRunningInExtension
+
+    /// Whether a sync was skipped and local changes may not be uploaded yet. Stored in the shared
+    /// app group, so the app also sees syncs deferred by the widget or share extension.
+    /// Cleared by the next successful sync.
+    var hasDeferredSync: Bool {
+        get { UserDefaultsManager.shared.getValue(forKey: .hasDeferredSync) ?? false }
+        set { UserDefaultsManager.shared.set(value: newValue, forKey: .hasDeferredSync) }
+    }
+
+    /// Stops new syncs from starting, e.g. when the app moves to the background.
+    /// A sync that is already running keeps going.
+    public func pauseSyncing() {
+        isSyncAllowed = false
+    }
+
+    /// Allows syncs again in the app. Returns true if a sync was deferred, here or in an extension,
+    /// and should run now.
+    public func resumeSyncing() -> Bool {
+        guard !Self.isRunningInExtension else { return false }
+        isSyncAllowed = true
+        return hasDeferredSync
+    }
 
     public enum SyncType: Codable, CaseIterable {
         case remote
@@ -56,65 +103,6 @@ public class TaskchampionService {
         } catch {
             throw TCError.genericError("Failed to delete replica: \(error.localizedDescription)")
         }
-    }
-
-    public func sync(syncType: SyncType, onSync: @escaping () -> Void = {}) async throws {
-        currentTask?.cancel()
-        currentTask = .init {
-            guard let replica else {
-                throw TCError.genericError("Database not set")
-            }
-
-            let syncService = getSyncServiceFromType(syncType)
-
-            do {
-                let synced = try await syncService.sync(replica: replica)
-
-                if synced {
-                    needToSync = false
-                } else {
-                    needToSync = true
-                }
-                WidgetCenter.shared.reloadAllTimelines()
-                onSync()
-            } catch is CancellationError {
-                // do nothing: task was canceled before finishing
-            } catch {
-                needToSync = true
-                onSync()
-            }
-        }
-        try await currentTask?.value
-    }
-
-    public func sync(onSync: @escaping () -> Void = {}) async throws {
-        currentTask?.cancel()
-        currentTask = .init {
-            guard let replica else {
-                throw TCError.genericError("Database not set")
-            }
-
-            let syncType: SyncType = FileService.shared.getSelectedSyncType() ?? .none
-            let syncService = getSyncServiceFromType(syncType)
-
-            do {
-                let synced = try await syncService.sync(replica: replica)
-
-                if synced {
-                    needToSync = false
-                } else {
-                    needToSync = true
-                }
-                WidgetCenter.shared.reloadAllTimelines()
-                onSync()
-            } catch is CancellationError {
-                // do nothing: task was canceled before finishing
-            } catch {
-                needToSync = true
-                onSync()
-            }
-        }
-        try await currentTask?.value
     }
 
     @MainActor

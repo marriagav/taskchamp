@@ -29,7 +29,7 @@ let project = Project(
                                 "NSUbiquitousContainerSupportedFolderLevels": "Any"
                             ]
                     ],
-                    "CFBundleShortVersionString": "3.7"
+                    "CFBundleShortVersionString": "3.7.1"
                 ]
             ),
             sources: ["taskchamp/Sources/**"],
@@ -86,7 +86,7 @@ let project = Project(
                             "NSUbiquitousContainerSupportedFolderLevels": "Any"
                         ]
                 ],
-                "CFBundleShortVersionString": "3.7"
+                "CFBundleShortVersionString": "3.7.1"
             ]),
             sources: "taskchampWidget/Sources/**",
             entitlements: .dictionary(
@@ -120,7 +120,7 @@ let project = Project(
                         ]
                     ]
                 ],
-                "CFBundleShortVersionString": "3.7"
+                "CFBundleShortVersionString": "3.7.1"
             ]),
             sources: "taskchampShareExtension/Sources/**",
             entitlements: .dictionary([
@@ -147,6 +147,11 @@ let project = Project(
     schemes: [
         .scheme(
             name: "taskchamp",
+            // Tests run in Debug so they build unoptimized; the run action stays in Release.
+            testAction: .targets(
+                ["taskchampTests"],
+                configuration: .debug
+            ),
             runAction: .runAction(
                 configuration: .release,
                 executable: .target("taskchamp")
