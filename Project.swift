@@ -62,7 +62,10 @@ let project = Project(
             infoPlist: .default,
             sources: ["taskchamp/Tests/**"],
             resources: [],
-            dependencies: [.target(name: "taskchamp")]
+            dependencies: [
+                .target(name: "taskchamp"),
+                .target(name: "taskchampShared")
+            ]
         ),
         .target(
             name: "taskchampWidget",
